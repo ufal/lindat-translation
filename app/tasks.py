@@ -14,7 +14,7 @@ def run(task):
         import time
         start_time = time.time()
         import subprocess
-        subprocess.check_call(['/home/okosarko/run_transformer.sh'])
+        subprocess.check_call(['/home/okosarko/run_transformer.sh', '/home/varis/test.in'])
         seconds = time.time() - start_time
         #seconds = random.randint(1, current_app.config['MAX_TIME_TO_WAIT'])
     return '{} performed in {} second(s)'.format(task, seconds)
