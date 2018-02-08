@@ -9,7 +9,12 @@ def run(task):
         1 / 0
     if task.startswith('Short'):
         seconds = 1
+        time.sleep(seconds)
     else:
-        seconds = random.randint(1, current_app.config['MAX_TIME_TO_WAIT'])
-    time.sleep(seconds)
+        import time
+        start_time = time.time()
+        import subprocess
+        subprocess.check_call(['/home/okosarko/run_transformer.sh'])
+        seconds = time.time() - start_time
+        #seconds = random.randint(1, current_app.config['MAX_TIME_TO_WAIT'])
     return '{} performed in {} second(s)'.format(task, seconds)
