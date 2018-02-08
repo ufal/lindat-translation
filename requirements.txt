@@ -1,0 +1,7 @@
+Flask
+Flask-WTF
+Flask-Script
+Flask-Bootstrap
+WTForms
+redis
+rq
