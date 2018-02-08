@@ -2,6 +2,16 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block main %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class=flashes>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
       <div class="panel panel-default">
         <!-- Default panel contents -->
         <div class="panel-heading">Select task to run</div>
