@@ -1,7 +1,7 @@
 from flask import Flask
 from . import settings
-from extensions import bootstrap
-from main.views import bp as main
+from .extensions import bootstrap
+from .main.views import bp as main
 
 
 def create_app():

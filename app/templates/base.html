@@ -12,6 +12,14 @@
   <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 {% endblock %}
 
+{% block scripts %}
+  {{super()}}
+  <script type=text/javascript>
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+  </script>
+  {% block app_scripts %}{% endblock %}
+{% endblock %}
+
 {% block title %}My App{% endblock %}
 
 {% block navbar %}
