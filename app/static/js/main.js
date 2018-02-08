@@ -48,7 +48,7 @@ $(document).ready(function() {
 
   // submit form
   $("#submit").on('click', function() {
-    flash_alert("Running " + $("#task").val() + "...", "info");
+    flash_alert("Running  ...", "info");
     $.ajax({
       url: $SCRIPT_ROOT + "/_run_task",
       data: $("#taskForm").serialize(),
@@ -56,12 +56,12 @@ $(document).ready(function() {
       dataType: "json",
       success: function(data, status, request) {
         $("#submit").attr("disabled", "disabled");
-        flash_alert("Running " + task + "...", "info");
+        flash_alert("Running ...", "info");
         var status_url = request.getResponseHeader('Location');
         check_job_status(status_url)
       },
       error: function(jqXHR, textStatus, errorThrown) {
-          flash_alert("Failed to start " + task, "danger");
+          flash_alert("Failed to start", "danger");
       }
     });
   });
