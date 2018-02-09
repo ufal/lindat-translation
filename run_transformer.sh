@@ -3,6 +3,9 @@ echo "Started" > /tmp/debug.log
 #INPUT=/home/varis/test.in
 INPUT=$1
 OUTPUT=$(basename $INPUT)
+cd /home/okosarko/scripts
+cp $INPUT ${INPUT}_1
+./split-sentences.pl < ${INPUT}_1 > $INPUT
 source /home/varis/tensorflow-virtualenv/bin/activate
 export PYTHONPATH=/home/varis/tensor2tensor-1.2.9/
 cd /home/varis/
