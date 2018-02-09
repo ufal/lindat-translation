@@ -21,6 +21,13 @@ $(document).ready(function() {
     });
   }
 
+  function show_translation(translation) {
+    var htmlString = '<pre>';
+    var $pre = $(htmlString);
+    $pre.text(translation);
+    $pre.appendTo("#mainContent");
+  }
+
   function check_job_status(status_url) {
   $.getJSON(status_url, function(data) {
     console.log(data);
@@ -30,7 +37,8 @@ $(document).ready(function() {
           $("#submit").removeAttr("disabled");
           break;
       case "finished":
-          flash_alert(data.result, "success");
+          flash_alert("Success", "success");
+          show_translation(data.result)
           $("#submit").removeAttr("disabled");
           break;
       case "failed":
