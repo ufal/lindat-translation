@@ -77,7 +77,8 @@ $(document).ready(function() {
       success: function(data, status, request) {
         $("#submit").attr("disabled", "disabled");
         flash_alert("Running ...", "info");
-        var status_url = request.getResponseHeader('Location');
+        var url_parts = request.getResponseHeader('Location').split(":",2);
+	var status_url = window.location.protocol + url_parts[1];
         check_job_status(status_url)
       },
       error: function(jqXHR, textStatus, errorThrown) {
