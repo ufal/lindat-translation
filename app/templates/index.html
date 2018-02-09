@@ -4,14 +4,14 @@
 {% block main %}
       <div class="panel panel-default">
         <!-- Default panel contents -->
-        <div class="panel-heading">Select task to run</div>
+        <div class="panel-heading">Translate</div>
         <div class="panel-body">
           <div class="col-md-3">
             <form class="form" id="taskForm" method="POST">
               {{ form.hidden_tag() }}
               {{ wtf.form_field(form.english) }}
               <div class="form-group">
-                <button type="button" class="btn btn-default" id="submit">Run</button>
+                <button type="button" class="btn btn-default" id="submit">Translate</button>
               </div>
             </form>
           </div>

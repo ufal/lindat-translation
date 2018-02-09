@@ -12,7 +12,7 @@ $(document).ready(function() {
     var htmlString = '<div class="alert alert-' + category + ' alert-dismissible" role="alert">'
     htmlString += '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
     htmlString += '<span aria-hidden="true">&times;</span></button>' + message + '</div>'
-    $(htmlString).prependTo("#mainContent").slideDown();
+    $(htmlString).prependTo("#mainContent").fadeToggle();
   }
 
   function remove_alerts() {
