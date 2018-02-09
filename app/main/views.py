@@ -14,10 +14,14 @@ def job_status(job_id):
     if job is None:
         response = {'status': 'unknown'}
     else:
+        status = job.get_status()
         response = {
-            'status': job.get_status(),
+            'status': status,
             'result': job.result,
         }
+        if status == 'queued':
+            response['queued'] = q.get_job_ids().index(job_id)
+
         if job.is_failed:
             response['message'] = job.exec_info.strip().split('\n')[-1]
     return jsonify(response)

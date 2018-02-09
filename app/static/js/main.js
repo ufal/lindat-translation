@@ -53,7 +53,8 @@ $(document).ready(function() {
 	if ( data.status == 'started' ){
 	   message = "Running" + dots;
 	}else if ( data.status == 'queued'){
-	   message = "Queued" + dots;
+	   message = "Queued" + dots + " there are " + (data.queued + 1) + " tasks in line before" +
+        " yours.";
 	}else{
 	   message = data.status + dots;
 	}
