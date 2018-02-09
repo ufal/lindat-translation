@@ -1,4 +1,5 @@
 $(document).ready(function() {
+  var counter = 0;
 
   // flash an alert
   // remove previous alerts by default
@@ -12,7 +13,7 @@ $(document).ready(function() {
     var htmlString = '<div class="alert alert-' + category + ' alert-dismissible" role="alert">'
     htmlString += '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
     htmlString += '<span aria-hidden="true">&times;</span></button>' + message + '</div>'
-    $(htmlString).prependTo("#mainContent").fadeToggle();
+    $(htmlString).prependTo("#mainContent").hide().slideDown();
   }
 
   function remove_alerts() {
@@ -47,9 +48,19 @@ $(document).ready(function() {
           break;
       default:
         // queued/started/deferred
+	var dots = Array((++counter % 5) + 2).join(".");
+        var message;
+	if ( data.status == 'started' ){
+	   message = "Running" + dots;
+	}else if ( data.status == 'queued'){
+	   message = "Queued" + dots;
+	}else{
+	   message = data.status + dots;
+	}
+	flash_alert(message, "info");
         setTimeout(function() {
           check_job_status(status_url);
-        }, 500);
+        }, 1500);
     }
   });
 }

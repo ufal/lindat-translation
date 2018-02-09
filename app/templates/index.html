@@ -6,7 +6,8 @@
         <!-- Default panel contents -->
         <div class="panel-heading">Translate</div>
         <div class="panel-body">
-          <div class="col-md-3">
+          <div class="col-md-12">
+            <p>Once the translation has started it takes in order of minutes to complete. You'll be shown the status (started/queued) of your translation task above this panel.</p>
             <form class="form" id="taskForm" method="POST">
               {{ form.hidden_tag() }}
               {{ wtf.form_field(form.english) }}

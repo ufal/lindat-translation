@@ -27,7 +27,7 @@ def job_status(job_id):
 def run_task():
     english = request.form.get('english')
     q = Queue()
-    job = q.enqueue(tasks.run, english)
+    job = q.enqueue(tasks.run, english, timeout=10800)
     return jsonify({}), 202, {'Location': url_for('main.job_status', job_id=job.get_id())}
 
 
