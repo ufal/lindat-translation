@@ -29,9 +29,10 @@ def job_status(job_id):
 
 @bp.route('/_run_task', methods=['POST'])
 def run_task():
-    english = request.form.get('english')
+    text = request.form.get('input_text')
+    lang_pair = request.form.get('lang_pair')
     q = Queue()
-    job = q.enqueue(tasks.run, english, timeout=10800)
+    job = q.enqueue(tasks.run, text, lang_pair, timeout=10800)
     return jsonify({}), 202, {'Location': url_for('main.job_status', job_id=job.get_id())}
 
 

@@ -3,15 +3,16 @@ import time
 from flask import current_app
 
 
-def run(english):
-    if english:
+def run(text, lang_pair='en-cs'):
+    if text:
         import tempfile
         with tempfile.NamedTemporaryFile(mode='wt', encoding='utf-8', delete=False) as temp_in:
-            temp_in.write(english)
+            temp_in.write(text)
             temp_in.flush()
             output_name = temp_in.name + '_out'
             import subprocess
-            subprocess.check_call(['/home/okosarko/run_transformer.sh', temp_in.name, output_name],
+            subprocess.check_call(['/home/okosarko/run_transformer.sh', temp_in.name,
+                                   output_name, lang_pair],
                                   timeout=10800)  # 3h
             with open(output_name, mode='rt', encoding='utf-8') as output:
                 czech = output.read()

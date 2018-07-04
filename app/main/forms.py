@@ -5,7 +5,10 @@ from wtforms import SelectField, TextAreaField, validators
 
 class TaskForm(Form):
     #task = SelectField('Task')
-    english = TextAreaField(label='English sentences', validators=[validators.required])
+    input_text = TextAreaField(label='Input sentences', validators=[validators.required])
+    lang_pair = SelectField(label="Language pair", validators=[validators.required],
+                            default='en-cs', choices=[('en-cs', 'English->Czech'),
+                                                      ('cs-en', 'Czech->English')])
 
     def __init__(self, *args, **kwargs):
         super(TaskForm, self).__init__(*args, **kwargs)

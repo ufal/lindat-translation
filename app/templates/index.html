@@ -9,8 +9,9 @@
           <div class="col-md-12">
             <p>Once the translation has started it takes in order of minutes to complete. You'll be shown the status (started/queued) of your translation task above this panel.</p>
             <form class="form" id="taskForm" method="POST">
-              {{ form.hidden_tag() }}
-              {{ wtf.form_field(form.english) }}
+                {{ form.hidden_tag() }}
+                {{ wtf.form_field(form.input_text) }}
+                {{ wtf.form_field(form.lang_pair) }}
               <div class="form-group">
                 <button type="button" class="btn btn-default" id="submit">Translate</button>
               </div>
