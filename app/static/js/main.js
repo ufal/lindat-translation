@@ -77,7 +77,7 @@ $(document).ready(function() {
       dataType: "json",
       success: function(data, status, request) {
           flash_alert("Success", "success");
-          show_translation($.map(data, function(pair){return pair[0]}));
+          show_translation(data.join('\n'));
           $("#submit").removeAttr("disabled");
       },
       error: function(jqXHR, textStatus, errorThrown) {

@@ -21,7 +21,8 @@ def run_task():
     request_fn = serving_utils.make_grpc_request_fn(servable_name=lang_pair + '_model',
                                                                    server='localhost:9000', timeout_secs=90)
     sentences = split_to_sent_array(text)
-    outputs = serving_utils.predict(sentences, problem, request_fn)
+    outputs = list(map(lambda sent_score: sent_score[0],
+                       serving_utils.predict(sentences, problem, request_fn)))
     return jsonify(outputs)
 
 
