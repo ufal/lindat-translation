@@ -3,3 +3,4 @@ Flask-WTF
 Flask-Script
 Flask-Bootstrap
 WTForms
+sentence_splitter
