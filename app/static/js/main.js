@@ -35,6 +35,7 @@ $(document).ready(function() {
     var progress = setInterval(function() {
           var dots = Array((++counter % 5) + 2).join(".");
           var message = "Running" + dots;
+          flash_alert(message, "info");
       }, 1500);
     $("#submit").attr("disabled", "disabled");
     $.ajax({

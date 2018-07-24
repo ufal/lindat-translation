@@ -1,11 +1,11 @@
 [Unit]
-Description=Transformer worker
+Description=Transformer - tensorflow serving
 PartOf=transformer.service
 After=transformer.service
 
 [Service]
 WorkingDirectory=/home/okosarko/transformer_frontend
-ExecStart=/usr/bin/tensorflow_model_server --port=9000 --model_config_file=/home/okosarko/transformer_fronted/model.config
+ExecStart=/usr/bin/tensorflow_model_server --port=9000 --model_config_file=/home/okosarko/transformer_frontend/model.config
 Restart=always
 User=okosarko
 

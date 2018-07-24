@@ -1,5 +1,5 @@
 [Unit]
-Description=Transformer server
+Description=Transformer frontend server
 PartOf=transformer.service
 After=transformer.service
 
