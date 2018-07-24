@@ -2,7 +2,8 @@ import os
 from flask import Blueprint, render_template, request, jsonify, current_app, g, url_for
 from .forms import TaskForm
 import tensorflow as tf
-from tensor2tensor.serving import serving_utils, registry, usr_dir
+from tensor2tensor.serving import serving_utils
+from tensor2tensor.utils import registry, usr_dir
 
 usr_dir.import_usr_dir('~varis/t2t_usr_dir')
 problem = registry.problem('translate_encs_wmt_czeng57m32k')
