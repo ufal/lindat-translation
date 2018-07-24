@@ -69,17 +69,16 @@ $(document).ready(function() {
   // submit form
   $("#submit").on('click', function() {
     flash_alert("Running  ...", "info");
+    $("#submit").attr("disabled", "disabled");
     $.ajax({
-      url: $SCRIPT_ROOT + "/_run_task",
+      url: $SCRIPT_ROOT + "/translate",
       data: $("#taskForm").serialize(),
       method: "POST",
       dataType: "json",
       success: function(data, status, request) {
-        $("#submit").attr("disabled", "disabled");
-        flash_alert("Running ...", "info");
-        var url_parts = request.getResponseHeader('Location').split(":",2);
-	var status_url = window.location.protocol + url_parts[1];
-        check_job_status(status_url)
+          flash_alert("Success", "success");
+          show_translation($.map(data, function(pair){return pair[0]}));
+          $("#submit").removeAttr("disabled");
       },
       error: function(jqXHR, textStatus, errorThrown) {
           flash_alert("Failed to start", "danger");

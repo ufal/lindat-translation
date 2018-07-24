@@ -1,39 +1,27 @@
-import redis
+import os
 from flask import Blueprint, render_template, request, jsonify, current_app, g, url_for
-from .. import tasks
 from .forms import TaskForm
-from rq import push_connection, pop_connection, Queue
+import tensorflow as tf
+from tensor2tensor.serving import serving_utils, registry, usr_dir
+
+usr_dir.import_usr_dir('~varis/t2t_usr_dir')
+problem = registry.problem('translate_encs_wmt_czeng57m32k')
+hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('~varis/t2t_data_dir'))
+problem.get_hparams(hparams)
+
 
 bp = Blueprint('main', __name__)
 
 
-@bp.route('/status/<job_id>')
-def job_status(job_id):
-    q = Queue()
-    job = q.fetch_job(job_id)
-    if job is None:
-        response = {'status': 'unknown'}
-    else:
-        status = job.get_status()
-        response = {
-            'status': status,
-            'result': job.result,
-        }
-        if status == 'queued':
-            response['queued'] = q.get_job_ids().index(job_id)
-
-        if job.is_failed:
-            response['message'] = job.exec_info.strip().split('\n')[-1]
-    return jsonify(response)
-
-
-@bp.route('/_run_task', methods=['POST'])
+@bp.route('/translate', methods=['POST'])
 def run_task():
     text = request.form.get('input_text')
-    lang_pair = request.form.get('lang_pair')
-    q = Queue()
-    job = q.enqueue(tasks.run, text, lang_pair, timeout=10800)
-    return jsonify({}), 202, {'Location': url_for('main.job_status', job_id=job.get_id())}
+    lang_pair = request.form.get('lang_pair', default='en-cs')
+    request_fn = serving_utils.make_grpc_request_fn(servable_name=lang_pair + '_model',
+                                                                   server='localhost:9000', timeout_secs=90)
+    sentences = split_to_sent_array(text)
+    outputs = serving_utils.predict(sentences, problem, request_fn)
+    return jsonify(outputs)
 
 
 @bp.route('/')
@@ -42,19 +30,5 @@ def index():
     return render_template('index.html', form=form)
 
 
-def get_redis_connection():
-    redis_connection = getattr(g, '_redis_connection', None)
-    if redis_connection is None:
-        redis_url = current_app.config['REDIS_URL']
-        redis_connection = g._redis_connection = redis.from_url(redis_url)
-    return redis_connection
-
-
-@bp.before_request
-def push_rq_connection():
-    push_connection(get_redis_connection())
-
-
-@bp.teardown_request
-def pop_rq_connection(exception=None):
-    pop_connection()
+def split_to_sent_array(text):
+    return [text]
