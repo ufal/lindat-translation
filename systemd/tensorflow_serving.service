@@ -5,7 +5,7 @@ After=transformer.service
 
 [Service]
 WorkingDirectory=/home/okosarko/transformer_frontend
-ExecStart=/home/okosarko/transformer_frontend/virtualenv/bin/python manage.py runworker
+ExecStart=/usr/bin/tensorflow_model_server --port=9000 --model_config_file=/home/okosarko/transformer_fronted/model.config
 Restart=always
 User=okosarko
 

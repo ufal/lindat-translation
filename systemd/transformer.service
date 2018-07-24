@@ -1,6 +1,6 @@
 [Unit]
 Description=Transformer
-Wants=transformer_worker.service transformer_server.service
+Wants=tensorflow_serving.service transformer_frontend.service
 
 [Service]
 # Don't run as a deamon (because we've got nothing to do directly)
