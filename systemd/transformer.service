@@ -1,0 +1,15 @@
+[Unit]
+Description=Transformer
+Wants=transformer_worker.service transformer_server.service
+
+[Service]
+# Don't run as a deamon (because we've got nothing to do directly)
+Type=oneshot
+# Just print something, because ExecStart is required
+ExecStart=/bin/true
+# Keep running after Exit start finished, because we want the instances that depend on this to keep running
+RemainAfterExit=yes
+#StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

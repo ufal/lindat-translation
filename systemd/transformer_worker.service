@@ -1,0 +1,14 @@
+[Unit]
+Description=Transformer worker
+PartOf=transformer.service
+After=transformer.service
+
+[Service]
+WorkingDirectory=/home/okosarko/transformer_frontend
+ExecStart=/home/okosarko/transformer_frontend/virtualenv/bin/python manage.py runworker
+Restart=always
+User=okosarko
+
+[Install]
+WantedBy=transformer.service
+
