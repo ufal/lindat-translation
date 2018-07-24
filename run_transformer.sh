@@ -1,13 +1,17 @@
 #!/bin/bash
-echo "Started" > /tmp/debug.log
+echo "`date -Ins`: Started" >> /tmp/debug.log
 #INPUT=/home/varis/test.in
 INPUT=$1
+echo "`date -Ins`: INPUT=$INPUT" >> /tmp/debug.log
 OUTPUT=$2
+echo "`date -Ins`: OUTPUT=$OUTPUT" >> /tmp/debug.log
 LANG_PAIR=${3:-"en-cs"}
+echo "`date -Ins`: LANG_PAIR=$LANG_PAIR" >> /tmp/debug.log
 cd /home/okosarko/scripts
 cp $INPUT ${INPUT}_1
 ./split-sentences.pl -l ${LANG_PAIR%-*} < ${INPUT}_1 > $INPUT
-source /home/varis/tensorflow-virtualenv/bin/activate
+echo "`date -Ins`: ./split-sentences.pl -l ${LANG_PAIR%-*} < ${INPUT}_1 > $INPUT" >> /tmp/debug.log
+source /home/varis/tensor2tensor-venv-1.4.2/bin/activate
 export PYTHONPATH=/home/varis/tensor2tensor-1.4.2/
 cd /home/varis/
 tensor2tensor-1.4.2/tensor2tensor/bin/t2t-decoder \
