@@ -1,5 +1,4 @@
 $(document).ready(function() {
-  var counter = 0;
 
   // flash an alert
   // remove previous alerts by default
@@ -29,46 +28,14 @@ $(document).ready(function() {
     $pre.appendTo("#mainContent");
   }
 
-  function check_job_status(status_url) {
-  $.getJSON(status_url, function(data) {
-    console.log(data);
-    switch (data.status) {
-      case "unknown":
-          flash_alert("Unknown job id", "danger");
-          $("#submit").removeAttr("disabled");
-          break;
-      case "finished":
-          flash_alert("Success", "success");
-          show_translation(data.result)
-          $("#submit").removeAttr("disabled");
-          break;
-      case "failed":
-          flash_alert("Job failed: " + data.message, "danger");
-          $("#submit").removeAttr("disabled");
-          break;
-      default:
-        // queued/started/deferred
-	var dots = Array((++counter % 5) + 2).join(".");
-        var message;
-	if ( data.status == 'started' ){
-	   message = "Running" + dots;
-	}else if ( data.status == 'queued'){
-	   message = "Queued" + dots + " there are " + (data.queued + 1) + " tasks in line before" +
-        " yours.";
-	}else{
-	   message = data.status + dots;
-	}
-	flash_alert(message, "info");
-        setTimeout(function() {
-          check_job_status(status_url);
-        }, 1500);
-    }
-  });
-}
-
   // submit form
   $("#submit").on('click', function() {
     flash_alert("Running  ...", "info");
+    var counter = 0;
+    var progress = setInterval(function() {
+          var dots = Array((++counter % 5) + 2).join(".");
+          var message = "Running" + dots;
+      }, 1500);
     $("#submit").attr("disabled", "disabled");
     $.ajax({
       url: $SCRIPT_ROOT + "/translate",
@@ -76,12 +43,14 @@ $(document).ready(function() {
       method: "POST",
       dataType: "json",
       success: function(data, status, request) {
+          clearInterval(progress);
           flash_alert("Success", "success");
           show_translation(data.join('\n'));
           $("#submit").removeAttr("disabled");
       },
       error: function(jqXHR, textStatus, errorThrown) {
-          flash_alert("Failed to start", "danger");
+          clearInterval(progress);
+          flash_alert("Translation failed: " + textStatus + "\n" + errorThrown, "danger");
       }
     });
   });
