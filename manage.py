@@ -1,8 +1,5 @@
-import sys
-sys.path.append('/home/varis/tensor2tensor-1.6.6/')
-sys.path.append('/home/varis/tensorflow-virtualenv/lib/python3.5/site-packages/')
-from flask_script import Server, Manager
 from uwsgi import app
+from flask_script import Server, Manager
 
 
 manager = Manager(app)
