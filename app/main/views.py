@@ -20,7 +20,7 @@ def run_task():
     text = request.form.get('input_text')
     lang_pair = request.form.get('lang_pair', default='en-cs')
     request_fn = serving_utils.make_grpc_request_fn(servable_name=lang_pair + '_model',
-                                                                   server='localhost:9000', timeout_secs=500)
+                                                                   server='10.10.51.30:9000', timeout_secs=500)
     sentences = split_to_sent_array(text, lang=lang_pair.split('-')[0])
     outputs = list(map(lambda sent_score: sent_score[0],
                        serving_utils.predict(sentences, problem, request_fn)))
