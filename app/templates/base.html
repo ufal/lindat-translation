@@ -7,9 +7,16 @@
   {{super()}}
 {% endblock %}
 
+{% block body_attribs %}
+    {{ super() }}
+    id="lindat-tools"
+{% endblock %}
+
 {% block styles %}
   {{super()}}
   <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='lindat-common/public/css/lindat.css') }}"
+          rel="stylesheet">
 {% endblock %}
 
 {% block scripts %}
@@ -23,21 +30,7 @@
 {% block title %}Transformer{% endblock %}
 
 {% block navbar %}
-  <!-- Fixed navbar -->
-  <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <!--img class="navbar-brand" src="../../static/logo.png"-->
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">Transformer</a>
-      </div>
-    </div>
-  </div>
+    {% include 'lindat-common/header.htm' %}
 {% endblock %}
 
 {% block content %}
@@ -45,4 +38,6 @@
     {{utils.flashed_messages(container=False, dismissible=True)}}
     {% block main %}{% endblock %}
   </div>
+    <!-- Footer -->
+    {% include 'lindat-common/footer.htm' %}
 {% endblock %}
