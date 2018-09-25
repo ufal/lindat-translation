@@ -35,7 +35,7 @@
 {% block app_scripts %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        var current = {{ request.path|tojson }}
+        var current = $SCRIPT_ROOT + {{ request.path|tojson }}
         $("li a[href='" + current +"']").parent().addClass("active")
     </script>
 {% endblock %}

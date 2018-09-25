@@ -17,9 +17,9 @@
         <dt>Get models titles:urls from the <code>_embedded</code> field </dt>
         <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write('\n'.join ([model['title'] + ':' + model['href'] for model in json.load(sys.stdin) ['_embedded']['latest']['_embedded']['models']['_links']['models']]))"</code></dd>
         <dt>Translate (when you've found the right model)</dt>
-        <dd><code>curl -d 'input_text=This is a test' {{ request.url_root.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
+        <dd><code>curl -d 'input_text=This is a test' {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
         <dt>Upload a file</dt>
-        <dd><code>curl -F input_text=@/tmp/test.txt {{ request.url_root.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
+        <dd><code>curl -F input_text=@/tmp/test.txt {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
     </dl>
     <p>
     For one off scripts you can also use the <a href="{{ url_for('main.api_models_v1') }}">model
@@ -28,9 +28,10 @@
     </p>
     <dl>
         <dt>With hardcoded en-cs model</dt>
-        <dd><code>curl -d 'input_text=This is a simple test.' {{ request.url_root.rstrip('/') + url_for('main.api_models_v1') + '/en-cs' }}</code></dd>
+        <dd><code>curl -d 'input_text=This is a simple test.' {{ request.host_url.rstrip('/') + url_for('main.api_models_v1') + '/en-cs' }}</code></dd>
     </dl>
-    <!-- h2>Response?</h2 -->
+    <h2>Response</h2>
+     <p>The response is a json array where each element is a translated sentence.</p>
 
     <h2>Limitations</h2>
     <p>See the <a href="https://lindat.mff.cuni.cz/en/terms-of-use">terms of use</a> for general

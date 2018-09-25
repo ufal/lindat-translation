@@ -42,11 +42,11 @@ def index():
 def upload():
     file_form = FileForm()
     choices = url_for_choices()
-    file_form.lang_pair.choices = choices
-    file_form.lang_pair.default = choices[0][0]
+    file_form.lang_pair.choices = _choices
+    file_form.lang_pair.default = _choices[0][0]
     if file_form.validate_on_submit():
-        input_text = file_form.data_file.data.read()
-        return str(_translate(file_form.lang_pair, input_text))
+        input_text = file_form.data_file.data.read().decode('utf-8')
+        return str(_translate(file_form.lang_pair.data, input_text))
     return render_template('upload.html', file_form=file_form,
                            file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
 
@@ -124,7 +124,7 @@ def run_task(model):
         input_file = request.files.get('input_text')
         if input_file.content_type != 'text/plain':
             abort(415)
-        text = input_file.read()
+        text = input_file.read().decode('utf-8')
     else:
         text = request.form.get('input_text')
     outputs = _translate(model, text)
