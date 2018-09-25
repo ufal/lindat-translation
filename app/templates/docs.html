@@ -1,0 +1,39 @@
+{%- extends "main.html" %}
+{% block panel %}
+{{ super() }}
+    <h2>Api</h2>
+    <p>There's a very simple API available. You need to know only how to discover the available
+        models and that you <code>POST</code> <code>input_text</code> to those models.</p>
+    <p>Start exploring the api by requesting <code>application/json</code> from <a href="{{
+            url_for('main.index') }}">{{ url_for('main.index') }}</a>. You can then follow the
+        links in the <code>_links</code> dictionary and navigate the api.</p>
+    <p>For convenience the models available in the latest api version are embedded (in the
+        <code>_embedded</code> field of the response).</p>
+    <p>Errors are reported solely as the HTTP return status.</p>
+    <h2>Examples</h2>
+    <dl>
+        <dt>Enter the api</dt>
+        <dd><code>curl -H'Accept: application/json' {{ request.url_root|tojson }}</code></dd>
+        <dt>Get models titles:urls from the <code>_embedded</code> field </dt>
+        <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write('\n'.join ([model['title'] + ':' + model['href'] for model in json.load(sys.stdin) ['_embedded']['latest']['_embedded']['models']['_links']['models']]))"</code></dd>
+        <dt>Translate (when you've found the right model)</dt>
+        <dd><code>curl -d 'input_text=This is a test' {{ request.url_root.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
+        <dt>Upload a file</dt>
+        <dd><code>curl -F input_text=@/tmp/test.txt {{ request.url_root.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
+    </dl>
+    <p>
+    For one off scripts you can also use the <a href="{{ url_for('main.api_models_v1') }}">model
+        endpoint</a> and/or the urls of models provided by that endpoint, provided you don't mind
+        updating them by hand from time to time.
+    </p>
+    <dl>
+        <dt>With hardcoded en-cs model</dt>
+        <dd><code>curl -d 'input_text=This is a simple test.' {{ request.url_root.rstrip('/') + url_for('main.api_models_v1') + '/en-cs' }}</code></dd>
+    </dl>
+    <!-- h2>Response?</h2 -->
+
+    <h2>Limitations</h2>
+    <p>See the <a href="https://lindat.mff.cuni.cz/en/terms-of-use">terms of use</a> for general
+        limitations on lindat services.</p>
+    <p>There is a limitation on the size of the payload (file/request); this is currently {{ file_size_limit|tojson }}B</p>
+{% endblock %}

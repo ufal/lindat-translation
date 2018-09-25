@@ -18,6 +18,11 @@
 .panel.with-nav-tabs .nav-justified{
 	margin-bottom: -1px;
 }
+
+dt {
+    margin-top: 1em;
+}
+
 /********************************************************************/
 /*** PANEL DEFAULT ***/
 .with-nav-tabs.panel-default .nav-tabs > li > a,

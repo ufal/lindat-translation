@@ -25,7 +25,7 @@ $(document).ready(function() {
     var htmlString = '<pre>';
     var $pre = $(htmlString);
     $pre.text(translation);
-    $pre.appendTo("#tab1");
+    $pre.appendTo("#tab");
   }
 
   // submit form
@@ -39,8 +39,8 @@ $(document).ready(function() {
       }, 1500);
     $("#submit").attr("disabled", "disabled");
     $.ajax({
-      url: $SCRIPT_ROOT + "/translate",
-      data: $("#taskForm").serialize(),
+      url: $("#lang_pair option:selected").val(),
+      data: {'input_text': $("#input_text").val()},
       method: "POST",
       dataType: "json",
       success: function(data, status, request) {
@@ -56,4 +56,18 @@ $(document).ready(function() {
     });
   });
 
+  // fileUpload button
+  $("#translate").on('click', function (e){
+      var data_file = $('#data_file')
+      if(data_file.size() > 0 && data_file[0].files.length) {
+          if (data_file[0].files[0].size > $FILE_SIZE_LIMIT) {
+              alert('The file is too large.\nThe maximal allowed content length is ' + $FILE_SIZE_LIMIT + 'B.')
+              e.preventDefault()
+          }
+          if (data_file[0].files[0].type !== 'text/plain'){
+              alert(data_file[0].files[0].type + ' not allowed. Only text/plain.')
+              e.preventDefault()
+          }
+      }
+  })
 });

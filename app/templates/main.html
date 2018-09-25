@@ -1,0 +1,41 @@
+{%- extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block main %}
+<div class="panel panel-primary">
+    <div class="panel-heading"><a href="{{ url_for('main.index')
+            }}"><strong>Transformer</strong></a></div>
+    <div class="panel-body">
+        <div class="panel-group">
+            <div class="panel with-nav-tabs panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">
+                    <ul class="nav nav-tabs">
+                        <li><a href="{{ url_for('main.index') }}">Translate</a></li>
+                        <li><a href="{{ url_for('main.upload') }}">Upload file</a></li>
+                        <li><a href="{{ url_for('main.docs') }}">Docs</a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <div class="tab-content col-md-12">
+                        <div class="tab-pane fade in active" id="tab">
+                            {% block panel %}{% endblock %}
+                        </div>
+                    </div>
+                    <div class="small col-md-12" style="margin-top: 2em">
+                        Credits: The service runs systems trained by Martin Popel as presented in <a href="http://matrix.statmt.org/matrix/systems_list/1883">en-cs</a>; <a href="http://matrix.statmt.org/matrix/systems_list/1882">cs-en</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block app_scripts %}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        var current = {{ request.path|tojson }}
+        $("li a[href='" + current +"']").parent().addClass("active")
+    </script>
+{% endblock %}
