@@ -46,7 +46,7 @@ $(document).ready(function() {
       success: function(data, status, request) {
           clearInterval(progress);
           flash_alert("Success", "success");
-          show_translation(data.join('\n'));
+          show_translation(data.join(' ').replace(/\n /g, '\n'));
           $("#submit").removeAttr("disabled");
       },
       error: function(jqXHR, textStatus, errorThrown) {

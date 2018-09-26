@@ -20,9 +20,18 @@ _models = list(map(lambda pair: pair[0], _choices))
 def _translate(model, text):
     request_fn = serving_utils.make_grpc_request_fn(servable_name=model + '_model',
                                                     server='10.10.51.30:9000', timeout_secs=500)
-    sentences = split_to_sent_array(text, lang=model.split('-')[0])
+    lang = model.split('-')[0]
+    sentences = []
+    newlines_after = []
+    for segment in text.split('\n'):
+        if segment:
+            sentences += split_to_sent_array(segment, lang=lang)
+        newlines_after.append(len(sentences)-1)
     outputs = list(map(lambda sent_score: sent_score[0],
                        serving_utils.predict(sentences, problem, request_fn)))
+    for i in newlines_after:
+        if i >= 0:
+            outputs[i] += '\n'
     return outputs
 
 
