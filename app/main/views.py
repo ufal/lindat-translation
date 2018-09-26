@@ -1,12 +1,14 @@
 from math import ceil
 import os
 from flask import Blueprint, render_template, request, jsonify, current_app, g, url_for, abort
-from .forms import TaskForm, FileForm
 import numpy as np
 import tensorflow as tf
 from tensor2tensor.serving import serving_utils
 from tensor2tensor.utils import registry, usr_dir
 from sentence_splitter import split_text_into_sentences
+
+from .forms import TaskForm, FileForm
+from ..logging_utils import logged
 
 usr_dir.import_usr_dir('t2t_usr_dir')
 problem = registry.problem('translate_encs_wmt_czeng57m32k')
@@ -20,8 +22,9 @@ _models = list(map(lambda pair: pair[0], _choices))
 
 
 def _translate(model, text):
-    request_fn = serving_utils.make_grpc_request_fn(servable_name=model + '_model',
-                                                    server='10.10.51.30:9000', timeout_secs=500)
+    request_fn = serving_utils.make_grpc_request_fn(servable_name=model + '_model', timeout_secs=500,
+                                                    # server='localhost:9000')
+                                                    server='10.10.51.30:9000')
     lang = model.split('-')[0]
     sentences = []
     newlines_after = []
@@ -73,6 +76,7 @@ def url_for_choices():
     return list(map(lambda choice: (url_for('main.run_task', model=choice[0]), choice[1]), _choices))
 
 
+@logged()
 def split_to_sent_array(text, lang):
     return split_text_into_sentences(text=text, language=lang)
 

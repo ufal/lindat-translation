@@ -1,0 +1,1 @@
+from .logged import LoggedDecorator as logged
