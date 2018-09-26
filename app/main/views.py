@@ -1,14 +1,16 @@
+from math import ceil
 import os
 from flask import Blueprint, render_template, request, jsonify, current_app, g, url_for, abort
 from .forms import TaskForm, FileForm
+import numpy as np
 import tensorflow as tf
 from tensor2tensor.serving import serving_utils
 from tensor2tensor.utils import registry, usr_dir
 from sentence_splitter import split_text_into_sentences
 
-usr_dir.import_usr_dir('~varis/t2t_usr_dir')
+usr_dir.import_usr_dir('t2t_usr_dir')
 problem = registry.problem('translate_encs_wmt_czeng57m32k')
-hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('~varis/t2t_data_dir'))
+hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
 problem.get_hparams(hparams)
 
 
@@ -27,8 +29,10 @@ def _translate(model, text):
         if segment:
             sentences += split_to_sent_array(segment, lang=lang)
         newlines_after.append(len(sentences)-1)
-    outputs = list(map(lambda sent_score: sent_score[0],
-                       serving_utils.predict(sentences, problem, request_fn)))
+    outputs = []
+    for batch in np.array_split(sentences, ceil(len(sentences)/current_app.config['BATCH_SIZE'])):
+        outputs += list(map(lambda sent_score: sent_score[0],
+                        serving_utils.predict(batch.tolist(), problem, request_fn)))
     for i in newlines_after:
         if i >= 0:
             outputs[i] += '\n'
