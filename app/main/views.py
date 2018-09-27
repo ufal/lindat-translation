@@ -22,6 +22,8 @@ _models = list(map(lambda pair: pair[0], _choices))
 
 
 def _translate(model, text):
+    if not text or not text.strip():
+        return []
     request_fn = serving_utils.make_grpc_request_fn(servable_name=model + '_model', timeout_secs=500,
                                                     # server='localhost:9000')
                                                     server='10.10.51.30:9000')
