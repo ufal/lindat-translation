@@ -1,6 +1,7 @@
 from math import ceil
 import os
-from flask import Blueprint, render_template, request, jsonify, current_app, g, url_for, abort
+from flask import Blueprint, render_template, request, session, jsonify, current_app, g, url_for, \
+    abort
 import numpy as np
 import tensorflow as tf
 from tensor2tensor.serving import serving_utils
@@ -36,8 +37,14 @@ def _translate(model, text):
         newlines_after.append(len(sentences)-1)
     outputs = []
     for batch in np.array_split(sentences, ceil(len(sentences)/current_app.config['BATCH_SIZE'])):
-        outputs += list(map(lambda sent_score: sent_score[0],
+        try:
+            outputs += list(map(lambda sent_score: sent_score[0],
                         serving_utils.predict(batch.tolist(), problem, request_fn)))
+        except:
+            # When tensorflow serving restarts web clients seem to "remember" the channel where
+            # the connection have failed. clearing up the session, seems to solve that
+            session.clear()
+            raise
     for i in newlines_after:
         if i >= 0:
             outputs[i] += '\n'
