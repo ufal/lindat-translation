@@ -22,6 +22,7 @@ $(document).ready(function() {
   }
 
   function show_translation(translation) {
+    $('#tab pre').remove();
     var htmlString = '<pre>';
     var $pre = $(htmlString);
     $pre.text(translation);
