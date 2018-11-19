@@ -12,14 +12,28 @@ from .forms import TaskForm, FileForm
 from ..logging_utils import logged
 
 usr_dir.import_usr_dir('t2t_usr_dir')
-problem = registry.problem('translate_encs_wmt_czeng57m32k')
 hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
-problem.get_hparams(hparams)
+
+en_cs_problem = registry.problem('translate_encs_wmt_czeng57m32k')
+en_cs_problem.get_hparams(hparams)
+
+en_fr_problem = registry.problem('translate_enfr_wmt32k')
+en_fr_problem.get_hparams(hparams)
 
 
 bp = Blueprint('main', __name__)
-_choices = [('en-cs', 'English->Czech'), ('cs-en', 'Czech->English')]
+_choices = [('en-cs', 'English->Czech'), ('cs-en', 'Czech->English'),
+            ('en-fr', 'English->French'), ('fr-en', 'French->English')]
 _models = list(map(lambda pair: pair[0], _choices))
+
+
+def model2problem(model):
+    if model == 'en-cs' or model == 'cs-en':
+        return en_cs_problem
+    elif model == 'en-fr' or model == 'fr-en':
+        return en_fr_problem
+    else:
+        return en_cs_problem  # keep en_cs_problem as default
 
 
 def _translate(model, text):
@@ -39,7 +53,7 @@ def _translate(model, text):
     for batch in np.array_split(sentences, ceil(len(sentences)/current_app.config['BATCH_SIZE'])):
         try:
             outputs += list(map(lambda sent_score: sent_score[0],
-                        serving_utils.predict(batch.tolist(), problem, request_fn)))
+                        serving_utils.predict(batch.tolist(), model2problem(model), request_fn)))
         except:
             # When tensorflow serving restarts web clients seem to "remember" the channel where
             # the connection have failed. clearing up the session, seems to solve that
