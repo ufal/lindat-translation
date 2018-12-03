@@ -5,7 +5,7 @@ After=transformer.service
 
 [Service]
 WorkingDirectory=/home/okosarko/transformer_frontend
-ExecStart=/usr/bin/tensorflow_model_server --port=9000 --model_config_file=/home/okosarko/transformer_frontend/model.config
+ExecStart=/usr/bin/tensorflow_model_server --port=9000 --enable_batching=true --model_config_file=/home/okosarko/transformer_frontend/model.config --batching_parameters_file=/home/okosarko/transformer_frontend/batching.config
 Restart=always
 User=okosarko
 
