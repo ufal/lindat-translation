@@ -101,7 +101,15 @@ def url_for_choices():
 
 @logged()
 def split_to_sent_array(text, lang):
-    return split_text_into_sentences(text=text, language=lang)
+    sent_array = []
+    limit = current_app.config['SENT_LEN_LIMIT']
+    for sent in split_text_into_sentences(text=text, language=lang):
+        while len(sent) > limit:
+            last_space_idx = sent.rfind(" ", 0, limit)
+            sent_array.append(sent[0:last_space_idx])
+            sent = sent[last_space_idx:]
+        sent_array.append(sent)
+    return sent_array
 
 
 def _request_wants_json():
