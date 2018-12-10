@@ -1,4 +1,4 @@
-# transformer_fronted
+# transformer_frontend
 A simple flask based ui in front of tensorflow serving.
 
 In our setup the flask app runs on a machine called `transformer` and tensorflow serving on another machine called `t2t-transformer`.
