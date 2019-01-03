@@ -20,10 +20,14 @@ en_cs_problem.get_hparams(hparams)
 en_fr_problem = registry.problem('translate_enfr_wmt32k')
 en_fr_problem.get_hparams(hparams)
 
+en_hi_problem = registry.problem('translate_enhi_wat18')
+en_hi_problem.get_hparams(hparams)
+
 
 bp = Blueprint('main', __name__)
 _choices = [('en-cs', 'English->Czech'), ('cs-en', 'Czech->English'),
-            ('en-fr', 'English->French'), ('fr-en', 'French->English')]
+            ('en-fr', 'English->French'), ('fr-en', 'French->English'),
+            ('en-hi', 'English->Hindi')]
 _models = list(map(lambda pair: pair[0], _choices))
 
 
@@ -32,6 +36,8 @@ def model2problem(model):
         return en_cs_problem
     elif model == 'en-fr' or model == 'fr-en':
         return en_fr_problem
+    elif model == 'en-hi':
+        return en_hi_problem
     else:
         return en_cs_problem  # keep en_cs_problem as default
 
