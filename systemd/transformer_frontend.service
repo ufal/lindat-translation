@@ -5,7 +5,7 @@ After=transformer.service
 
 [Service]
 WorkingDirectory=/home/okosarko/transformer_frontend
-ExecStart=/home/okosarko/transformer_frontend/virtualenv/bin/gunicorn -t 500 -k sync -w 12 -b 127.0.0.1:5000 uwsgi:app
+ExecStart=/home/okosarko/transformer_frontend/virtualenv/bin/gunicorn -t 500 -k sync -w 12 -b 0.0.0.0:5000 uwsgi:app
 Restart=always
 User=okosarko
 
