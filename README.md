@@ -5,7 +5,17 @@ In our setup the flask app runs on a machine called `transformer` and tensorflow
 
 ## Install
 
-*TBD*
+### To install and run frontend
+```
+git clone --recurse-submodules git@github.com:ufal/transformer_frontend
+pip install -r requirements.txt
+gunicorn -t 500 -k sync -w 12 -b 0.0.0.0:5000 uwsgi:app
+```
+systemd configs are provided in order to run as a system service, sample docker (see [Dockerfile](./Dockerfile), [docker-compose.yml](./docker-compose.yml)) configuration is provided for testing. Both need tweaking.
+
+### Serving
+The easiest but probably suboptimal (you likely want to compile yourself) way is to follow https://www.tensorflow.org/serving/setup and get a .deb package.
+There's also a docker image, we use that in the sample setup (see [docker-compose.yml](./docker-compose.yml)), but you'll need to provide a model and set a proper path to it
 
 ## Configs
 There are several config files:
