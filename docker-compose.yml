@@ -1,0 +1,29 @@
+version: '2.4'
+services:
+  # Tensorflow serving
+  serving:
+    image: "tensorflow/serving"
+    #command: --enable_batching=true --model_config_file=/configs/model.config --batching_parameters_file=/config/batching.config
+    #ports:
+    # - 9000:8500
+    environment:
+      - MODEL_NAME=en-hi
+    volumes:
+      - type: bind
+        source: /c/Users/ko_ok/sources/transformer_frontend/models/t2t-model.en-hi/export/Servo
+        target: /models/en-hi
+    tty: true
+    stdin_open: true
+    platform: linux
+  # frontend
+  frontend:
+    build: .
+    ports:
+      - 5000:5000
+    environment:
+      - LOCAL_SETTINGS=../.docker_config.py
+    depends_on:
+      - serving
+    tty: true
+    stdin_open: true
+    platform: linux
