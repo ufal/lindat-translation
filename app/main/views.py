@@ -1,53 +1,23 @@
 from math import ceil
-import os
 from flask import Blueprint, render_template, request, session, jsonify, current_app, g, url_for, \
     abort
 import numpy as np
-import tensorflow as tf
 from tensor2tensor.serving import serving_utils
-from tensor2tensor.utils import registry, usr_dir
 from sentence_splitter import split_text_into_sentences
 
 from .forms import TaskForm, FileForm
 from ..logging_utils import logged
-
-usr_dir.import_usr_dir('t2t_usr_dir')
-hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
-
-en_cs_problem = registry.problem('translate_encs_wmt_czeng57m32k')
-en_cs_problem.get_hparams(hparams)
-
-en_fr_problem = registry.problem('translate_enfr_wmt32k')
-en_fr_problem.get_hparams(hparams)
-
-en_hi_problem = registry.problem('translate_enhi_wat18')
-en_hi_problem.get_hparams(hparams)
-
+from ..model_settings import model2problem, get_choices, get_default_model_name, get_model_names,\
+    model2server
 
 bp = Blueprint('main', __name__)
-_choices = [('en-cs', 'English->Czech'), ('cs-en', 'Czech->English'),
-            ('en-fr', 'English->French'), ('fr-en', 'French->English'),
-            ('en-hi', 'English->Hindi')]
-_models = list(map(lambda pair: pair[0], _choices))
-
-
-def model2problem(model):
-    if model == 'en-cs' or model == 'cs-en':
-        return en_cs_problem
-    elif model == 'en-fr' or model == 'fr-en':
-        return en_fr_problem
-    elif model == 'en-hi':
-        return en_hi_problem
-    else:
-        return en_cs_problem  # keep en_cs_problem as default
 
 
 def _translate(model, text):
     if not text or not text.strip():
         return []
-    request_fn = serving_utils.make_grpc_request_fn(servable_name=model + '_model', timeout_secs=500,
-                                                    # server='localhost:9000')
-                                                    server='10.10.51.30:9000')
+    request_fn = serving_utils.make_grpc_request_fn(servable_name=model, timeout_secs=500,
+                                                    server=model2server(model))
     lang = model.split('-')[0]
     sentences = []
     newlines_after = []
@@ -86,9 +56,8 @@ def index():
 @bp.route('/translate/upload', methods=['GET', 'POST'])
 def upload():
     file_form = FileForm()
-    choices = url_for_choices()
-    file_form.lang_pair.choices = _choices
-    file_form.lang_pair.default = _choices[0][0]
+    file_form.lang_pair.choices = get_choices()
+    file_form.lang_pair.default = get_default_model_name()
     if file_form.validate_on_submit():
         input_text = file_form.data_file.data.read().decode('utf-8')
         return str(_translate(file_form.lang_pair.data, input_text))
@@ -102,7 +71,7 @@ def docs():
 
 
 def url_for_choices():
-    return list(map(lambda choice: (url_for('main.run_task', model=choice[0]), choice[1]), _choices))
+    return list(map(lambda choice: (url_for('main.run_task', model=choice[0]), choice[1]), get_choices()))
 
 
 @logged()
@@ -166,13 +135,12 @@ def models():
     return {
         '_links': {
             'self': url_for('main.api_models_v1'),
-            'models': [{'href': choice[0], 'title': choice[1]} for choice in
-                               url_for_choices()]
+            'models': [{'href': choice[0], 'title': choice[1]} for choice in url_for_choices()]
         }
     }
 
 
-@bp.route('/api/v1/models/<any' + str(tuple(_models)) + ':model>', methods=['POST'])
+@bp.route('/api/v1/models/<any' + str(tuple(get_model_names())) + ':model>', methods=['POST'])
 def run_task(model):
     if request.files and 'input_text' in request.files:
         input_file = request.files.get('input_text')
