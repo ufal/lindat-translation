@@ -1,5 +1,6 @@
 import json
 import os
+from flask import current_app
 import tensorflow as tf
 from tensor2tensor.utils import registry, usr_dir
 from iso639 import to_name
@@ -52,4 +53,4 @@ def model2server(model):
     if model in _model2server:
         return _model2server[model]
     else:
-        return settings.DEFAULT_SERVER
+        return current_app.config['DEFAULT_SERVER']

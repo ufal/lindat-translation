@@ -1,7 +1,9 @@
+import logging
 from flask import Flask
 from . import settings
 from .extensions import bootstrap
 from .main.views import bp as main
+
 
 class ReverseProxied(object):
     '''Wrap the application in this middleware and configure the 
@@ -42,6 +44,7 @@ def create_app():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     app.config.from_object(settings)
     app.config.from_envvar('LOCAL_SETTINGS', silent=True)
+    logging.getLogger().error('DEFAULT_SERVER=' + app.config.get('DEFAULT_SERVER'))
     bootstrap.init_app(app)
     app.register_blueprint(main)
     return app;
