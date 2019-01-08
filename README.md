@@ -29,10 +29,19 @@ There are several config files:
   - [app/settings.py](app/settings.py)
     - keep `BATCH_SIZE` in sync with `batching.config`
     - `SENT_LEN_LIMIT` limits the max length of sent in chars
-  - [app/main/views.py](app/main/views.py) - *these will probably move into `settings.py` in the future*
-    - `_choices` - src-tgt (without _model) to human readable mapping
-    - `model2problem` - src-tgt (without _model) to t2t problem instance mapping
-    - `request_fn` - contains server details
+  - [app/models.json](app/models.json) - a list defining model2problem, model2server, source & target mappings etc
+```
+  {
+    "source": "en",
+    "target": "cs",
+    "problem": "translate_encs_wmt_czeng57m32k",
+    "domain": "",
+    "model": "en-cs",
+    "server": "localhost:9000",
+    "default": true
+  }
+  ```
+    
   
 ## Adding new model
 0. get Dusan to convert model to the right format (and put the data on `t2t-transformer`)
