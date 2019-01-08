@@ -4,7 +4,7 @@
     "target": "cs",
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
-    "model": "en-cs_model",
+    "model": "en-cs",
     "default": true
   },
   {
@@ -12,27 +12,27 @@
     "target": "en",
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
-    "model": "cs-en_model"
+    "model": "cs-en"
   },
   {
     "source": "en",
     "target": "fr",
     "problem": "translate_enfr_wmt32k",
     "domain": "",
-    "model": "en-fr_model"
+    "model": "en-fr"
   },
   {
     "source": "fr",
     "target": "en",
     "problem": "translate_enfr_wmt32k",
     "domain": "",
-    "model": "fr-en_model"
+    "model": "fr-en"
   },
   {
     "source": "en",
     "target": "hi",
     "problem": "translate_enhi_wat18",
     "domain": "",
-    "model": "en-hi_model"
+    "model": "en-hi"
   }
 ]
