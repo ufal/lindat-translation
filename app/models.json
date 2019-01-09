@@ -34,5 +34,23 @@
     "problem": "translate_enhi_wat18",
     "domain": "",
     "model": "en-hi"
+  },
+  {
+    "source": "en",
+    "target": "cs",
+    "problem": "translate_encs_wmt_czeng57m32k",
+    "domain": "",
+    "model": "en-cs_2",
+    "display": "(Beta) English->Czech",
+    "server": "{T2T_TRANSFORMER2}"
+  },
+  {
+    "source": "cs",
+    "target": "en",
+    "problem": "translate_encs_wmt_czeng57m32k",
+    "domain": "",
+    "model": "cs-en_2",
+    "display": "(Beta) Czech->English",
+    "server": "{T2T_TRANSFORMER2}"
   }
 ]

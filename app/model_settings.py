@@ -24,7 +24,8 @@ for cfg in models:
     _model2problem[cfg['model']] = problem
     if cfg.get('default'):
         _default_model_name = cfg['model']
-    _choices.append((cfg['model'], '{}->{}'.format(to_name(cfg['source']), to_name(cfg['target']))))
+    _choices.append((cfg['model'], cfg.get('display', '{}->{}'.format(to_name(cfg['source']),
+                                                                      to_name(cfg['target'])))))
     _model_names.append(cfg['model'])
     if cfg.get('server'):
         _model2server[cfg['model']] = cfg['server']
@@ -50,7 +51,12 @@ def get_model_names():
 
 
 def model2server(model):
+    """
+    This method needs a valid app context
+    :param model:
+    :return:
+    """
     if model in _model2server:
-        return _model2server[model]
+        return _model2server[model].format(**current_app.config)
     else:
         return current_app.config['DEFAULT_SERVER']
