@@ -4,6 +4,7 @@ from flask import current_app
 import tensorflow as tf
 from tensor2tensor.utils import registry, usr_dir
 from iso639 import to_name
+import networkx as nx
 
 from . import settings
 
@@ -18,6 +19,7 @@ _model2server = {}
 _choices = []
 _model_names = []
 _default_model_name = models[0]['model']
+_G = nx.DiGraph()
 for cfg in models:
     problem = registry.problem(cfg['problem'])
     problem.get_hparams(hparams)
@@ -29,6 +31,11 @@ for cfg in models:
     _model_names.append(cfg['model'])
     if cfg.get('server'):
         _model2server[cfg['model']] = cfg['server']
+    # This will keep only the last model
+    _G.add_edge(cfg['source'], cfg['target'], cfg=cfg)
+
+# There may be more than one shortest path between sa source and target; this returns only one
+_shortest_path = nx.shortest_path(_G)
 
 
 def model2problem(model):
@@ -60,3 +67,31 @@ def model2server(model):
         return _model2server[model].format(**current_app.config)
     else:
         return current_app.config['DEFAULT_SERVER']
+
+
+def get_model_list(source, target):
+    """
+    Returns a list of models that need to be used to translate from source to target
+    :param source:
+    :param target:
+    :return:
+    """
+    try:
+        path = _shortest_path[source][target]
+        if len(path) > 1:
+            return [_G[pair[0]][pair[1]]['cfg']['model'] for pair in zip(path[0:-1], path[1:])]
+        else:
+            return []
+    except KeyError as e:
+        return []
+
+
+def get_possible_directions():
+    directions = []
+    for item in _shortest_path.items():
+        u = item[0]
+        for v in item[1].keys():
+            if u != v:
+                display = '{}->{}'.format(to_name(u), to_name(v))
+                directions.append((u, v, display))
+    return directions

@@ -8,12 +8,21 @@ from sentence_splitter import split_text_into_sentences
 from .forms import TaskForm, FileForm
 from ..logging_utils import logged
 from ..model_settings import model2problem, get_choices, get_default_model_name, get_model_names,\
-    model2server
+    model2server, get_model_list, get_possible_directions
 
 bp = Blueprint('main', __name__)
 
 
-def _translate(model, text):
+def _translate_from_to(source, target, text):
+    models_on_path = get_model_list(source, target)
+    translation = []
+    for model in models_on_path:
+        translation = _translate_with_model(model, text)
+        text = ' '.join(translation).replace('\n ', '\n')
+    return translation
+
+
+def _translate_with_model(model, text):
     if not text or not text.strip():
         return []
     request_fn = serving_utils.make_grpc_request_fn(servable_name=model, timeout_secs=500,
@@ -60,7 +69,7 @@ def upload():
     file_form.lang_pair.default = get_default_model_name()
     if file_form.validate_on_submit():
         input_text = file_form.data_file.data.read().decode('utf-8')
-        return str(_translate(file_form.lang_pair.data, input_text))
+        return str(_translate_with_model(file_form.lang_pair.data, input_text))
     return render_template('upload.html', file_form=file_form,
                            file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
 
@@ -149,10 +158,41 @@ def run_task(model):
         text = input_file.read().decode('utf-8')
     else:
         text = request.form.get('input_text')
-    outputs = _translate(model, text)
+    outputs = _translate_with_model(model, text)
     if _request_wants_json():
         return jsonify(outputs)
     else:
         return str(outputs)
 
 
+@bp.route('/api/v1/langs', methods=['POST'])
+def source_target_translate():
+    if request.files and 'input_text' in request.files:
+        input_file = request.files.get('input_text')
+        if input_file.content_type != 'text/plain':
+            abort(415)
+        text = input_file.read().decode('utf-8')
+    else:
+        text = request.form.get('input_text')
+    src = request.args.get('src')
+    tgt = request.args.get('tgt')
+    outputs = _translate_from_to(src, tgt, text)
+    if _request_wants_json():
+        return jsonify(outputs)
+    else:
+        return str(outputs)
+
+
+@bp.route('/pivot_demo', methods=['GET'])
+def pivot_demo():
+    if _request_wants_json():
+        return api_index()
+    form = TaskForm()
+    choices = list(map(lambda tuple3: (url_for('main.source_target_translate') +
+                                       '?src={}&tgt={}'.format(tuple3[0], tuple3[1]),
+                                       tuple3[2]),
+                       get_possible_directions()))
+    form.lang_pair.choices = choices
+    form.lang_pair.default = choices[0][0]
+    return render_template('index.html', form=form,
+                           file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
