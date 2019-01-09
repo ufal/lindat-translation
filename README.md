@@ -50,7 +50,3 @@ There are several config files:
 3. update `model.config` with the new model (on `t2t-transformer` the systemd scripts expects that file in `/opt/lindat_tranformer_service`)
 4. restart both - `sudo systemctl restart tensorflow_serving`, `sudo systemctl restart transformer`
 5. check serving logs for oom errors `sudo journalctl -f -u tensorflow_serving`; if you see them before translating anything, search for a way to dynamically swap the models; if you see them when translating you might try fiddling with `batching.config`
-
-
-## Notes
-The first version (where the translation was run as a shell script) was based on https://beenje.github.io/blog/posts/running-background-tasks-with-flask-and-rq/ - the look and forms are still based on that
