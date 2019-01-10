@@ -1,9 +1,0 @@
-{%- extends "main.html" %}
-{% block panel %}
-{{ super() }}
-    <form class="form" id="fileForm" method="POST"
-          enctype="multipart/form-data">
-        {{ wtf.quick_form(file_form) }}
-    </form>
-{% endblock %}
-

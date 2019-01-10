@@ -67,18 +67,6 @@ def index():
                            file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
 
 
-@bp.route('/translate/upload', methods=['GET', 'POST'])
-def upload():
-    file_form = FileForm()
-    file_form.lang_pair.choices = get_choices()
-    file_form.lang_pair.default = get_default_model_name()
-    if file_form.validate_on_submit():
-        input_text = file_form.data_file.data.read().decode('utf-8')
-        return str(_translate_with_model(file_form.lang_pair.data, input_text))
-    return render_template('upload.html', file_form=file_form,
-                           file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
-
-
 @bp.route('/docs', methods=['GET'])
 def docs():
     return render_template('docs.html', file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])

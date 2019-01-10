@@ -5,8 +5,15 @@
         to complete. You'll be shown the status (started/queued) of your translation task above this panel.</p>
     <form class="form" id="taskForm" method="POST">
         {{ wtf.quick_form(form) }}
-        <div class="form-group">
-            <button type="button" class="btn btn-default" id="submit">Translate</button>
+        <div class="row">
+            <div class="form-group col-sm-1">
+                <button type="button" class="btn btn-default" id="submit">Translate</button>
+            </div>
+            <div class="file-field col-sm-2">
+                    <label for="data_file" class="btn btn-default">Choose file</label>
+                    <input id="data_file" name="data_file" type="file" style="display:none">
+            </div>
+            <div class="col-sm-10">&nbsp;</div>
         </div>
     </form>
 {% endblock %}

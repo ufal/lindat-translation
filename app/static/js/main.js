@@ -58,25 +58,37 @@ $(document).ready(function() {
     });
   });
 
-  // fileUpload button
-  $("#translate").on('click', function (e){
-      var data_file = $('#data_file')
-      if(data_file.size() > 0 && data_file[0].files.length) {
-          if (data_file[0].files[0].size > $FILE_SIZE_LIMIT) {
-              alert('The file is too large.\nThe maximal allowed content length is ' + $FILE_SIZE_LIMIT + 'B.')
-              e.preventDefault()
-          }
-          if (data_file[0].files[0].type !== 'text/plain'){
-              alert(data_file[0].files[0].type + ' not allowed. Only text/plain.')
-              e.preventDefault()
-          }
-      }
-  })
-
   // checkbox actions
   $("#advanced").change(function(){
       $("#models").parents("div.form-group").toggleClass('hidden')
       $("#lang_pair").parents("div.form-group").toggleClass('hidden')
       visible_select_box_id = '#' + $("div.form-group:not(.hidden) > select").attr('id')
   })
+
+  // fileupload
+  if (!!FileReader && 'draggable' in document.createElement('span')
+			&& !!window.FormData && "upload" in new XMLHttpRequest && !!window.Blob && !!window.FileReader) {
+            var $file_field = $("input[type='file']")
+				$file_field.change(function() {
+                    var files = document.getElementById("data_file").files;
+                    if(files.length > 0) {
+                        if (files[0].size > $FILE_SIZE_LIMIT) {
+                            alert('The file is too large.\nThe maximal allowed content length is ' + $FILE_SIZE_LIMIT + 'B.')
+                            event.preventDefault()
+                            return
+                        }
+                        if (files[0].type !== 'text/plain'){
+                            alert(files[0].type + ' not allowed. Only text/plain.')
+                            event.preventDefault()
+                            return
+                        }
+                        var reader = new FileReader();
+                        reader.onload = function(event){
+                            $("textarea").val(event.target.result)
+                        }
+                        console.log(files[0])
+                        reader.readAsText(files[0]);
+                    }
+				});
+		}
 });
