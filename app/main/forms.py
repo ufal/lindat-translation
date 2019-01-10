@@ -1,13 +1,16 @@
 from flask import current_app, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import SelectField, TextAreaField, SubmitField, validators
+from wtforms import SelectField, TextAreaField, SubmitField, BooleanField, validators
 
 
 class TaskForm(FlaskForm):
     #task = SelectField('Task')
-    input_text = TextAreaField(label='Input sentences', validators=[validators.data_required()])
     lang_pair = SelectField(label="Language pair", validators=[validators.data_required()])
+    models = SelectField(label="Models", render_kw={'class_': 'hidden'})
+    advanced = BooleanField(label="advanced")
+    input_text = TextAreaField(label='Input sentences', validators=[validators.data_required()],
+                               render_kw={'rows': 10})
 
     def __init__(self, *args, **kwargs):
         super(TaskForm, self).__init__(*args, **kwargs)

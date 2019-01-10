@@ -1,4 +1,5 @@
 $(document).ready(function() {
+   var visible_select_box_id = '#lang_pair'
 
   // flash an alert
   // remove previous alerts by default
@@ -40,7 +41,7 @@ $(document).ready(function() {
       }, 1500);
     $("#submit").attr("disabled", "disabled");
     $.ajax({
-      url: $("#lang_pair option:selected").val(),
+      url: $(visible_select_box_id + " option:selected").val(),
       data: {'input_text': $("#input_text").val()},
       method: "POST",
       dataType: "json",
@@ -70,5 +71,12 @@ $(document).ready(function() {
               e.preventDefault()
           }
       }
+  })
+
+  // checkbox actions
+  $("#advanced").change(function(){
+      $("#models").parents("div.form-group").toggleClass('hidden')
+      $("#lang_pair").parents("div.form-group").toggleClass('hidden')
+      visible_select_box_id = '#' + $("div.form-group:not(.hidden) > select").attr('id')
   })
 });

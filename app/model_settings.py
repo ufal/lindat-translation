@@ -26,8 +26,10 @@ for cfg in models:
     _model2problem[cfg['model']] = problem
     if cfg.get('default'):
         _default_model_name = cfg['model']
-    _choices.append((cfg['model'], cfg.get('display', '{}->{}'.format(to_name(cfg['source']),
-                                                                      to_name(cfg['target'])))))
+    _choices.append((cfg['model'], '{} ({})'.format(cfg['model'],
+                                                    cfg.get('display', '{}->{}'
+                                                            .format(to_name(cfg['source']),
+                                                                    to_name(cfg['target']))))))
     _model_names.append(cfg['model'])
     if cfg.get('server'):
         _model2server[cfg['model']] = cfg['server']
@@ -36,6 +38,14 @@ for cfg in models:
 
 # There may be more than one shortest path between sa source and target; this returns only one
 _shortest_path = nx.shortest_path(_G)
+_directions = []
+for item in _shortest_path.items():
+    u = item[0]
+    for v in item[1].keys():
+        if u != v:
+            display = '{}->{}'.format(to_name(u), to_name(v))
+            _directions.append((u, v, display))
+_directions = sorted(_directions, key=lambda x: x[2])
 
 
 def model2problem(model):
@@ -87,11 +97,4 @@ def get_model_list(source, target):
 
 
 def get_possible_directions():
-    directions = []
-    for item in _shortest_path.items():
-        u = item[0]
-        for v in item[1].keys():
-            if u != v:
-                display = '{}->{}'.format(to_name(u), to_name(v))
-                directions.append((u, v, display))
-    return directions
+    return _directions

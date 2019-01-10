@@ -55,9 +55,14 @@ def index():
     if _request_wants_json():
         return api_index()
     form = TaskForm()
-    choices = url_for_choices()
+    choices = list(map(lambda tuple3: (url_for('main.source_target_translate') +
+                                       '?src={}&tgt={}'.format(tuple3[0], tuple3[1]),
+                                       tuple3[2]),
+                       get_possible_directions()))
     form.lang_pair.choices = choices
     form.lang_pair.default = choices[0][0]
+    form.models.choices = url_for_choices()
+    form.models.default = form.models.choices[0][0]
     return render_template('index.html', form=form,
                            file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
 
@@ -182,17 +187,3 @@ def source_target_translate():
     else:
         return str(outputs)
 
-
-@bp.route('/pivot_demo', methods=['GET'])
-def pivot_demo():
-    if _request_wants_json():
-        return api_index()
-    form = TaskForm()
-    choices = list(map(lambda tuple3: (url_for('main.source_target_translate') +
-                                       '?src={}&tgt={}'.format(tuple3[0], tuple3[1]),
-                                       tuple3[2]),
-                       get_possible_directions()))
-    form.lang_pair.choices = choices
-    form.lang_pair.default = choices[0][0]
-    return render_template('index.html', form=form,
-                           file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
