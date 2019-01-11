@@ -16,7 +16,6 @@ with open(os.path.join(os.path.dirname(__file__), 'models.json')) as models_json
 
 _model2problem = {}
 _model2server = {}
-_choices = []
 _model_names = []
 _default_model_name = models[0]['model']
 _G = nx.DiGraph()
@@ -26,10 +25,9 @@ for cfg in models:
     _model2problem[cfg['model']] = problem
     if cfg.get('default'):
         _default_model_name = cfg['model']
-    _choices.append((cfg['model'], '{} ({})'.format(cfg['model'],
-                                                    cfg.get('display', '{}->{}'
+    cfg['title'] = '{} ({})'.format(cfg['model'], cfg.get('display', '{}->{}'
                                                             .format(to_name(cfg['source']),
-                                                                    to_name(cfg['target']))))))
+                                                                    to_name(cfg['target']))))
     _model_names.append(cfg['model'])
     if cfg.get('server'):
         _model2server[cfg['model']] = cfg['server']
@@ -55,8 +53,8 @@ def model2problem(model):
         return _model2problem[_default_model_name]
 
 
-def get_choices():
-    return _choices
+def get_models():
+    return models
 
 
 def get_default_model_name():
@@ -89,7 +87,7 @@ def get_model_list(source, target):
     try:
         path = _shortest_path[source][target]
         if len(path) > 1:
-            return [_G[pair[0]][pair[1]]['cfg']['model'] for pair in zip(path[0:-1], path[1:])]
+            return [_G[pair[0]][pair[1]]['cfg'] for pair in zip(path[0:-1], path[1:])]
         else:
             return []
     except KeyError as e:

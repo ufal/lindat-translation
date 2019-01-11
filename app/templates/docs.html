@@ -14,21 +14,28 @@
     <dl>
         <dt>Enter the api</dt>
         <dd><code>curl -H'Accept: application/json' {{ request.url_root|tojson }}</code></dd>
-        <dt>Get models titles:urls from the <code>_embedded</code> field </dt>
+        <dt>Get available models (title:url) from the <code>_embedded</code> field </dt>
         <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write('\n'.join ([model['title'] + ':' + model['href'] for model in json.load(sys.stdin) ['_embedded']['latest']['_embedded']['models']['_links']['models']]))"</code></dd>
         <dt>Translate (when you've found the right model)</dt>
         <dd><code>curl -d 'input_text=This is a test' {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
         <dt>Upload a file</dt>
         <dd><code>curl -F input_text=@/tmp/test.txt {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
+        <dt>Get available source-target pairs and urls (you have no say in the model selection)</dt>
+        <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }}| PYTHONIOENCODING.stdout.write('\n'.join ([l['source'] + '->' + l['target'] + ':' + l['href'] for l in json.load(sys.stdin) ['_embedded']['latest']['_embedded']['languages']['_links']['languages']]))"</code></dd>
     </dl>
     <p>
     For one off scripts you can also use the <a href="{{ url_for('main.api_models_v1') }}">model
-        endpoint</a> and/or the urls of models provided by that endpoint, provided you don't mind
+        endpoint</a>, <a href="{{ url_for('main.api_languages_v1') }}">languages endpoint</a>
+        and/or the urls of models/language pair provided by that endpoint, if you don't mind
         updating them by hand from time to time.
     </p>
     <dl>
         <dt>With hardcoded en-cs model</dt>
         <dd><code>curl -d 'input_text=This is a simple test.' {{ request.host_url.rstrip('/') + url_for('main.api_models_v1') + '/en-cs' }}</code></dd>
+        <dt>Hardcoded Czech Hindi translation</dt>
+        <dd><code>curl -d 'input_text=Toto je jednoduchý text k přeložení.' {{ request.host_url
+        .rstrip('/') +
+        url_for('main.api_languages_v1') + '?src=cs&tgt=hi' }}</code></dd>
     </dl>
     <h2>Response</h2>
      <p>The response is a json array where each element is a translated sentence.</p>
