@@ -89,9 +89,13 @@ def split_to_sent_array(text, lang):
     limit = current_app.config['SENT_LEN_LIMIT']
     for sent in split_text_into_sentences(text=text, language=lang):
         while len(sent) > limit:
-            last_space_idx = sent.rindex(" ", 0, limit)
-            sent_array.append(sent[0:last_space_idx])
-            sent = sent[last_space_idx:]
+            try:
+                last_space_idx = sent.rindex(" ", 0, limit)
+                sent_array.append(sent[0:last_space_idx])
+                sent = sent[last_space_idx:]
+            except ValueError:
+                sent_array.append(sent[0:limit])
+                sent = sent[limit:]
         sent_array.append(sent)
     return sent_array
 
