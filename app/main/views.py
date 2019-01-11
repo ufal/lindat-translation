@@ -5,7 +5,7 @@ import numpy as np
 from tensor2tensor.serving import serving_utils
 from sentence_splitter import split_text_into_sentences
 
-from .forms import TaskForm, FileForm
+from .forms import TranslateForm
 from ..logging_utils import logged
 from ..model_settings import model2problem, get_choices, get_default_model_name, get_model_names,\
     model2server, get_model_list, get_possible_directions
@@ -54,7 +54,7 @@ def _translate_with_model(model, text):
 def index():
     if _request_wants_json():
         return api_index()
-    form = TaskForm()
+    form = TranslateForm()
     choices = list(map(lambda tuple3: (url_for('main.source_target_translate') +
                                        '?src={}&tgt={}'.format(tuple3[0], tuple3[1]),
                                        tuple3[2]),

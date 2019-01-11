@@ -84,11 +84,28 @@ $(document).ready(function() {
                         }
                         var reader = new FileReader();
                         reader.onload = function(event){
-                            $("textarea").val(event.target.result)
+                            $("#input_text").val(event.target.result)
+                            $("#input_text").trigger('change')
                         }
-                        console.log(files[0])
+                        //console.log(files[0])
                         reader.readAsText(files[0]);
                     }
 				});
 		}
+
+  // textarea auto translate
+    var countDownTimer;
+    var cancelCountDown = function(){
+        clearTimeout(countDownTimer)
+    }
+    var countDown = function(){
+        cancelCountDown()
+        countDownTimer = setTimeout(function(){
+            console.log("sending " + $("#input_text").val())
+        }, 750)
+    }
+    $("#input_text").on("keyup", countDown)
+                    .on("keydown", cancelCountDown)
+                    .on("paste", countDown)
+                    .on("change", countDown)
 });
