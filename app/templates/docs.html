@@ -21,7 +21,8 @@
         <dt>Upload a file</dt>
         <dd><code>curl -F input_text=@/tmp/test.txt {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
         <dt>Get available source-target pairs and urls (you have no say in the model selection)</dt>
-        <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }}| PYTHONIOENCODING.stdout.write('\n'.join ([l['source'] + '->' + l['target'] + ':' + l['href'] for l in json.load(sys.stdin) ['_embedded']['latest']['_embedded']['languages']['_links']['languages']]))"</code></dd>
+        <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }} |
+            PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write('\n'.join([l['source'] + '->' + l['target'] + ':' + l['href'] for l in json.load(sys.stdin)['_embedded']['latest']['_embedded']['languages']['_links']['languages']]))"</code></dd>
     </dl>
     <p>
     For one off scripts you can also use the <a href="{{ url_for('main.api_models_v1') }}">model
