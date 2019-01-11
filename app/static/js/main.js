@@ -23,11 +23,7 @@ $(document).ready(function() {
   }
 
   function show_translation(translation) {
-    $('#tab pre').remove();
-    var htmlString = '<pre>';
-    var $pre = $(htmlString);
-    $pre.text(translation);
-    $pre.appendTo("#tab");
+    $("#output_text").val(translation);
   }
 
   // submit form
@@ -101,8 +97,10 @@ $(document).ready(function() {
     var countDown = function(){
         cancelCountDown()
         countDownTimer = setTimeout(function(){
-            console.log("sending " + $("#input_text").val())
-            $("#submit").click()
+            //console.log("sending " + $("#input_text").val())
+            if($("#input_text").val()){
+                $("#submit").click()
+            }
         }, 1500)
     }
     $("#input_text").on("keyup", countDown)
