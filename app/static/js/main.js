@@ -85,7 +85,7 @@ $(document).ready(function() {
                         var reader = new FileReader();
                         reader.onload = function(event){
                             $("#input_text").val(event.target.result)
-                            $("#input_text").trigger('change')
+                            $("#input_text").trigger('paste')
                         }
                         //console.log(files[0])
                         reader.readAsText(files[0]);
@@ -102,10 +102,13 @@ $(document).ready(function() {
         cancelCountDown()
         countDownTimer = setTimeout(function(){
             console.log("sending " + $("#input_text").val())
-        }, 750)
+            $("#submit").click()
+        }, 1500)
     }
     $("#input_text").on("keyup", countDown)
                     .on("keydown", cancelCountDown)
                     .on("paste", countDown)
-                    .on("change", countDown)
+    $("#lang_pair").on("change", countDown)
+    $("#models").on("change", countDown)
+    $("#advanced").on("change", countDown)
 });
