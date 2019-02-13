@@ -1,14 +1,12 @@
-from math import ceil
 from flask import Blueprint, render_template, request, session, jsonify, current_app, g, url_for, \
     abort
-import numpy as np
-from tensor2tensor.serving import serving_utils
-from sentence_splitter import split_text_into_sentences
 
 from .forms import TranslateForm
 from ..logging_utils import logged
 from ..model_settings import model2problem, get_models, get_default_model_name, get_model_names,\
     model2server, get_model_list, get_possible_directions
+
+from app.main.translate import translate_with_model
 
 bp = Blueprint('main', __name__)
 
@@ -17,37 +15,9 @@ def _translate_from_to(source, target, text):
     models_on_path = get_model_list(source, target)
     translation = []
     for cfg in models_on_path:
-        translation = _translate_with_model(cfg['model'], text)
+        translation = translate_with_model(cfg['model'], text)
         text = ' '.join(translation).replace('\n ', '\n')
     return translation
-
-
-def _translate_with_model(model, text):
-    if not text or not text.strip():
-        return []
-    request_fn = serving_utils.make_grpc_request_fn(servable_name=model, timeout_secs=500,
-                                                    server=model2server(model))
-    lang = model.split('-')[0]
-    sentences = []
-    newlines_after = []
-    for segment in text.split('\n'):
-        if segment:
-            sentences += split_to_sent_array(segment, lang=lang)
-        newlines_after.append(len(sentences)-1)
-    outputs = []
-    for batch in np.array_split(sentences, ceil(len(sentences)/current_app.config['BATCH_SIZE'])):
-        try:
-            outputs += list(map(lambda sent_score: sent_score[0],
-                        serving_utils.predict(batch.tolist(), model2problem(model), request_fn)))
-        except:
-            # When tensorflow serving restarts web clients seem to "remember" the channel where
-            # the connection have failed. clearing up the session, seems to solve that
-            session.clear()
-            raise
-    for i in newlines_after:
-        if i >= 0:
-            outputs[i] += '\n'
-    return outputs
 
 
 @bp.route('/', methods=['GET'])
@@ -81,23 +51,6 @@ def docs():
 def url_for_choices():
     return list(map(lambda cfg:
                     (url_for('main.run_task', model=cfg['model']), cfg['title']), get_models()))
-
-
-@logged()
-def split_to_sent_array(text, lang):
-    sent_array = []
-    limit = current_app.config['SENT_LEN_LIMIT']
-    for sent in split_text_into_sentences(text=text, language=lang):
-        while len(sent) > limit:
-            try:
-                last_space_idx = sent.rindex(" ", 0, limit)
-                sent_array.append(sent[0:last_space_idx])
-                sent = sent[last_space_idx:]
-            except ValueError:
-                sent_array.append(sent[0:limit])
-                sent = sent[limit:]
-        sent_array.append(sent)
-    return sent_array
 
 
 def _request_wants_json():
@@ -175,7 +128,7 @@ def run_task(model):
         text = input_file.read().decode('utf-8')
     else:
         text = request.form.get('input_text')
-    outputs = _translate_with_model(model, text)
+    outputs = translate_with_model(model, text)
     if _request_wants_json():
         return jsonify(outputs)
     else:

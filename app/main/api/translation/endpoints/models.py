@@ -1,0 +1,100 @@
+from flask import request, url_for
+from flask_restplus import Resource, fields, marshal_with
+
+from app.main.api.restplus import api
+from app.main.api.translation.parsers import text_input, file_input
+from app.model_settings import get_models, get_model_names
+from app.main.translate import translate_with_model
+# from six.moves.urllib.parse import urlparse, urlunparse
+# TODO refactor
+from app.main.views import _request_wants_json
+
+
+ns = api.namespace('models', description='Operations related to translation models')
+
+_models_item_relation = 'item'
+
+link = ns.model('Link', {
+        'href': fields.Url,
+        'name': fields.String,
+        'title': fields.String,
+        'type': fields.String,
+        'deprecation': fields.String,
+        'profile': fields.String,
+        'templated': fields.String,
+        'hreflang': fields.String
+})
+
+# resource = ns.model('Resource', {
+#    '_links': fields.List(fields.Nested(link, skip_none=True)),
+#    '_embedded': fields.List(fields.Nested(resource))
+#})
+
+model_link = ns.clone('ModelLink', link, {
+    'href': fields.Url(endpoint='.models_model_item'),
+    'name': fields.String(attribute='model'),
+})
+
+
+def identity(x):
+    return x
+
+
+# TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
+model_resource = ns.model('ModelResource', {
+    '_links': fields.Nested(ns.model('SelfLink', {
+        'self': fields.Nested(ns.model('JustHrefLink', {'href': fields.Url(
+            endpoint='.models_model_item')}), attribute=identity)
+    }), attribute=identity),
+    'default': fields.Boolean,
+    'domain': fields.String,
+    'model': fields.String,
+    'source': fields.String,
+    'target': fields.String,
+    'title': fields.String,
+})
+
+models_links = ns.model('ModelLinks', {
+    _models_item_relation: fields.List(fields.Nested(model_link, skip_none=True), attribute='models'),
+    'self': fields.Nested(link, skip_none=True)
+})
+
+models_resources = ns.model('ModelsResource', {
+    '_links': fields.Nested(models_links, attribute=lambda x: {'self': {}, 'models': x['models']}),
+    '_embedded': fields.Nested(ns.model('EmbeddedModels', {
+        _models_item_relation: fields.List(fields.Nested(model_resource, skip_none=True),
+                                        attribute='models')
+    }), attribute=identity)
+})
+
+
+@ns.route('/')
+class ModelCollection(Resource):
+
+    @ns.doc(model=models_resources)  # This shouldn't be necessary according to docs,
+    # but without it the swagger.json does not contain the definitions part
+    @marshal_with(models_resources, skip_none=True)
+    def get(self):
+        """
+        Returns a list of available models
+        """
+        return {'models': get_models()}
+
+
+@ns.route('/<any' + str(tuple(get_model_names())) + ':model>')
+class ModelItem(Resource):
+
+    @ns.expect(text_input, validate=True)
+    def post(self, model):
+        """
+        Send text to be processed by the selected model
+        """
+        #if request.files and 'input_text' in request.files:
+        #    input_file = request.files.get('input_text')
+        #    if input_file.content_type != 'text/plain':
+        #       api.abort(code=415, message='Can only handle text/plain files.')
+        #  text = input_file.read().decode('utf-8')
+        #else:
+        text = request.form.get('input_text')
+        return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
+        # TODO add fileupload

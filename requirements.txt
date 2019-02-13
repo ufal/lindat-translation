@@ -2,6 +2,7 @@ Flask
 Flask-WTF
 Flask-Script
 Flask-Bootstrap
+flask-restplus
 WTForms
 sentence_splitter
 gunicorn
