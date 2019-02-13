@@ -84,6 +84,18 @@ class ModelCollection(Resource):
 @ns.route('/<any' + str(tuple(get_model_names())) + ':model>')
 class ModelItem(Resource):
 
+    @classmethod
+    def to_text(cls, data, code, headers):
+        resp = api.make_response(' '.join(data).replace('\n ', '\n'), code)
+        resp.headers.extend(headers)
+        return resp
+
+    def __init__(self, const_api=None, *args, **kwargs):
+        super(ModelItem, self).__init__(const_api, *args, **kwargs)
+        self.representations = self.representations if self.representations else {}
+        self.representations['text/plain'] = ModelItem.to_text
+
+    @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input, validate=True)
     def post(self, model):
         """
@@ -96,5 +108,6 @@ class ModelItem(Resource):
         #  text = input_file.read().decode('utf-8')
         #else:
         text = request.form.get('input_text')
-        return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
+        #return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
+        return translate_with_model(model, text)
         # TODO add fileupload
