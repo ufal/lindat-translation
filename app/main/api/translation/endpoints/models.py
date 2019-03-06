@@ -2,7 +2,7 @@ from flask import request, url_for
 from flask_restplus import Resource, fields, marshal_with
 
 from app.main.api.restplus import api
-from app.main.api.translation.parsers import text_input, file_input
+from app.main.api.translation.parsers import text_input # , file_input
 from app.model_settings import get_models, get_model_names
 from app.main.translate import translate_with_model
 # from six.moves.urllib.parse import urlparse, urlunparse
@@ -99,15 +99,15 @@ class ModelItem(Resource):
     @ns.expect(text_input, validate=True)
     def post(self, model):
         """
-        Send text to be processed by the selected model
+        Send text to be processed by the selected model.
+        It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         """
-        #if request.files and 'input_text' in request.files:
-        #    input_file = request.files.get('input_text')
-        #    if input_file.content_type != 'text/plain':
-        #       api.abort(code=415, message='Can only handle text/plain files.')
-        #  text = input_file.read().decode('utf-8')
-        #else:
-        text = request.form.get('input_text')
+        if request.files and 'input_text' in request.files:
+            input_file = request.files.get('input_text')
+            if input_file.content_type != 'text/plain':
+                api.abort(code=415, message='Can only handle text/plain files.')
+            text = input_file.read().decode('utf-8')
+        else:
+            text = request.form.get('input_text')
         #return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
         return translate_with_model(model, text)
-        # TODO add fileupload

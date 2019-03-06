@@ -3,21 +3,11 @@ from flask import Blueprint, render_template, request, session, jsonify, current
 
 from .forms import TranslateForm
 from ..logging_utils import logged
-from ..model_settings import model2problem, get_models, get_default_model_name, get_model_names,\
-    model2server, get_model_list, get_possible_directions
+from ..model_settings import get_models, get_model_names, get_model_list, get_possible_directions
 
-from app.main.translate import translate_with_model
+from app.main.translate import translate_with_model, translate_from_to
 
 bp = Blueprint('main', __name__)
-
-
-def _translate_from_to(source, target, text):
-    models_on_path = get_model_list(source, target)
-    translation = []
-    for cfg in models_on_path:
-        translation = translate_with_model(cfg['model'], text)
-        text = ' '.join(translation).replace('\n ', '\n')
-    return translation
 
 
 @bp.route('/', methods=['GET'])
@@ -163,7 +153,7 @@ def source_target_translate():
         text = request.form.get('input_text')
     src = request.args.get('src')
     tgt = request.args.get('tgt')
-    outputs = _translate_from_to(src, tgt, text)
+    outputs = translate_from_to(src, tgt, text)
     if _request_wants_json():
         return jsonify(outputs)
     else:

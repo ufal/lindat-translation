@@ -3,7 +3,7 @@ import numpy as np
 from tensor2tensor.serving import serving_utils
 from sentence_splitter import split_text_into_sentences
 from app.logging_utils import logged
-from app.model_settings import model2problem, model2server
+from app.model_settings import model2problem, model2server, get_model_list
 # TODO get rid of these
 from flask import current_app, session
 
@@ -34,6 +34,15 @@ def translate_with_model(model, text):
         if i >= 0:
             outputs[i] += '\n'
     return outputs
+
+
+def translate_from_to(source, target, text):
+    models_on_path = get_model_list(source, target)
+    translation = []
+    for cfg in models_on_path:
+        translation = translate_with_model(cfg['model'], text)
+        text = ' '.join(translation).replace('\n ', '\n')
+    return translation
 
 
 @logged()
