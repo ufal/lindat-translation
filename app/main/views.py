@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, session, jsonify, current
 
 from .forms import TranslateForm
 from ..logging_utils import logged
-from ..model_settings import get_models, get_model_names, get_model_list, get_possible_directions
+from app.model_settings import models as models_conf
 
 from app.main.translate import translate_with_model, translate_from_to
 
@@ -30,7 +30,7 @@ def url_for_src_tgt(source, target):
 
 def get_src_tgt_choices():
     return list(map(lambda tuple3: (url_for_src_tgt(tuple3[0], tuple3[1]), tuple3[2]),
-                    get_possible_directions()))
+                    models_conf.get_possible_directions()))
 
 
 @bp.route('/docs', methods=['GET'])
@@ -39,8 +39,9 @@ def docs():
 
 
 def url_for_choices():
-    return list(map(lambda cfg:
-                    (url_for('main.run_task', model=cfg['model']), cfg['title']), get_models()))
+    return list(map(lambda model:
+                    (url_for('main.run_task', model=model.model), model.title),
+                    models_conf.get_models()))
 
 
 def _request_wants_json():
@@ -91,11 +92,11 @@ def api_models_v1():
 
 def _get_models_with_href(supplied_models=None):
     if not supplied_models:
-        supplied_models = get_models()
+        supplied_models = models_conf.get_models()
     models_cfg = []
-    for cfg in supplied_models:
-        copied = dict(cfg)
-        copied['href'] = url_for('main.run_task', model=cfg['model'])
+    for model in supplied_models:
+        copied = dict(model)
+        copied['href'] = url_for('main.run_task', model=model.model)
         models_cfg.append(copied)
     return models_cfg
 
@@ -109,7 +110,8 @@ def models():
     }
 
 
-@bp.route('/api/v1/models/<any' + str(tuple(get_model_names())) + ':model>', methods=['POST'])
+@bp.route('/api/v1/models/<any' + str(tuple(models_conf.get_model_names())) + ':model>', methods=[
+    'POST'])
 def run_task(model):
     if request.files and 'input_text' in request.files:
         input_file = request.files.get('input_text')
@@ -131,8 +133,8 @@ def languages():
             'self': url_for('main.api_languages_v1'),
             'languages': [{'href': url_for_src_tgt(x[0], x[1]), 'title': x[2], 'source': x[0],
                            'target': x[1], 'models':
-                               [{'model': m['model']} for m in get_model_list(x[0], x[1])]}
-                          for x in get_possible_directions()]
+                               [{'model': m.model} for m in models_conf.get_model_list(x[0], x[1])]}
+                          for x in models_conf.get_possible_directions()]
         }
     }
 

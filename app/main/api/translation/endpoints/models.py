@@ -3,7 +3,7 @@ from flask_restplus import Resource, fields, marshal_with
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input # , file_input
-from app.model_settings import get_models, get_model_names
+from app.model_settings import models
 from app.main.translate import translate_with_model
 # from six.moves.urllib.parse import urlparse, urlunparse
 # TODO refactor
@@ -78,10 +78,10 @@ class ModelCollection(Resource):
         """
         Returns a list of available models
         """
-        return {'models': get_models()}
+        return {'models': models.get_models()}
 
 
-@ns.route('/<any' + str(tuple(get_model_names())) + ':model>')
+@ns.route('/<any' + str(tuple(models.get_model_names())) + ':model>')
 class ModelItem(Resource):
 
     @classmethod

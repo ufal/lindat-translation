@@ -3,7 +3,7 @@ from flask_restplus import Resource, fields, marshal_with
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
-from app.model_settings import get_possible_directions, get_model_list
+from app.model_settings import models
 from app.main.translate import translate_from_to
 from app.main.api.translation.endpoints.models import model_link
 # from six.moves.urllib.parse import urlparse, urlunparse
@@ -77,8 +77,8 @@ language_resource = ns.model('LanguageResource', {
                                    attribute=rem_title_from_dict)
             }), attribute=identity),
             'models': fields.List(fields.Nested(model_link, skip_none=True),
-                                  attribute=lambda x: [m for m in get_model_list(x['src'],
-                                                                                 x['tgt'])]),
+                                  attribute=lambda x: [m for m in models.get_model_list(x['src'],
+                                                                                        x['tgt'])]),
         }), attribute=identity),
     'source': fields.String(attribute='src'),
     'target': fields.String(attribute='tgt'),
@@ -110,6 +110,7 @@ class LanguageCollection(Resource):
         resp.headers.extend(headers)
         return resp
 
+    # TODO fix in browser get languages (text/plain) returns crap
     def __init__(self, const_api=None, *args, **kwargs):
         super(LanguageCollection, self).__init__(const_api, *args, **kwargs)
         self.representations = self.representations if self.representations else {}
@@ -122,7 +123,8 @@ class LanguageCollection(Resource):
         """
         Returns a list of available models
         """
-        return {'languages': [{'title': x[2], 'src': x[0], 'tgt': x[1]} for x in get_possible_directions()]}
+        return {'languages': [{'title': x[2], 'src': x[0], 'tgt': x[1]} for x in
+                              models.get_possible_directions()]}
 
     @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input_with_src_tgt, validate=True)
