@@ -2,7 +2,7 @@ from flask import request, url_for
 from flask_restplus import Resource, fields, marshal_with
 
 from app.main.api.restplus import api
-from app.main.api.translation.parsers import text_input # , file_input
+from app.main.api.translation.parsers import text_input_with_src_tgt #text_input # , file_input
 from app.model_settings import models
 from app.main.translate import translate_with_model
 # from six.moves.urllib.parse import urlparse, urlunparse
@@ -49,8 +49,7 @@ model_resource = ns.model('ModelResource', {
     'default': fields.Boolean,
     'domain': fields.String,
     'model': fields.String,
-    'source': fields.String,
-    'target': fields.String,
+    'supports': fields.Raw,
     'title': fields.String,
 })
 
@@ -90,13 +89,14 @@ class ModelItem(Resource):
         resp.headers.extend(headers)
         return resp
 
-    def __init__(self, const_api=None, *args, **kwargs):
-        super(ModelItem, self).__init__(const_api, *args, **kwargs)
-        self.representations = self.representations if self.representations else {}
-        self.representations['text/plain'] = ModelItem.to_text
+    # TODO fix text/plain
+    #def __init__(self, const_api=None, *args, **kwargs):
+    #    super(ModelItem, self).__init__(const_api, *args, **kwargs)
+    #    self.representations = self.representations if self.representations else {}
+    #    self.representations['text/plain'] = ModelItem.to_text
 
     @ns.produces(['application/json', 'text/plain'])
-    @ns.expect(text_input, validate=True)
+    @ns.expect(text_input_with_src_tgt, validate=True)
     def post(self, model):
         """
         Send text to be processed by the selected model.
@@ -110,4 +110,22 @@ class ModelItem(Resource):
         else:
             text = request.form.get('input_text')
         #return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
-        return translate_with_model(model, text)
+        args = text_input_with_src_tgt.parse_args(request)
+        src = args.get('src', None)
+        tgt = args.get('tgt', None)
+        # map model name to model obj
+        model = models.get_model(model)
+        if src not in model.supports.keys() or tgt not in model.supports[src]:
+            api.abort(code=404,
+                      message='This model does not support translation from {} to {}'
+                      .format(src, tgt))
+
+        return translate_with_model(model, text, src, tgt)
+
+    @marshal_with(model_resource, skip_none=True)
+    def get(self, model):
+        """
+        Get model's details
+        """
+        return models.get_model(model)
+

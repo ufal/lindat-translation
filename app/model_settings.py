@@ -24,6 +24,10 @@ class Models(object):
         self._default_model_name = models_cfg[0]['model']
         self._G = nx.DiGraph()
         for cfg in models_cfg:
+            if not isinstance(cfg['source'], list) or not isinstance(cfg['target'], list):
+                log.error("Error in config source and target must be lists")
+                import sys
+                sys.exit(1)
             model = Model(cfg)
             if model.model in self._models:
                 log.error("Model names should be unique")
@@ -32,8 +36,14 @@ class Models(object):
             self._models[model.model] = model
             if cfg.get('default'):
                 _default_model_name = cfg['model']
-            # This will keep only the last model
-            self._G.add_edge(cfg['source'], cfg['target'], cfg=model)
+
+            flip_src_tgt = cfg.get('target_to_source', False)
+            for src_lang in cfg['source']:
+                for tgt_lang in cfg['target']:
+                    # This will keep only the last model
+                    self._G.add_edge(src_lang, tgt_lang, cfg=model)
+                    if flip_src_tgt:
+                        self._G.add_edge(tgt_lang, src_lang, cfg=model)
 
         # There may be more than one shortest path between sa source and target; this returns only one
         self._shortest_path = nx.shortest_path(self._G)
@@ -82,21 +92,47 @@ class Models(object):
 
 class Model(object):
 
+    @staticmethod
+    def lang_list_display(lang_list):
+        return ', '.join(map(to_name, lang_list))
+
+    @staticmethod
+    def get_or_create_list(aDict, key):
+        arr = aDict.get(key, [])
+        aDict[key] = arr
+        return arr
+
     def __init__(self, cfg):
-        for key in cfg:
-            if key != 'server':
-                setattr(self, key, cfg[key])
-            else:
-                setattr(self, '_server', cfg[key])
+        self.model = cfg['model']
+        self.target_to_source = cfg.get('target_to_source', False)
+
+        self.supports = {}
+        for src_lang in cfg['source']:
+            for tgt_lang in cfg['target']:
+                targets = Model.get_or_create_list(self.supports, src_lang)
+                targets.append(tgt_lang)
+                if self.target_to_source:
+                    targets = Model.get_or_create_list(self.supports, tgt_lang)
+                    targets.append(src_lang)
+
         self.problem = registry.problem(cfg['problem'])
         self.problem.get_hparams(hparams)
-        domain = cfg.get('domain', '')
-        if domain:
-            ' ({})'.format(domain)
-        self.title = '{} ({}{})'.format(cfg['model'], cfg.get('display', '{}->{}'
-                                                              .format(to_name(cfg['source']),
-                                                                      to_name(cfg['target']))),
-                                        domain)
+        if 'server' in cfg:
+            self._server = cfg['server']
+        self.domain = cfg.get('domain', None)
+        self.default = cfg.get('default', False)
+        self.prefix_with = cfg.get('prefix_with', None)
+
+        if self.domain:
+            ' ({})'.format(self.domain)
+        src = Model.lang_list_display(cfg['source'])
+        tgt = Model.lang_list_display(cfg['target'])
+        arrow = '->'
+        if cfg.get('target_to_source', False):
+            arrow = '<' + arrow
+        self.title = '{} ({}{})'.format(cfg['model'], cfg.get('display', '{src}{arrow}{tgt}'
+                                                              .format(src=src, arrow=arrow, tgt=tgt)),
+                                        self.domain)
 
     @property
     def server(self):
@@ -111,12 +147,11 @@ class Model(object):
 
     def __iter__(self):
         yield 'model', self.model
-        yield 'source', self.source
-        yield 'target', self.target
+        yield 'supports', self.supports
         yield 'title', self.title
-        if hasattr(self, 'default'):
+        if self.default:
             yield 'default', self.default
-        if hasattr(self, 'domain'):
+        if self.domain:
             yield 'domain', self.domain
 
 

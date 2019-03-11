@@ -111,10 +111,11 @@ class LanguageCollection(Resource):
         return resp
 
     # TODO fix in browser get languages (text/plain) returns crap
-    def __init__(self, const_api=None, *args, **kwargs):
-        super(LanguageCollection, self).__init__(const_api, *args, **kwargs)
-        self.representations = self.representations if self.representations else {}
-        self.representations['text/plain'] = LanguageCollection.to_text
+    # TODO also jquery ajax for some reason receives text/plain instead of json
+    #def __init__(self, const_api=None, *args, **kwargs):
+    #    super(LanguageCollection, self).__init__(const_api, *args, **kwargs)
+    #    self.representations = self.representations if self.representations else {}
+    #    self.representations['text/plain'] = LanguageCollection.to_text
 
     @ns.doc(model=languages_resources)  # This shouldn't be necessary according to docs,
     # but without it the swagger.json does not contain the definitions part

@@ -38,7 +38,10 @@ $(document).ready(function() {
     $("#submit").attr("disabled", "disabled");
     $.ajax({
       url: $(visible_select_box_id + " option:selected").val(),
-      data: {'input_text': $("#input_text").val()},
+      data: {'input_text': $("#input_text").val(),
+             'src': $("#source option:selected").val(),
+             'tgt': $("#target option:selected").val()
+      },
       method: "POST",
       dataType: "json",
       success: function(data, status, request) {
@@ -59,7 +62,57 @@ $(document).ready(function() {
       $("#models").parents("div.form-group").toggleClass('hidden')
       $("#lang_pair").parents("div.form-group").toggleClass('hidden')
       visible_select_box_id = '#' + $("div.form-group:not(.hidden) > select").attr('id')
+
+      // src tgt with model
+      $("#source").parents("div.form-group").toggleClass('hidden')
+      $("#target").parents("div.form-group").toggleClass('hidden')
   })
+
+  // src tgt with model
+    var select_source = $("#source")
+    var select_target = $("#target")
+    var get_model_options = function(model_url){
+      return $.ajax({
+          url: model_url,
+          dataType: "json",
+          success: function(data, status, request){
+              select_source.off('change.languages')
+              select_source.find("option").remove()
+              select_target.find("option").remove()
+              var create_option = function(value){
+                 var option = $("<option/>")
+                 option.attr('value', value)
+                 option.text(value)
+                 return option
+              }
+              Object.keys(data.supports).forEach(function(key){
+                  var option = create_option(key)
+                  select_source.append(option)
+              })
+              select_source.on('change.languages', function(e){
+                  var key = $(e.target).val()
+                  var supported_tgt_arr = data.supports[key]
+                  select_target.find("option").remove()
+                  supported_tgt_arr.forEach(function(tgt_lang){
+                      var option = create_option(tgt_lang)
+                      select_target.append(option)
+                  })
+              })
+              //add_options(select_target, data.target)
+              //console.log(data)
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+              console.error(textStatus)
+          }
+      })
+    }
+    $("#models").change(function(e){
+        var model_url = $(e.target).val()
+        get_model_options(model_url).done(function(){
+            select_source.trigger('change')
+        })
+    })
+    $("#models").trigger('change')
 
   // fileupload
   if (!!FileReader && 'draggable' in document.createElement('span')
@@ -103,10 +156,13 @@ $(document).ready(function() {
             }
         }, 1500)
     }
+    // TODO mobile seems lacking keyup/keydown
     $("#input_text").on("keyup", countDown)
                     .on("keydown", cancelCountDown)
                     .on("paste", countDown)
     $("#lang_pair").on("change", countDown)
     $("#models").on("change", countDown)
     $("#advanced").on("change", countDown)
+    $("#source").on("change", countDown)
+    $("#target").on("change", countDown)
 });

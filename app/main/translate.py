@@ -8,13 +8,21 @@ from app.model_settings import models
 from flask import current_app, session
 
 
-def translate_with_model(model_name, text):
+def translate_with_model(model, text, src=None, tgt=None):
     if not text or not text.strip():
         return []
-    model = models.get_model(model_name)
+
+    src = src or model.supports.keys()[0]
+    tgt = tgt or model.supports[src][0]
+
+    if model.prefix_with:
+        prefix = model.prefix_with.format(source=src, target=tgt)
+    else:
+        prefix = ''
+
     request_fn = serving_utils.make_grpc_request_fn(servable_name=model.model, timeout_secs=500,
                                                     server=model.server)
-    src_lang = model.source
+    src_lang = src
     sentences = []
     newlines_after = []
     for segment in text.split('\n'):
@@ -25,7 +33,9 @@ def translate_with_model(model_name, text):
     for batch in np.array_split(sentences, ceil(len(sentences)/current_app.config['BATCH_SIZE'])):
         try:
             outputs += list(map(lambda sent_score: sent_score[0],
-                                serving_utils.predict(batch.tolist(), model.problem, request_fn)))
+                                serving_utils.predict([prefix + sent for sent in batch.tolist()],
+                                                        model.problem,
+                                                      request_fn)))
         except:
             # When tensorflow serving restarts web clients seem to "remember" the channel where
             # the connection have failed. clearing up the session, seems to solve that
@@ -41,7 +51,7 @@ def translate_from_to(source, target, text):
     models_on_path = models.get_model_list(source, target)
     translation = []
     for model in models_on_path:
-        translation = translate_with_model(model.model, text)
+        translation = translate_with_model(model, text, source, target)
         text = ' '.join(translation).replace('\n ', '\n')
     return translation
 

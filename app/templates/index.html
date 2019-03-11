@@ -6,6 +6,10 @@
     <form class="form" id="taskForm" method="POST">
         {{ wtf.form_field(form.lang_pair) }}
         {{ wtf.form_field(form.models) }}
+        <div class="row">
+            <div class="col-md-6" id="source_col">{{ wtf.form_field(form.source) }}</div>
+            <div class="col-md-6" id="target_col">{{ wtf.form_field(form.target) }}</div>
+        </div>
         {{ wtf.form_field(form.advanced) }}
         <div class="row">
             <div class="col-md-6" id="input">{{ wtf.form_field(form.input_text) }}</div>
