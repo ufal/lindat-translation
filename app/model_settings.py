@@ -15,8 +15,6 @@ usr_dir.import_usr_dir('t2t_usr_dir')
 hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
 
 
-#TODO handle prefix_with
-#TODO src/tgt as array
 class Models(object):
 
     def __init__(self, models_cfg):

@@ -1,56 +1,49 @@
 [
   {
-    "source": "en",
-    "target": "cs",
+    "source": ["en"],
+    "target": ["cs", "de", "es", "fr", "hu", "pl", "sv"],
+    "problem": "translate_medical8lang",
+    "domain": "medical",
+    "model": "cs-es_medical",
+    "display": "Experimentální překlad",
+    "prefix_with": "SRC{source} TRG{target} ",
+    "target_to_source": true,
+    "server": "{T2T_TRANSFORMER2}"
+  },
+  {
+    "source": ["en"],
+    "target": ["cs"],
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
     "model": "en-cs",
     "default": true
   },
   {
-    "source": "cs",
-    "target": "en",
+    "source": ["cs"],
+    "target": ["en"],
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
     "model": "cs-en"
   },
   {
-    "source": "en",
-    "target": "fr",
-    "problem": "translate_enfr_wmt32k",
-    "domain": "",
-    "model": "en-fr"
-  },
-  {
-    "source": "fr",
-    "target": "en",
-    "problem": "translate_enfr_wmt32k",
-    "domain": "",
-    "model": "fr-en"
-  },
-  {
-    "source": "en",
-    "target": "hi",
+    "source": ["en"],
+    "target": ["hi"],
     "problem": "translate_enhi_wat18",
     "domain": "",
     "model": "en-hi"
   },
   {
-    "source": "en",
-    "target": "cs",
-    "problem": "translate_encs_wmt_czeng57m32k",
+    "source": ["en"],
+    "target": ["fr"],
+    "problem": "translate_enfr_wmt32k",
     "domain": "",
-    "model": "en-cs_2",
-    "display": "(Beta) English->Czech",
-    "server": "{T2T_TRANSFORMER2}"
+    "model": "en-fr"
   },
   {
-    "source": "cs",
-    "target": "en",
-    "problem": "translate_encs_wmt_czeng57m32k",
+    "source": ["fr"],
+    "target": ["en"],
+    "problem": "translate_enfr_wmt32k",
     "domain": "",
-    "model": "cs-en_2",
-    "display": "(Beta) Czech->English",
-    "server": "{T2T_TRANSFORMER2}"
+    "model": "fr-en"
   }
 ]

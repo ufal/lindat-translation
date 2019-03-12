@@ -1,4 +1,3 @@
-import os
 from tensor2tensor.utils import registry
 from tensor2tensor.data_generators import translate, problem, text_encoder, generator_utils
 from tensor2tensor.data_generators.translate_encs import TranslateEncsWmt32k
