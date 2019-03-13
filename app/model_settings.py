@@ -128,9 +128,10 @@ class Model(object):
         arrow = '->'
         if cfg.get('target_to_source', False):
             arrow = '<' + arrow
-        self.title = '{} ({}{})'.format(cfg['model'], cfg.get('display', '{src}{arrow}{tgt}'
-                                                              .format(src=src, arrow=arrow, tgt=tgt)),
-                                        self.domain)
+        self.title = '{name} {domain}({display})'\
+            .format(name=cfg['model'],
+                    display=cfg.get('display', '{src}{arrow}{tgt}'.format(src=src, arrow=arrow, tgt=tgt)),
+                    domain='- ' + self.domain + ' domain - ' if self.domain else '')
 
     @property
     def server(self):
