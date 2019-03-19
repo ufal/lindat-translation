@@ -51,6 +51,10 @@ $(document).ready(function() {
       if(src_option.attr('name')){
           src = src_option.attr('name')
       }
+      var i = src.lastIndexOf('/')
+      if(i >= 0){
+          src = src.substring(i + 1)
+      }
       return {
           'input_text': $("#input_text").val(),
           'src': src,

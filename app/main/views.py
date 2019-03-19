@@ -17,7 +17,6 @@ def index():
     form.models.choices = url_for_choices()
     form.models.default = form.models.choices[0][0]
 
-    # TODO this should either contain name attributes or main.js should do the init
     sources = list(set([(url_for('api.languages_language_item', language=direction[0]),
                          direction[0]) for direction in models_conf.get_possible_directions()]))
 
