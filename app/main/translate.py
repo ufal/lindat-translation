@@ -50,8 +50,8 @@ def translate_with_model(model, text, src=None, tgt=None):
 def translate_from_to(source, target, text):
     models_on_path = models.get_model_list(source, target)
     translation = []
-    for model in models_on_path:
-        translation = translate_with_model(model, text, source, target)
+    for obj in models_on_path:
+        translation = translate_with_model(obj['model'], text, obj['src'], obj['tgt'])
         text = ' '.join(translation).replace('\n ', '\n')
     return translation
 

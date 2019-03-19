@@ -49,6 +49,7 @@ model_resource = ns.model('ModelResource', {
     'default': fields.Boolean,
     'domain': fields.String,
     'model': fields.String,
+    # TODO is raw ok, how does it look in swagger
     'supports': fields.Raw,
     'title': fields.String,
 })
@@ -80,6 +81,7 @@ class ModelCollection(Resource):
         return {'models': models.get_models()}
 
 
+# TODO should expose templated urls in hal?
 @ns.route('/<any' + str(tuple(models.get_model_names())) + ':model>')
 class ModelItem(Resource):
 
@@ -95,6 +97,7 @@ class ModelItem(Resource):
     #    self.representations = self.representations if self.representations else {}
     #    self.representations['text/plain'] = ModelItem.to_text
 
+    #TODO is there a default src/tgt?
     @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input_with_src_tgt, validate=True)
     def post(self, model):

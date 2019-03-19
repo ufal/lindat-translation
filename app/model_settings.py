@@ -15,6 +15,12 @@ usr_dir.import_usr_dir('t2t_usr_dir')
 hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
 
 
+def get_or_create_list(aDict, key):
+    arr = aDict.get(key, [])
+    aDict[key] = arr
+    return arr
+
+
 class Models(object):
 
     def __init__(self, models_cfg):
@@ -46,16 +52,32 @@ class Models(object):
         # There may be more than one shortest path between sa source and target; this returns only one
         self._shortest_path = nx.shortest_path(self._G)
         _directions = []
+        self._src_tgt = {}
+        self._tgt_src = {}
         for item in self._shortest_path.items():
             u = item[0]
             for v in item[1].keys():
                 if u != v:
                     display = '{}->{}'.format(to_name(u), to_name(v))
                     _directions.append((u, v, display))
+                    targets = get_or_create_list(self._src_tgt, u)
+                    targets.append(v)
+                    sources = get_or_create_list(self._tgt_src, v)
+                    sources.append(u)
         self._directions = sorted(_directions, key=lambda x: x[2])
 
     def get_possible_directions(self):
         return self._directions
+
+    def get_reachable_langs(self, lang):
+        where_lang_is_src = self._src_tgt.get(lang, [])
+        where_lang_is_tgt = self._tgt_src.get(lang, [])
+        return {
+            'name': lang,
+            'title': to_name(lang),
+            'to': where_lang_is_src,
+            'from': where_lang_is_tgt
+        }
 
     def get_model_list(self, source, target):
         """
@@ -68,7 +90,11 @@ class Models(object):
             path = self._shortest_path[source][target]
             if len(path) > 1:
                 # TODO cfg is now a model class
-                return [self._G[pair[0]][pair[1]]['cfg'] for pair in zip(path[0:-1], path[1:])]
+                return [{
+                    'model': self._G[pair[0]][pair[1]]['cfg'],
+                    'src': pair[0],
+                    'tgt': pair[1],
+                } for pair in zip(path[0:-1], path[1:])]
             else:
                 return []
         except KeyError as e:
@@ -94,12 +120,6 @@ class Model(object):
     def lang_list_display(lang_list):
         return ', '.join(map(to_name, lang_list))
 
-    @staticmethod
-    def get_or_create_list(aDict, key):
-        arr = aDict.get(key, [])
-        aDict[key] = arr
-        return arr
-
     def __init__(self, cfg):
         self.model = cfg['model']
         self.target_to_source = cfg.get('target_to_source', False)
@@ -107,10 +127,10 @@ class Model(object):
         self.supports = {}
         for src_lang in cfg['source']:
             for tgt_lang in cfg['target']:
-                targets = Model.get_or_create_list(self.supports, src_lang)
+                targets = get_or_create_list(self.supports, src_lang)
                 targets.append(tgt_lang)
                 if self.target_to_source:
-                    targets = Model.get_or_create_list(self.supports, tgt_lang)
+                    targets = get_or_create_list(self.supports, tgt_lang)
                     targets.append(src_lang)
 
         self.problem = registry.problem(cfg['problem'])

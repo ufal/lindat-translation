@@ -31,6 +31,17 @@ class MyUrlField(fields.Url):
             raise fields.MarshallingError(te)
 
 
+class MyTemplatedUrlField(MyUrlField):
+
+    def __init__(self, params, **kwargs):
+        super(MyTemplatedUrlField, self).__init__(required=None, **kwargs)
+        self.query_template = '{?' + ','.join(params) + '}'
+
+    def output(self, key, obj, **kwargs):
+        url = super(MyTemplatedUrlField, self).output(key, obj, **kwargs)
+        return url + self.query_template
+
+
 ns = api.namespace('languages', description='Operations with source and target languages')
 
 _models_item_relation = 'item'
@@ -58,9 +69,9 @@ def rem_title_from_dict(aDict):
     return ret
 
 
-lang_link = ns.clone('LangPairLink', link, {
-    'href': MyUrlField(endpoint='.languages_language_collection', attribute=rem_title_from_dict),
-    'name': fields.String(attribute='model'),
+lang_link = ns.clone('LangLink', link, {
+    'href': fields.Url(endpoint='.languages_language_item'),
+    'name': fields.String(attribute=lambda obj_lang_code: obj_lang_code['language']),
 })
 
 
@@ -68,27 +79,40 @@ def identity(x):
     return x
 
 
+translate_link =ns.model('TranslateLink', {
+        'href': MyTemplatedUrlField(endpoint='.languages_language_collection',
+                                    params=['src', 'tgt'], attribute=lambda x: {}),
+        'templated': fields.Boolean(attribute=lambda x: True)
+    })
+
+
 # TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
 language_resource = ns.model('LanguageResource', {
     '_links': fields.Nested(
         ns.model('Links', {
+            'translate': fields.Nested(translate_link),
             'self': fields.Nested(ns.model('JustHrefLink', {
-                'href': MyUrlField(endpoint='.languages_language_collection',
-                                   attribute=rem_title_from_dict)
+                'href': MyUrlField(endpoint='.languages_language_item', attribute=lambda x: {
+                    'language': x['name']})
             }), attribute=identity),
-            'models': fields.List(fields.Nested(model_link, skip_none=True),
-                                  attribute=lambda x: [m for m in models.get_model_list(x['src'],
-                                                                                        x['tgt'])]),
+            # TODO potrebuju linky na modely k necemu? Potrebuju, kdyby interface vypadal choose
+            #  lang -> choose from models
+            #'models': fields.List(fields.Nested(model_link, skip_none=True),
+            #                      attribute=lambda x: [m for m in models.get_model_list(x['src'],
+            #                                                                            x[
+            #                                                                            'tgt'])]),
         }), attribute=identity),
-    'source': fields.String(attribute='src'),
-    'target': fields.String(attribute='tgt'),
+    'sources': fields.List(fields.String, attribute='from'),
+    'targets': fields.List(fields.String, attribute='to'),
+    'name': fields.String,
     'title': fields.String,
 })
 
 languages_links = ns.model('LanguageLinks', {
     _models_item_relation: fields.List(fields.Nested(lang_link, skip_none=True),
                                        attribute='languages'),
-    'self': fields.Nested(link, skip_none=True)
+    'self': fields.Nested(link, skip_none=True),
+    'translate': fields.Nested(translate_link),
 })
 
 languages_resources = ns.model('LanguagesResource', {
@@ -96,7 +120,9 @@ languages_resources = ns.model('LanguagesResource', {
         'languages']}),
     '_embedded': fields.Nested(ns.model('EmbeddedLanguages', {
         _models_item_relation: fields.List(fields.Nested(language_resource, skip_none=True),
-                                           attribute='languages')
+                                           attribute=lambda obj: [models.get_reachable_langs(
+                                               lang_obj['language']) for lang_obj in obj[
+                                               'languages']])
     }), attribute=identity)
 })
 
@@ -122,10 +148,13 @@ class LanguageCollection(Resource):
     @marshal_with(languages_resources, skip_none=True)
     def get(self):
         """
-        Returns a list of available models
+        Returns a list of available languages
         """
-        return {'languages': [{'title': x[2], 'src': x[0], 'tgt': x[1]} for x in
-                              models.get_possible_directions()]}
+        languages = set()
+        for x in models.get_possible_directions():
+            languages.add(x[0])
+            languages.add(x[1])
+        return {'languages': [{'language': lang} for lang in languages]}
 
     @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input_with_src_tgt, validate=True)
@@ -144,5 +173,22 @@ class LanguageCollection(Resource):
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src', 'en')
         tgt = args.get('tgt', 'cs')
+        if len(src) != 2 or len(tgt) != 2:
+            api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         return translate_from_to(src, tgt, text)
 
+
+@ns.route('/<string(length=2):language>')
+class LanguageItem(Resource):
+    @ns.doc(model=language_resource)  # This shouldn't be necessary according to docs,
+    # but without it the swagger.json does not contain the definitions part
+    @marshal_with(language_resource, skip_none=True)
+    def get(self, language):
+        """
+        Returns a language resource object
+        """
+        return models.get_reachable_langs(language)
+
+
+# TODO accounting
+# TODO feedback link
