@@ -3,12 +3,8 @@ from flask_restplus import Resource, fields, marshal_with
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
-from app.model_settings import models
+from app.model_settings import languages
 from app.main.translate import translate_from_to
-from app.main.api.translation.endpoints.models import model_link
-# from six.moves.urllib.parse import urlparse, urlunparse
-# TODO refactor
-from app.main.views import _request_wants_json
 
 
 class MyUrlField(fields.Url):
@@ -71,7 +67,8 @@ def rem_title_from_dict(aDict):
 
 lang_link = ns.clone('LangLink', link, {
     'href': fields.Url(endpoint='.languages_language_item'),
-    'name': fields.String(attribute=lambda obj_lang_code: obj_lang_code['language']),
+    'name': fields.String,
+    'title': fields.String,
 })
 
 
@@ -91,9 +88,11 @@ language_resource = ns.model('LanguageResource', {
     '_links': fields.Nested(
         ns.model('Links', {
             'translate': fields.Nested(translate_link),
+            'sources': fields.List(fields.Nested(lang_link, skip_none=True)),
+            'targets': fields.List(fields.Nested(lang_link, skip_none=True)),
             'self': fields.Nested(ns.model('JustHrefLink', {
-                'href': MyUrlField(endpoint='.languages_language_item', attribute=lambda x: {
-                    'language': x['name']})
+                'href': MyUrlField(endpoint='.languages_language_item', attribute=lambda l: {
+                    'language': l.language})
             }), attribute=identity),
             # TODO potrebuju linky na modely k necemu? Potrebuju, kdyby interface vypadal choose
             #  lang -> choose from models
@@ -102,28 +101,21 @@ language_resource = ns.model('LanguageResource', {
             #                                                                            x[
             #                                                                            'tgt'])]),
         }), attribute=identity),
-    'sources': fields.List(fields.String, attribute='from'),
-    'targets': fields.List(fields.String, attribute='to'),
     'name': fields.String,
     'title': fields.String,
 })
 
 languages_links = ns.model('LanguageLinks', {
-    _models_item_relation: fields.List(fields.Nested(lang_link, skip_none=True),
-                                       attribute='languages'),
-    'self': fields.Nested(link, skip_none=True),
+    _models_item_relation: fields.List(fields.Nested(lang_link, skip_none=True)),
+    'self': fields.Nested(link, skip_none=True, attribute=lambda _: {}),
     'translate': fields.Nested(translate_link),
 })
 
 languages_resources = ns.model('LanguagesResource', {
-    '_links': fields.Nested(languages_links, attribute=lambda x: {'self': {}, 'languages': x[
-        'languages']}),
+    '_links': fields.Nested(languages_links),
     '_embedded': fields.Nested(ns.model('EmbeddedLanguages', {
-        _models_item_relation: fields.List(fields.Nested(language_resource, skip_none=True),
-                                           attribute=lambda obj: [models.get_reachable_langs(
-                                               lang_obj['language']) for lang_obj in obj[
-                                               'languages']])
-    }), attribute=identity)
+        _models_item_relation: fields.List(fields.Nested(language_resource, skip_none=True))
+    }))
 })
 
 
@@ -150,11 +142,16 @@ class LanguageCollection(Resource):
         """
         Returns a list of available languages
         """
-        languages = set()
-        for x in models.get_possible_directions():
-            languages.add(x[0])
-            languages.add(x[1])
-        return {'languages': [{'language': lang} for lang in languages]}
+        values = list(languages.languages.values())
+        return {
+            '_links': {
+                _models_item_relation: values
+            },
+            '_embedded': {
+                _models_item_relation: values
+            },
+        }
+
 
     @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input_with_src_tgt, validate=True)
@@ -187,7 +184,7 @@ class LanguageItem(Resource):
         """
         Returns a language resource object
         """
-        return models.get_reachable_langs(language)
+        return languages.languages[language]
 
 
 # TODO accounting

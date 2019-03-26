@@ -106,8 +106,8 @@ $(document).ready(function() {
               success: function(data, status, request){
                   select_source.find("option").remove()
                   data._embedded.item.forEach(function(lang_resource){
-                     if (lang_resource.targets.length > 0){
-                         var option = create_option(lang_resource.name)
+                     if (lang_resource._links.targets.length > 0){
+                         var option = create_option(lang_resource.title)
                          option.val(lang_resource._links.self.href)
                          option.attr('name', lang_resource.name)
                          select_source.append(option)
@@ -171,11 +171,14 @@ $(document).ready(function() {
               success: function(data, status, request){
                   var selected_target = $("#target option:selected").val()
                   select_target.find("option").remove()
-                  data.targets.forEach(function(key){
-                      var option = create_option(key)
-                      if (key == selected_target){
+                  data._links.targets.sort(function(a, b){
+                      return a.title.localeCompare(b.title)
+                  }).forEach(function(lang_link){
+                      var option = create_option(lang_link.name)
+                      if (lang_link.name == selected_target){
                           option.attr('selected', 'selected')
                       }
+                      option.text(lang_link.title)
                       select_target.append(option)
                   })
 

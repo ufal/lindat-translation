@@ -5,9 +5,6 @@ from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt #text_input # , file_input
 from app.model_settings import models
 from app.main.translate import translate_with_model
-# from six.moves.urllib.parse import urlparse, urlunparse
-# TODO refactor
-from app.main.views import _request_wants_json
 
 
 ns = api.namespace('models', description='Operations related to translation models')

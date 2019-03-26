@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, session, jsonify, current
 from .forms import TranslateForm
 from ..logging_utils import logged
 from app.model_settings import models as models_conf
+from app.model_settings import languages
 
 bp = Blueprint('main', __name__)
 
@@ -17,11 +18,14 @@ def index():
     form.models.choices = url_for_choices()
     form.models.default = form.models.choices[0][0]
 
-    sources = list(set([(url_for('api.languages_language_item', language=direction[0]),
-                         direction[0]) for direction in models_conf.get_possible_directions()]))
+    sources = [(url_for('api.languages_language_item', language=code), language.title)
+               for code, language in languages.languages.items() if language.targets]
 
-    form.source.choices = sources
-    form.target.choices = [(l, l) for l in models_conf.get_reachable_langs(sources[0][1])['to']]
+    form.target.choices = sorted([(l.name, l.title) for l in list(languages.languages.values())[0].targets],
+                                 key=lambda x: x[1])
+
+    form.source.choices = sorted(sources, key=lambda x: x[1])
+    form.source.data = sources[0][0]
     return render_template('index.html', form=form,
                            file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
 

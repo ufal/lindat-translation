@@ -15,8 +15,8 @@ usr_dir.import_usr_dir('t2t_usr_dir')
 hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
 
 
-def get_or_create_list(aDict, key):
-    arr = aDict.get(key, [])
+def get_or_create(aDict, key, default=lambda: []):
+    arr = aDict.get(key, default())
     aDict[key] = arr
     return arr
 
@@ -60,9 +60,9 @@ class Models(object):
                 if u != v:
                     display = '{}->{}'.format(to_name(u), to_name(v))
                     _directions.append((u, v, display))
-                    targets = get_or_create_list(self._src_tgt, u)
+                    targets = get_or_create(self._src_tgt, u)
                     targets.append(v)
-                    sources = get_or_create_list(self._tgt_src, v)
+                    sources = get_or_create(self._tgt_src, v)
                     sources.append(u)
         self._directions = sorted(_directions, key=lambda x: x[2])
 
@@ -89,7 +89,6 @@ class Models(object):
         try:
             path = self._shortest_path[source][target]
             if len(path) > 1:
-                # TODO cfg is now a model class
                 return [{
                     'model': self._G[pair[0]][pair[1]]['cfg'],
                     'src': pair[0],
@@ -107,7 +106,6 @@ class Models(object):
         return list(self._models.keys())
 
     def get_models(self):
-        # TODO this used to return the json cfg not model classes
         return list(self._models.values())
 
     def get_model(self, model_name):
@@ -127,10 +125,10 @@ class Model(object):
         self.supports = {}
         for src_lang in cfg['source']:
             for tgt_lang in cfg['target']:
-                targets = get_or_create_list(self.supports, src_lang)
+                targets = get_or_create(self.supports, src_lang)
                 targets.append(tgt_lang)
                 if self.target_to_source:
-                    targets = get_or_create_list(self.supports, tgt_lang)
+                    targets = get_or_create(self.supports, tgt_lang)
                     targets.append(src_lang)
 
         self.problem = registry.problem(cfg['problem'])
@@ -174,10 +172,48 @@ class Model(object):
             yield 'domain', self.domain
 
 
+class Language(object):
+
+    def __init__(self, iso_code):
+        self.language = iso_code
+        self.name = iso_code
+        self.title = to_name(iso_code)
+        self.sources = set()
+        self.targets = set()
+
+    def __iter__(self):
+        yield 'language', self.language
+        yield 'name', self.name
+        yield 'title', self.title
+        yield 'sources', self.sources
+        yield 'targets', self.targets
+
+
+class Languages(object):
+
+    def __init__(self, models):
+        self.languages = {}
+        for x in models.get_possible_directions():
+            get_or_create(self.languages, x[0], lambda: Language(x[0]))
+            get_or_create(self.languages, x[1], lambda: Language(x[1]))
+
+        for iso_code, lang in self.languages.items():
+            x = models.get_reachable_langs(iso_code)
+            for to_iso_code in x['to']:
+                to_lang = self.languages[to_iso_code]
+                lang.targets.add(to_lang)
+                to_lang.sources.add(lang)
+            for from_iso_code in x['from']:
+                from_lang = self.languages[from_iso_code]
+                lang.sources.add(to_lang)
+                from_lang.targets.add(lang)
+
+
 with open(os.path.join(os.path.dirname(__file__), 'models.json')) as models_json:
     models_cfg = json.load(models_json)
 
 models = Models(models_cfg)
+languages = Languages(models)
 
 
 
