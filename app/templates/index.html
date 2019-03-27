@@ -1,8 +1,7 @@
 {%- extends "main.html" %}
 {% block panel %}
     {{ super() }}
-    <p>Once the translation has started it can take in order of minutes
-        to complete. You'll be shown the status (started/queued) of your translation task above this panel.</p>
+    <p>You'll be shown the status (started/queued) of your translation task above this panel.</p>
     <form class="form" id="taskForm" method="POST"
           action="{{ url_for('api.languages_language_collection') }}">
         {{ wtf.form_field(form.models) }}
