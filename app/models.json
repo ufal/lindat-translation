@@ -17,12 +17,14 @@
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
     "model": "en-cs",
+    "display": "English->Czech (CUBBITT)",
     "default": true
   },
   {
     "source": ["cs"],
     "target": ["en"],
     "problem": "translate_encs_wmt_czeng57m32k",
+    "display": "Czech->English (CUBBITT)",
     "domain": "",
     "model": "cs-en"
   },
@@ -37,6 +39,7 @@
     "source": ["en"],
     "target": ["fr"],
     "problem": "translate_enfr_wmt32k",
+    "display": "English->French (CUBBITT)",
     "domain": "",
     "model": "en-fr"
   },
@@ -44,6 +47,7 @@
     "source": ["fr"],
     "target": ["en"],
     "problem": "translate_enfr_wmt32k",
+    "display": "French->English (CUBBITT)",
     "domain": "",
     "model": "fr-en"
   }
