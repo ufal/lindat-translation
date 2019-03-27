@@ -1,5 +1,7 @@
 from flask import request, url_for
+from flask.helpers import  make_response
 from flask_restplus import Resource, fields, marshal_with
+from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
@@ -124,16 +126,16 @@ class LanguageCollection(Resource):
 
     @classmethod
     def to_text(cls, data, code, headers):
-        resp = api.make_response(' '.join(data).replace('\n ', '\n'), code)
-        resp.headers.extend(headers)
-        return resp
+        return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
 
-    # TODO fix in browser get languages (text/plain) returns crap
-    # TODO also jquery ajax for some reason receives text/plain instead of json
-    #def __init__(self, const_api=None, *args, **kwargs):
-    #    super(LanguageCollection, self).__init__(const_api, *args, **kwargs)
-    #    self.representations = self.representations if self.representations else {}
-    #    self.representations['text/plain'] = LanguageCollection.to_text
+    def __init__(self, const_api=None, *args, **kwargs):
+        super(LanguageCollection, self).__init__(const_api, *args, **kwargs)
+        self.representations = self.representations if self.representations else {}
+        if 'text/plain' not in self.representations:
+            self.representations['text/plain'] = LanguageCollection.to_text
+        if 'application/json' not in self.representations:
+            self.representations['application/json'] = output_json
+
 
     @ns.doc(model=languages_resources)  # This shouldn't be necessary according to docs,
     # but without it the swagger.json does not contain the definitions part
@@ -152,12 +154,11 @@ class LanguageCollection(Resource):
             },
         }
 
-
     @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input_with_src_tgt, validate=True)
     def post(self):
         """
-        Send text to be processed by the selected model.
+        Translate input from scr lang to tgt lang.
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         """
         if request.files and 'input_text' in request.files:
@@ -170,9 +171,11 @@ class LanguageCollection(Resource):
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src', 'en')
         tgt = args.get('tgt', 'cs')
-        if len(src) != 2 or len(tgt) != 2:
+        try:
+            return translate_from_to(src, tgt, text)
+        except ValueError as e:
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
-        return translate_from_to(src, tgt, text)
+
 
 
 @ns.route('/<string(length=2):language>')
@@ -186,6 +189,3 @@ class LanguageItem(Resource):
         """
         return languages.languages[language]
 
-
-# TODO accounting
-# TODO feedback link

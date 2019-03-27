@@ -1,5 +1,7 @@
 from flask import request, url_for
+from flask.helpers import make_response
 from flask_restplus import Resource, fields, marshal_with
+from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt #text_input # , file_input
@@ -84,15 +86,15 @@ class ModelItem(Resource):
 
     @classmethod
     def to_text(cls, data, code, headers):
-        resp = api.make_response(' '.join(data).replace('\n ', '\n'), code)
-        resp.headers.extend(headers)
-        return resp
+        return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
 
-    # TODO fix text/plain
-    #def __init__(self, const_api=None, *args, **kwargs):
-    #    super(ModelItem, self).__init__(const_api, *args, **kwargs)
-    #    self.representations = self.representations if self.representations else {}
-    #    self.representations['text/plain'] = ModelItem.to_text
+    def __init__(self, const_api=None, *args, **kwargs):
+        super(ModelItem, self).__init__(const_api, *args, **kwargs)
+        self.representations = self.representations if self.representations else {}
+        if 'text/plain' not in self.representations:
+            self.representations['text/plain'] = ModelItem.to_text
+        if 'application/json' not in self.representations:
+            self.representations['application/json'] = output_json
 
     #TODO is there a default src/tgt?
     @ns.produces(['application/json', 'text/plain'])
