@@ -8,6 +8,7 @@
     "display": "Experimentální překlad",
     "prefix_with": "SRC{source} TRG{target} ",
     "target_to_source": true,
+    "include_in_graph": false,
     "server": "{T2T_TRANSFORMER2}"
   },
   {

@@ -41,13 +41,14 @@ class Models(object):
             if cfg.get('default'):
                 _default_model_name = cfg['model']
 
-            flip_src_tgt = cfg.get('target_to_source', False)
-            for src_lang in cfg['source']:
-                for tgt_lang in cfg['target']:
-                    # This will keep only the last model
-                    self._G.add_edge(src_lang, tgt_lang, cfg=model)
-                    if flip_src_tgt:
-                        self._G.add_edge(tgt_lang, src_lang, cfg=model)
+            if cfg.get('include_in_graph', True):
+                flip_src_tgt = cfg.get('target_to_source', False)
+                for src_lang in cfg['source']:
+                    for tgt_lang in cfg['target']:
+                        # This will keep only the last model
+                        self._G.add_edge(src_lang, tgt_lang, cfg=model)
+                        if flip_src_tgt:
+                            self._G.add_edge(tgt_lang, src_lang, cfg=model)
 
         # There may be more than one shortest path between sa source and target; this returns only one
         self._shortest_path = nx.shortest_path(self._G)
