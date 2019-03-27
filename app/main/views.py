@@ -1,8 +1,6 @@
-from flask import Blueprint, render_template, request, session, jsonify, current_app, g, url_for, \
-    abort
+from flask import Blueprint, render_template, request, current_app, url_for
 
 from .forms import TranslateForm
-from ..logging_utils import logged
 from app.model_settings import models as models_conf
 from app.model_settings import languages
 

@@ -4,7 +4,7 @@ $(document).ready(function() {
   // remove previous alerts by default
   // set clean to false to keep old alerts
   function flash_alert(message, category, clean) {
-    console.log(message);
+    //console.log(message);
     if (typeof(clean) === "undefined") clean = true;
     if(clean) {
       remove_alerts();
@@ -231,7 +231,7 @@ $(document).ready(function() {
             if($("#input_text").val()){
                 $("#submit").click()
             }
-        }, 1500)
+        }, 1000)
     }
     // TODO mobile seems lacking keyup/keydown
     $("#input_text").on("keyup", countDown)

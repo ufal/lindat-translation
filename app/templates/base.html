@@ -1,5 +1,4 @@
 {%- extends "bootstrap/base.html" %}
-{% import "bootstrap/utils.html" as utils %}
 
 {% block head %}
   <meta charset="utf-8">
@@ -36,7 +35,6 @@
 
 {% block content %}
   <div class="container" id="mainContent">
-    {{utils.flashed_messages(container=False, dismissible=True)}}
     {% block main %}{% endblock %}
   </div>
     <!-- Footer -->

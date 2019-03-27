@@ -2,7 +2,7 @@ from math import ceil
 import numpy as np
 from tensor2tensor.serving import serving_utils
 from sentence_splitter import split_text_into_sentences
-from app.logging_utils import logged
+#from app.logging_utils import logged
 from app.model_settings import models
 # TODO get rid of these
 from flask import current_app, session
@@ -58,7 +58,7 @@ def translate_from_to(source, target, text):
     return translation
 
 
-@logged()
+#@logged()
 def split_to_sent_array(text, lang):
     sent_array = []
     limit = current_app.config['SENT_LEN_LIMIT']
