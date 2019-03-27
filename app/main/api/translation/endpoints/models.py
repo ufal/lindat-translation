@@ -88,14 +88,6 @@ class ModelItem(Resource):
     def to_text(cls, data, code, headers):
         return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
 
-    def __init__(self, const_api=None, *args, **kwargs):
-        super(ModelItem, self).__init__(const_api, *args, **kwargs)
-        self.representations = self.representations if self.representations else {}
-        if 'text/plain' not in self.representations:
-            self.representations['text/plain'] = ModelItem.to_text
-        if 'application/json' not in self.representations:
-            self.representations['application/json'] = output_json
-
     #TODO is there a default src/tgt?
     @ns.produces(['application/json', 'text/plain'])
     @ns.expect(text_input_with_src_tgt, validate=True)
@@ -122,6 +114,11 @@ class ModelItem(Resource):
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 
+        self.representations = self.representations if self.representations else {}
+        if 'text/plain' not in self.representations:
+            self.representations['text/plain'] = ModelItem.to_text
+        if 'application/json' not in self.representations:
+            self.representations['application/json'] = output_json
         return translate_with_model(model, text, src, tgt)
 
     @marshal_with(model_resource, skip_none=True)

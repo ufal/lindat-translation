@@ -128,15 +128,6 @@ class LanguageCollection(Resource):
     def to_text(cls, data, code, headers):
         return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
 
-    def __init__(self, const_api=None, *args, **kwargs):
-        super(LanguageCollection, self).__init__(const_api, *args, **kwargs)
-        self.representations = self.representations if self.representations else {}
-        if 'text/plain' not in self.representations:
-            self.representations['text/plain'] = LanguageCollection.to_text
-        if 'application/json' not in self.representations:
-            self.representations['application/json'] = output_json
-
-
     @ns.doc(model=languages_resources)  # This shouldn't be necessary according to docs,
     # but without it the swagger.json does not contain the definitions part
     @marshal_with(languages_resources, skip_none=True)
@@ -172,6 +163,11 @@ class LanguageCollection(Resource):
         src = args.get('src', 'en')
         tgt = args.get('tgt', 'cs')
         try:
+            self.representations = self.representations if self.representations else {}
+            if 'text/plain' not in self.representations:
+                self.representations['text/plain'] = LanguageCollection.to_text
+            if 'application/json' not in self.representations:
+                self.representations['application/json'] = output_json
             return translate_from_to(src, tgt, text)
         except ValueError as e:
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
