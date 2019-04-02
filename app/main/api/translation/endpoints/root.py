@@ -23,7 +23,7 @@ link = ns.model('Link', {
 
 root_resource = ns.model('RootResource', {
     '_links': fields.Nested(ns.model('Links', {
-        'self': fields.Nested(link, attribute=lambda x: {'href': fields.Url(
+        'self': fields.Nested(link, attribute=lambda x: {'href': url_for(
             '.root_root_resource')}, skip_none=True),
         'models': fields.Nested(link, skip_none=True),
         'languages': fields.Nested(link, skip_none=True)
