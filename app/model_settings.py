@@ -7,8 +7,6 @@ from tensor2tensor.utils import registry, usr_dir
 from iso639 import to_name
 import networkx as nx
 
-from . import settings
-
 log = logging.getLogger(__name__)
 
 usr_dir.import_usr_dir('t2t_usr_dir')
@@ -218,7 +216,7 @@ class Languages(object):
                 to_lang.sources.add(lang)
             for from_iso_code in x['from']:
                 from_lang = self.languages[from_iso_code]
-                lang.sources.add(to_lang)
+                lang.sources.add(from_lang)
                 from_lang.targets.add(lang)
 
 
