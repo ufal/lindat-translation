@@ -121,6 +121,7 @@ class Model(object):
 
     def __init__(self, cfg):
         self.model = cfg['model']
+        self.name = self.model
         self.target_to_source = cfg.get('target_to_source', False)
 
         self.supports = {}
@@ -163,14 +164,20 @@ class Model(object):
         else:
             return current_app.config['DEFAULT_SERVER']
 
+    def add_href(self, url):
+        self.href = url
+
     def __iter__(self):
         yield 'model', self.model
+        yield 'name', self.name
         yield 'supports', self.supports
         yield 'title', self.title
         if self.default:
             yield 'default', self.default
         if self.domain:
             yield 'domain', self.domain
+        if self.href:
+            yield 'href', self.href
 
 
 class Language(object):
@@ -188,6 +195,11 @@ class Language(object):
         yield 'title', self.title
         yield 'sources', self.sources
         yield 'targets', self.targets
+        if self.href:
+            yield 'href', self.href
+
+    def add_href(self, href):
+        self.href = href
 
 
 class Languages(object):

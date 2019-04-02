@@ -1,6 +1,6 @@
-from flask import request
+from flask import request, url_for
 from flask.helpers import make_response
-from flask_restplus import Resource, fields, marshal_with
+from flask_restplus import Resource, fields
 from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
@@ -14,7 +14,7 @@ ns = api.namespace('models', description='Operations related to translation mode
 _models_item_relation = 'item'
 
 link = ns.model('Link', {
-        'href': fields.Url,
+        'href': fields.String,
         'name': fields.String,
         'title': fields.String,
         'type': fields.String,
@@ -29,37 +29,45 @@ link = ns.model('Link', {
 #    '_embedded': fields.List(fields.Nested(resource))
 #})
 
-model_link = ns.clone('ModelLink', link, {
-    'href': fields.Url(endpoint='.models_model_item'),
-    'name': fields.String(attribute='model'),
-})
-
 
 def identity(x):
     return x
 
 
+def add_href(model):
+    model.add_href(url_for('.models_model_item', model=model.model))
+    return model
+
+
+raw = ns.model('str2strlist', { })
+
+
+
 # TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
 model_resource = ns.model('ModelResource', {
-    '_links': fields.Nested(ns.model('SelfLink', {
-        'self': fields.Nested(ns.model('JustHrefLink', {'href': fields.Url(
-            endpoint='.models_model_item')}), attribute=identity)
+    '_links': fields.Nested(ns.model('ModelResourceLinks', {
+        'self': fields.Nested(link, attribute=lambda x: {'href': url_for(
+            '.models_model_item', model=x.model)}, skip_none=True)
     }), attribute=identity),
     'default': fields.Boolean,
     'domain': fields.String,
     'model': fields.String,
     # TODO is raw ok, how does it look in swagger
-    'supports': fields.Raw,
+    'supports': fields.Nested(raw),
     'title': fields.String,
 })
 
 models_links = ns.model('ModelLinks', {
-    _models_item_relation: fields.List(fields.Nested(model_link, skip_none=True), attribute='models'),
+    _models_item_relation: fields.List(fields.Nested(link, skip_none=True), attribute='models'),
     'self': fields.Nested(link, skip_none=True)
 })
 
 models_resources = ns.model('ModelsResource', {
-    '_links': fields.Nested(models_links, attribute=lambda x: {'self': {}, 'models': x['models']}),
+    '_links': fields.Nested(models_links,
+                            attribute=lambda x: {'self':
+                                                 {'href': url_for('.models_model_collection')},
+                                                 'models': list(map(add_href, x['models']))}
+                            ),
     '_embedded': fields.Nested(ns.model('EmbeddedModels', {
         _models_item_relation: fields.List(fields.Nested(model_resource, skip_none=True),
                                         attribute='models')
@@ -70,9 +78,7 @@ models_resources = ns.model('ModelsResource', {
 @ns.route('/')
 class ModelCollection(Resource):
 
-    @ns.doc(model=models_resources)  # This shouldn't be necessary according to docs,
-    # but without it the swagger.json does not contain the definitions part
-    @marshal_with(models_resources, skip_none=True)
+    @ns.marshal_with(models_resources, skip_none=True, code=200, description='Success')
     def get(self):
         """
         Returns a list of available models
@@ -82,19 +88,24 @@ class ModelCollection(Resource):
 
 # TODO should expose templated urls in hal?
 @ns.route('/<any' + str(tuple(models.get_model_names())) + ':model>')
+@ns.param(**{'name': 'model', 'description': 'model name', 'x-example': 'en-cs', '_in': 'path'})
 class ModelItem(Resource):
 
     @classmethod
     def to_text(cls, data, code, headers):
         return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
 
-    #TODO is there a default src/tgt?
     @ns.produces(['application/json', 'text/plain'])
-    @ns.expect(text_input_with_src_tgt, validate=True)
+    @ns.response(code=200, description="Success", model=str)
+    @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
+    @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
+    @ns.param(**{'name': 'input_text', 'description': 'text to translate',
+                 'x-example': 'this is a sample text', '_in': 'formData'})
     def post(self, model):
         """
         Send text to be processed by the selected model.
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
+        If you don't provide src or tgt some will be chosen for you!
         """
         if request.files and 'input_text' in request.files:
             input_file = request.files.get('input_text')
@@ -105,10 +116,12 @@ class ModelItem(Resource):
             text = request.form.get('input_text')
         #return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
         args = text_input_with_src_tgt.parse_args(request)
-        src = args.get('src', None)
-        tgt = args.get('tgt', None)
         # map model name to model obj
         model = models.get_model(model)
+        src_default = list(model.supports.keys())[0]
+        src = args.get('src', src_default) or src_default
+        tgt_default = list(model.supports[src])[0]
+        tgt = args.get('tgt', tgt_default) or tgt_default
         if src not in model.supports.keys() or tgt not in model.supports[src]:
             api.abort(code=404,
                       message='This model does not support translation from {} to {}'
@@ -121,7 +134,7 @@ class ModelItem(Resource):
             self.representations['application/json'] = output_json
         return translate_with_model(model, text, src, tgt)
 
-    @marshal_with(model_resource, skip_none=True)
+    @ns.marshal_with(model_resource, skip_none=True)
     def get(self, model):
         """
         Get model's details

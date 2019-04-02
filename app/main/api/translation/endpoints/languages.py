@@ -1,6 +1,6 @@
 from flask import request, url_for
 from flask.helpers import make_response
-from flask_restplus import Resource, fields, marshal_with
+from flask_restplus import Resource, fields
 from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
@@ -9,43 +9,12 @@ from app.model_settings import languages
 from app.main.translate import translate_from_to
 
 
-class MyUrlField(fields.Url):
-
-    def output(self, key, obj, **kwargs):
-        try:
-            data = fields.to_marshallable_type(fields.get_value(key if self.attribute is None
-                                                                else self.attribute, obj))
-            endpoint = self.endpoint if self.endpoint is not None else request.endpoint
-            o = fields.urlparse(url_for(endpoint, _external=self.absolute, **data))
-            path = o.path  # .rstrip('/')
-            if self.absolute:
-                scheme = self.scheme if self.scheme is not None else o.scheme
-                netloc = o.netloc
-            else:
-                scheme = ""
-                netloc = ""
-            return fields.urlunparse((scheme, netloc, path, "", o.query, ""))
-        except TypeError as te:
-            raise fields.MarshallingError(te)
-
-
-class MyTemplatedUrlField(MyUrlField):
-
-    def __init__(self, params, **kwargs):
-        super(MyTemplatedUrlField, self).__init__(required=None, **kwargs)
-        self.query_template = '{?' + ','.join(params) + '}'
-
-    def output(self, key, obj, **kwargs):
-        url = super(MyTemplatedUrlField, self).output(key, obj, **kwargs)
-        return url + self.query_template
-
-
 ns = api.namespace('languages', description='Operations with source and target languages')
 
 _models_item_relation = 'item'
 
 link = ns.model('Link', {
-    'href': fields.Url,
+    'href': fields.String,
     'name': fields.String,
     'title': fields.String,
     'type': fields.String,
@@ -67,35 +36,37 @@ def rem_title_from_dict(aDict):
     return ret
 
 
-lang_link = ns.clone('LangLink', link, {
-    'href': fields.Url(endpoint='.languages_language_item'),
-    'name': fields.String,
-    'title': fields.String,
-})
-
-
 def identity(x):
     return x
 
 
-translate_link =ns.model('TranslateLink', {
-        'href': MyTemplatedUrlField(endpoint='.languages_language_collection',
-                                    params=['src', 'tgt'], attribute=lambda x: {}),
-        'templated': fields.Boolean(attribute=lambda x: True)
-    })
+def set_endpoint_href(lang_o):
+    def add_href(x):
+        x.add_href(url_for('.languages_language_item', language=x.language))
+        return x
+
+    lang_o.sources = list(map(lambda src: add_href(src), lang_o.sources))
+    lang_o.targets = list(map(lambda tgt: add_href(tgt), lang_o.targets))
+
+
+def get_templated_translate_link():
+    params = ['src', 'tgt']
+    url = url_for('.languages_language_collection')
+    query_template = '{?' + ','.join(params) + '}'
+    return {'href': url + query_template, 'templated': True}
+
 
 
 # TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
 language_resource = ns.model('LanguageResource', {
     '_links': fields.Nested(
-        ns.model('Links', {
-            'translate': fields.Nested(translate_link),
-            'sources': fields.List(fields.Nested(lang_link, skip_none=True)),
-            'targets': fields.List(fields.Nested(lang_link, skip_none=True)),
-            'self': fields.Nested(ns.model('JustHrefLink', {
-                'href': MyUrlField(endpoint='.languages_language_item', attribute=lambda l: {
-                    'language': l.language})
-            }), attribute=identity),
+        ns.model('LanguageResourceLinks', {
+            'translate': fields.Nested(link, attribute=lambda _: get_templated_translate_link(),
+                                       skip_none=True),
+            'sources': fields.List(fields.Nested(link, skip_none=True)),
+            'targets': fields.List(fields.Nested(link, skip_none=True)),
+            'self': fields.Nested(link, attribute=lambda x: {'href': url_for(
+                '.languages_language_item', language=x.language)}, skip_none=True),
             # TODO potrebuju linky na modely k necemu? Potrebuju, kdyby interface vypadal choose
             #  lang -> choose from models
             #'models': fields.List(fields.Nested(model_link, skip_none=True),
@@ -108,9 +79,11 @@ language_resource = ns.model('LanguageResource', {
 })
 
 languages_links = ns.model('LanguageLinks', {
-    _models_item_relation: fields.List(fields.Nested(lang_link, skip_none=True)),
-    'self': fields.Nested(link, skip_none=True, attribute=lambda _: {}),
-    'translate': fields.Nested(translate_link),
+    _models_item_relation: fields.List(fields.Nested(link, skip_none=True)),
+    'self': fields.Nested(link, skip_none=True, attribute=lambda _: {'href': url_for(
+        '.languages_language_collection')}),
+    'translate': fields.Nested(link, attribute=lambda _: get_templated_translate_link(),
+                               skip_none=True),
 })
 
 languages_resources = ns.model('LanguagesResource', {
@@ -128,14 +101,15 @@ class LanguageCollection(Resource):
     def to_text(cls, data, code, headers):
         return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
 
-    @ns.doc(model=languages_resources)  # This shouldn't be necessary according to docs,
-    # but without it the swagger.json does not contain the definitions part
-    @marshal_with(languages_resources, skip_none=True)
+    @ns.marshal_with(languages_resources, skip_none=True)
     def get(self):
         """
         Returns a list of available languages
         """
         values = list(languages.languages.values())
+        for lang_o in values:
+            set_endpoint_href(lang_o)
+
         return {
             '_links': {
                 _models_item_relation: values
@@ -146,7 +120,11 @@ class LanguageCollection(Resource):
         }
 
     @ns.produces(['application/json', 'text/plain'])
-    @ns.expect(text_input_with_src_tgt, validate=True)
+    @ns.response(code=200, description="Success", model=str)
+    @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
+    @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
+    @ns.param(**{'name': 'input_text', 'description': 'text to translate',
+                 'x-example': 'this is a sample text', '_in': 'formData'})
     def post(self):
         """
         Translate input from scr lang to tgt lang.
@@ -173,15 +151,17 @@ class LanguageCollection(Resource):
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
 
 
-
 @ns.route('/<string(length=2):language>')
 class LanguageItem(Resource):
-    @ns.doc(model=language_resource)  # This shouldn't be necessary according to docs,
-    # but without it the swagger.json does not contain the definitions part
-    @marshal_with(language_resource, skip_none=True)
+    @ns.marshal_with(language_resource, skip_none=True)
+    @ns.param(**{'name': 'language', 'description': 'Language code',
+                 'x-example': 'en', '_in': 'path'})
     def get(self, language):
         """
         Returns a language resource object
         """
-        return languages.languages[language]
+        lang_o = languages.languages[language]
+        # TODO can we not call setter when the href was alredy set
+        set_endpoint_href(lang_o)
+        return lang_o
 
