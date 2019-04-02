@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, current_app, url_for
+from flask import Blueprint, render_template, request, current_app, url_for, redirect
 
 from .forms import TranslateForm
 from app.model_settings import models as models_conf
@@ -9,9 +9,8 @@ bp = Blueprint('main', __name__)
 
 @bp.route('/', methods=['GET'])
 def index():
-    # TODO json index?
-    # if _request_wants_json():
-    #    return api_index()
+    if _request_wants_json():
+        return redirect(url_for('api.root_root_resource'))
     form = TranslateForm()
     form.models.choices = url_for_choices()
     form.models.default = form.models.choices[0][0]

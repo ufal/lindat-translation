@@ -22,7 +22,7 @@
   {{super()}}
   <script type=text/javascript>
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-    $FILE_SIZE_LIMIT = {{ file_size_limit }};
+    $FILE_SIZE_LIMIT = {{ file_size_limit|default(0, true) }};
   </script>
   {% block app_scripts %}{% endblock %}
 {% endblock %}

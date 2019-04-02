@@ -2,45 +2,11 @@
 {% block panel %}
 {{ super() }}
     <h2>Api</h2>
-    <p>There's a very simple API available. You need to know only how to discover the available
-        models and that you <code>POST</code> <code>input_text</code> to those models.</p>
-    <p>Start exploring the api by requesting <code>application/json</code> from <a href="{{
-            url_for('main.index') }}">{{ url_for('main.index') }}</a>. You can then follow the
-        links in the <code>_links</code> dictionary and navigate the api.</p>
-    <p>For convenience the models available in the latest api version are embedded (in the
-        <code>_embedded</code> field of the response).</p>
-    <p>Errors are reported solely as the HTTP return status.</p>
-    <h2>Examples</h2>
-    <dl>
-        <dt>Enter the api</dt>
-        <dd><code>curl -H'Accept: application/json' {{ request.url_root|tojson }}</code></dd>
-        <dt>Get available models (title:url) from the <code>_embedded</code> field </dt>
-        <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write('\n'.join ([model['title'] + ':' + model['href'] for model in json.load(sys.stdin) ['_embedded']['latest']['_embedded']['models']['_links']['models']]))"</code></dd>
-        <dt>Translate (when you've found the right model)</dt>
-        <dd><code>curl -d 'input_text=This is a test' {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
-        <dt>Upload a file</dt>
-        <dd><code>curl -F input_text=@/tmp/test.txt {{ request.host_url.rstrip('/') }}$(curl -s -H'Accept: application/json' {{ request.url_root }} | PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['_embedded']['latest']['_embedded']['models']['_links']['models'][0]['href'])")</code></dd>
-        <dt>Get available source-target pairs and urls (you have no say in the model selection)</dt>
-        <dd><code>curl -s -H'Accept: application/json' {{ request.url_root|tojson }} |
-            PYTHONIOENCODING=utf-8 python -c "import sys,json; sys.stdout.write('\n'.join([l['source'] + '->' + l['target'] + ':' + l['href'] for l in json.load(sys.stdin)['_embedded']['latest']['_embedded']['languages']['_links']['languages']]))"</code></dd>
-    </dl>
-    <p>
-    For one off scripts you can also use the <a href="{{ url_for('main.api_models_v1') }}">model
-        endpoint</a>, <a href="{{ url_for('main.api_languages_v1') }}">languages endpoint</a>
-        and/or the urls of models/language pair provided by that endpoint, if you don't mind
-        updating them by hand from time to time.
-    </p>
-    <dl>
-        <dt>With hardcoded en-cs model</dt>
-        <dd><code>curl -d 'input_text=This is a simple test.' {{ request.host_url.rstrip('/') + url_for('main.api_models_v1') + '/en-cs' }}</code></dd>
-        <dt>Hardcoded Czech Hindi translation</dt>
-        <dd><code>curl -d 'input_text=Toto je jednoduchý text k přeložení.' {{ request.host_url
-        .rstrip('/') +
-        url_for('main.api_languages_v1') + '?src=cs&tgt=hi' }}</code></dd>
-    </dl>
-    <h2>Response</h2>
-     <p>The response is a json array where each element is a translated sentence.</p>
-
+    <p>There's a very simple API available. When you know the name of the model you want to use
+        and/or you know the source and target languages, you just <code>POST</code>
+        <code>input_text</code> to the model/language endpoint.</p>
+    See <a href="{{ url_for('api.doc') }}">the interactive api doc</a> or browse the api with <a
+        href="hal_browser">hal browser</a>.
     <h2>Limitations</h2>
     <p>See the <a href="https://lindat.mff.cuni.cz/en/terms-of-use">terms of use</a> for general
         limitations on lindat services.</p>
