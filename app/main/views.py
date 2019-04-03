@@ -15,14 +15,17 @@ def index():
     form.models.choices = url_for_choices()
     form.models.default = form.models.choices[0][0]
 
-    sources = [(url_for('api.languages_language_item', language=code), language.title)
-               for code, language in languages.languages.items() if language.targets]
+    sources = list(sorted(filter(lambda l: l.targets, languages.languages.values()),
+                          key=lambda l: l.title))
 
-    form.target.choices = sorted([(l.name, l.title) for l in list(languages.languages.values())[0].targets],
+    default_src = sources[0]
+
+    form.target.choices = sorted([(l.name, l.title) for l in default_src.targets],
                                  key=lambda x: x[1])
 
-    form.source.choices = sorted(sources, key=lambda x: x[1])
-    form.source.data = sources[0][0]
+    form.source.choices = [(url_for('api.languages_language_item', language=l.name), l.title) for
+                           l in sources]
+    form.source.data = form.source.choices[0][0]
     return render_template('index.html', form=form,
                            file_size_limit=current_app.config['MAX_CONTENT_LENGTH'])
 
