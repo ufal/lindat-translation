@@ -39,10 +39,6 @@ def add_href(model):
     return model
 
 
-raw = ns.model('str2strlist', { })
-
-
-
 # TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
 model_resource = ns.model('ModelResource', {
     '_links': fields.Nested(ns.model('ModelResourceLinks', {
@@ -51,9 +47,8 @@ model_resource = ns.model('ModelResource', {
     }), attribute=identity),
     'default': fields.Boolean,
     'domain': fields.String,
-    'model': fields.String,
-    # TODO is raw ok, how does it look in swagger
-    'supports': fields.Nested(raw),
+    'model': fields.String(required=True),
+    'supports': fields.Raw(required=True, example={'en': ['cs']}),
     'title': fields.String,
 })
 
