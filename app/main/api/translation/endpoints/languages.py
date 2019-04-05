@@ -121,6 +121,7 @@ class LanguageCollection(Resource):
 
     @ns.produces(['application/json', 'text/plain'])
     @ns.response(code=200, description="Success", model=str)
+    @ns.response(code=415, description="You sent a file but it was not text/plain")
     @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
     @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
     @ns.param(**{'name': 'input_text', 'description': 'text to translate',

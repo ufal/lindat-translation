@@ -39,11 +39,20 @@ def add_href(model):
     return model
 
 
+def get_templated_translate_link(model):
+    params = ['src', 'tgt']
+    url = url_for('.models_model_item', model=model).rstrip('/')
+    query_template = '{?' + ','.join(params) + '}'
+    return {'href': url + query_template, 'templated': True}
+
+
 # TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
 model_resource = ns.model('ModelResource', {
     '_links': fields.Nested(ns.model('ModelResourceLinks', {
         'self': fields.Nested(link, attribute=lambda x: {'href': url_for(
-            '.models_model_item', model=x.model)}, skip_none=True)
+            '.models_model_item', model=x.model)}, skip_none=True),
+        'translate': fields.Nested(link, attribute=lambda x: get_templated_translate_link(x.model),
+                                   skip_none=True)
     }), attribute=identity),
     'default': fields.Boolean,
     'domain': fields.String,
@@ -92,6 +101,7 @@ class ModelItem(Resource):
 
     @ns.produces(['application/json', 'text/plain'])
     @ns.response(code=200, description="Success", model=str)
+    @ns.response(code=415, description="You sent a file but it was not text/plain")
     @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
     @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
     @ns.param(**{'name': 'input_text', 'description': 'text to translate',
