@@ -20,7 +20,7 @@ link = ns.model('Link', {
     'type': fields.String,
     'deprecation': fields.String,
     'profile': fields.String,
-    'templated': fields.String,
+    'templated': fields.Boolean,
     'hreflang': fields.String
 })
 
@@ -51,7 +51,7 @@ def set_endpoint_href(lang_o):
 
 def get_templated_translate_link():
     params = ['src', 'tgt']
-    url = url_for('.languages_language_collection')
+    url = url_for('.languages_language_collection').rstrip('/')
     query_template = '{?' + ','.join(params) + '}'
     return {'href': url + query_template, 'templated': True}
 

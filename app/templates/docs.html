@@ -5,10 +5,11 @@
     <p>There's a very simple API available. When you know the name of the model you want to use
         and/or you know the source and target languages, you just <code>POST</code>
         <code>input_text</code> to the model/language endpoint.</p>
-    See <a href="{{ url_for('api.doc') }}">the interactive api doc</a> or browse the api with <a
+    See <a href="{{ url_for('api.doc') }}">the interactive api doc</a>, where you can explore the
+    endpoints and get example curl commands, or browse the api with <a
         href="{{ url_for('static', filename='hal-browser/browser.html') + '#'
-         + url_for('api.root_root_resource') }}">hal
-    browser</a>.
+         + url_for('api.root_root_resource') }}">hal browser</a>, which offers a nicer view of
+    the actual data structures.
     <h2>Limitations</h2>
     <p>See the <a href="https://lindat.mff.cuni.cz/en/terms-of-use">terms of use</a> for general
         limitations on lindat services.</p>

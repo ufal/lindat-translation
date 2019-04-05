@@ -16,7 +16,7 @@ link = ns.model('Link', {
     'type': fields.String,
     'deprecation': fields.String,
     'profile': fields.String,
-    'templated': fields.String,
+    'templated': fields.Boolean,
     'hreflang': fields.String
 })
 
