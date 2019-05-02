@@ -1,10 +1,9 @@
 from flask import request, url_for
-from flask.helpers import make_response
 from flask_restplus import Resource, fields
-from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
-from app.main.api.translation.parsers import text_input_with_src_tgt #text_input # , file_input
+from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
+from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
 from app.main.translate import translate_with_model
 
@@ -93,11 +92,7 @@ class ModelCollection(Resource):
 # TODO should expose templated urls in hal?
 @ns.route('/<any' + str(tuple(models.get_model_names())) + ':model>')
 @ns.param(**{'name': 'model', 'description': 'model name', 'x-example': 'en-cs', '_in': 'path'})
-class ModelItem(Resource):
-
-    @classmethod
-    def to_text(cls, data, code, headers):
-        return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
+class ModelItem(MyAbstractResource):
 
     @ns.produces(['application/json', 'text/plain'])
     @ns.response(code=200, description="Success", model=str)
@@ -112,14 +107,7 @@ class ModelItem(Resource):
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         If you don't provide src or tgt some will be chosen for you!
         """
-        if request.files and 'input_text' in request.files:
-            input_file = request.files.get('input_text')
-            if input_file.content_type != 'text/plain':
-                api.abort(code=415, message='Can only handle text/plain files.')
-            text = input_file.read().decode('utf-8')
-        else:
-            text = request.form.get('input_text')
-        #return ' '.join(translate_with_model(model, text)).replace('\n ', '\n')
+        text = self.get_text_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         # map model name to model obj
         model = models.get_model(model)
@@ -132,12 +120,8 @@ class ModelItem(Resource):
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 
-        self.representations = self.representations if self.representations else {}
-        if 'text/plain' not in self.representations:
-            self.representations['text/plain'] = ModelItem.to_text
-        if 'application/json' not in self.representations:
-            self.representations['application/json'] = output_json
-        return translate_with_model(model, text, src, tgt)
+        self.set_media_type_representations()
+        return self.create_response(translate_with_model(model, text, src, tgt))
 
     @ns.marshal_with(model_resource, skip_none=True)
     def get(self, model):
