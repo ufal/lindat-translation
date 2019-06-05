@@ -1,5 +1,4 @@
 {%- extends "bootstrap/base.html" %}
-{% import "bootstrap/utils.html" as utils %}
 
 {% block head %}
   <meta charset="utf-8">
@@ -23,7 +22,7 @@
   {{super()}}
   <script type=text/javascript>
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-    $FILE_SIZE_LIMIT = {{ file_size_limit }};
+    $FILE_SIZE_LIMIT = {{ file_size_limit|default(0, true) }};
   </script>
   {% block app_scripts %}{% endblock %}
 {% endblock %}
@@ -36,7 +35,6 @@
 
 {% block content %}
   <div class="container" id="mainContent">
-    {{utils.flashed_messages(container=False, dismissible=True)}}
     {% block main %}{% endblock %}
   </div>
     <!-- Footer -->

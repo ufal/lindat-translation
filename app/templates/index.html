@@ -1,11 +1,14 @@
 {%- extends "main.html" %}
 {% block panel %}
     {{ super() }}
-    <p>Once the translation has started it can take in order of minutes
-        to complete. You'll be shown the status (started/queued) of your translation task above this panel.</p>
-    <form class="form" id="taskForm" method="POST">
-        {{ wtf.form_field(form.lang_pair) }}
+    <p>You'll be shown the status (started/queued) of your translation task above this panel.</p>
+    <form class="form" id="taskForm" method="POST"
+          action="{{ url_for('api.languages_language_collection') }}">
         {{ wtf.form_field(form.models) }}
+        <div class="row">
+            <div class="col-md-6" id="source_col">{{ wtf.form_field(form.source) }}</div>
+            <div class="col-md-6" id="target_col">{{ wtf.form_field(form.target) }}</div>
+        </div>
         {{ wtf.form_field(form.advanced) }}
         <div class="row">
             <div class="col-md-6" id="input">{{ wtf.form_field(form.input_text) }}</div>

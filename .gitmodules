@@ -1,3 +1,6 @@
 [submodule "app/static/lindat-common"]
 	path = app/static/lindat-common
 	url = https://github.com/ufal/lindat-common
+[submodule "app/static/hal-browser"]
+	path = app/static/hal-browser
+	url = https://github.com/mikekelly/hal-browser.git

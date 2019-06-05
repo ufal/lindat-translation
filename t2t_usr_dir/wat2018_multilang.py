@@ -26,13 +26,15 @@ _datasets = {
 
 @registry.register_problem
 class TranslateEnhiWat18(translate.TranslateProblem):
-    @property 
+
+    @property
     def approx_vocab_size(self):
         return 2 ** 15  # 32768 
     
     @property
     def vocab_filename(self):
         return "vocab.enhi.32768"
+
     def source_data_files(self, dataset_split):
         train = dataset_split == problem.DatasetSplit.TRAIN
         return _datasets['ENHI_train'] if train else _datasets['ENHI_dev']

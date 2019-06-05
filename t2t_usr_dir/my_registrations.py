@@ -1,6 +1,6 @@
-import os
 from tensor2tensor.utils import registry
 from tensor2tensor.data_generators import translate, problem, text_encoder, generator_utils
+from tensor2tensor.data_generators.translate_encs import TranslateEncsWmt32k
 
 _ENCS_TRAIN_DATASETS = [
     [("http://czeng57m.tar"),
@@ -69,3 +69,10 @@ class TranslateEncsWmtCzeng57m32k(translate.TranslateProblem):
   @property
   def target_space_id(self):
     return problem.SpaceID.CS_TOK
+
+
+@registry.register_problem
+class TranslateMedical8lang(TranslateEncsWmt32k):
+    @property
+    def vocab_filename(self):
+        return "vocab_medical8lang.%d" % self.approx_vocab_size

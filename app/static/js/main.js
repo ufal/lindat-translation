@@ -1,11 +1,10 @@
 $(document).ready(function() {
-   var visible_select_box_id = '#lang_pair'
 
   // flash an alert
   // remove previous alerts by default
   // set clean to false to keep old alerts
   function flash_alert(message, category, clean) {
-    console.log(message);
+    //console.log(message);
     if (typeof(clean) === "undefined") clean = true;
     if(clean) {
       remove_alerts();
@@ -26,6 +25,43 @@ $(document).ready(function() {
     $("#output_text").val(translation);
   }
 
+  function create_option(value){
+      var option = $("<option/>")
+      option.attr('value', value)
+      option.text(value)
+      return option
+  }
+
+  function models_visible(){
+      return !$("#models").parents("div.form-group").hasClass('hidden')
+  }
+
+  function get_action_url(){
+      if (models_visible()){
+          return $("#models option:selected").val()
+      }else{
+          return $("form").attr('action')
+      }
+
+  }
+
+  function get_form_data(){
+      var src_option = $("#source option:selected")
+      var src = src_option.val()
+      if(src_option.attr('name')){
+          src = src_option.attr('name')
+      }
+      var i = src.lastIndexOf('/')
+      if(i >= 0){
+          src = src.substring(i + 1)
+      }
+      return {
+          'input_text': $("#input_text").val(),
+          'src': src,
+          'tgt': $("#target option:selected").val()
+      }
+  }
+
   // submit form
   $("#submit").on('click', function() {
     flash_alert("Running  ...", "info");
@@ -37,8 +73,8 @@ $(document).ready(function() {
       }, 1500);
     $("#submit").attr("disabled", "disabled");
     $.ajax({
-      url: $(visible_select_box_id + " option:selected").val(),
-      data: {'input_text': $("#input_text").val()},
+      url: get_action_url(),
+      data: get_form_data(),
       method: "POST",
       dataType: "json",
       success: function(data, status, request) {
@@ -54,12 +90,106 @@ $(document).ready(function() {
     });
   });
 
+  var select_source = $("#source")
+  var select_target = $("#target")
   // checkbox actions
   $("#advanced").change(function(){
-      $("#models").parents("div.form-group").toggleClass('hidden')
-      $("#lang_pair").parents("div.form-group").toggleClass('hidden')
-      visible_select_box_id = '#' + $("div.form-group:not(.hidden) > select").attr('id')
+      var models_parent = $("#models").parents("div.form-group").toggleClass('hidden')
+      // models are visible, fetch the right src/tgt
+      if (models_visible()){
+          $("#models").trigger('change')
+      }else{
+          //init select_source
+          $.ajax({
+              url:$('form').attr("action"),
+              dataType: "json",
+              success: function(data, status, request){
+                  select_source.find("option").remove()
+                  data._embedded.item.forEach(function(lang_resource){
+                     if (lang_resource._links.targets.length > 0){
+                         var option = create_option(lang_resource.title)
+                         option.val(lang_resource._links.self.href)
+                         option.attr('name', lang_resource.name)
+                         select_source.append(option)
+                     }
+                  })
+              },
+              error: function(jqXHR, textStatus, errorThrown){
+                  console.error(textStatus)
+              },
+
+          }).done(function(){
+              select_source.trigger('change')
+          })
+      }
   })
+
+    var get_model_options = function(model_url){
+      return $.ajax({
+          url: model_url,
+          dataType: "json",
+          success: function(data, status, request){
+              select_source.off('change.languages')
+              select_source.find("option").remove()
+              select_target.find("option").remove()
+              Object.keys(data.supports).forEach(function(key){
+                  var option = create_option(key)
+                  select_source.append(option)
+              })
+              select_source.on('change.languages', function(e){
+                  if (models_visible()) {
+                      var key = $(e.target).val()
+                      var supported_tgt_arr = data.supports[key]
+                      select_target.find("option").remove()
+                      supported_tgt_arr.forEach(function (tgt_lang) {
+                          var option = create_option(tgt_lang)
+                          select_target.append(option)
+                      })
+                  }
+              })
+              //add_options(select_target, data.target)
+              //console.log(data)
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+              console.error(textStatus)
+          }
+      })
+    }
+    $("#models").change(function(e){
+        var model_url = $(e.target).val()
+        get_model_options(model_url).done(function(){
+            select_source.trigger('change')
+        })
+    })
+
+    select_source.on('change.language.nomodel', function(e){
+        if (!models_visible()){
+            var selected_src_url = $(e.target).val()
+            $.ajax({
+              url: selected_src_url,
+              dataType: "json",
+              success: function(data, status, request){
+                  var selected_target = $("#target option:selected").val()
+                  select_target.find("option").remove()
+                  data._links.targets.sort(function(a, b){
+                      return a.title.localeCompare(b.title)
+                  }).forEach(function(lang_link){
+                      var option = create_option(lang_link.name)
+                      if (lang_link.name == selected_target){
+                          option.attr('selected', 'selected')
+                      }
+                      option.text(lang_link.title)
+                      select_target.append(option)
+                  })
+
+              },
+              error: function (jqXHR, textStatus, errorThrown) {
+                console.error(textStatus)
+              }
+            })
+        }
+    })
+
 
   // fileupload
   if (!!FileReader && 'draggable' in document.createElement('span')
@@ -101,12 +231,14 @@ $(document).ready(function() {
             if($("#input_text").val()){
                 $("#submit").click()
             }
-        }, 1500)
+        }, 1000)
     }
+    // TODO mobile seems lacking keyup/keydown
     $("#input_text").on("keyup", countDown)
                     .on("keydown", cancelCountDown)
                     .on("paste", countDown)
-    $("#lang_pair").on("change", countDown)
     $("#models").on("change", countDown)
     $("#advanced").on("change", countDown)
+    $("#source").on("change", countDown)
+    $("#target").on("change", countDown)
 });
