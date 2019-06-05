@@ -4,6 +4,7 @@ from flask_restplus import Resource, fields
 from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
+from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
 from app.model_settings import languages
 from app.main.translate import translate_from_to
@@ -95,11 +96,7 @@ languages_resources = ns.model('LanguagesResource', {
 
 
 @ns.route('/')
-class LanguageCollection(Resource):
-
-    @classmethod
-    def to_text(cls, data, code, headers):
-        return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
+class LanguageCollection(MyAbstractResource):
 
     @ns.marshal_with(languages_resources, skip_none=True)
     def get(self):
@@ -131,23 +128,13 @@ class LanguageCollection(Resource):
         Translate input from scr lang to tgt lang.
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         """
-        if request.files and 'input_text' in request.files:
-            input_file = request.files.get('input_text')
-            if input_file.content_type != 'text/plain':
-                api.abort(code=415, message='Can only handle text/plain files.')
-            text = input_file.read().decode('utf-8')
-        else:
-            text = request.form.get('input_text')
+        text = self.get_text_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src', 'en')
         tgt = args.get('tgt', 'cs')
+        self.set_media_type_representations()
         try:
-            self.representations = self.representations if self.representations else {}
-            if 'text/plain' not in self.representations:
-                self.representations['text/plain'] = LanguageCollection.to_text
-            if 'application/json' not in self.representations:
-                self.representations['application/json'] = output_json
-            return translate_from_to(src, tgt, text)
+            return self.create_response(translate_from_to(src, tgt, text))
         except ValueError as e:
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
 
