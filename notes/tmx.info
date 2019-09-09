@@ -41,3 +41,15 @@ marking the source of the translation in each TUV:
             <PROP NAME="Origin">MT</PROP>
 
 
+
+translate-toolkit has support both for TMX and XLIFF
+
+http://docs.translatehouse.org/projects/translate-toolkit/en/latest/index.html
+
+
+
+Two options:
+- keep the original file, just add the translations <-- preferred
+- generate a new output file
+
+
