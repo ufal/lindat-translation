@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tmx version="1.4">
+  <header creationtool="SDLXLiff2Tmx" creationtoolversion="1.0" o-tmf="SDLXliff2Tmx Generic 1.0 Format" datatype="xml" segtype="sentence" adminlang="en-US" srclang="en-US" creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx" />
+  <body>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>track record in real estate development, sales and marketing.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>track record in real estate development, sales and marketing.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>When Mr Zamrazil first toured</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>When Mr Zamrazil first toured</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>the unique former military facility, he was impressed by its massive scale.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>the unique former military facility, he was impressed by its massive scale.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>He saw its potential</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>He saw its potential</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>to be transformed into the ultimate life-assurance solution and named it The Oppidum, from</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>to be transformed into the ultimate life-assurance solution and named it The Oppidum, from</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>the Latin word meaning the main settlement in an administrative area of ancient Rome.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>the Latin word meaning the main settlement in an administrative area of ancient Rome.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>The word was derived from the earlier Latin op-pedum, an "enclosed space", used to describe</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>The word was derived from the earlier Latin op-pedum, an "enclosed space", used to describe</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>fortresses that were constructed in Europe as early as the Iron Age.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>fortresses that were constructed in Europe as early as the Iron Age.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>Mr Zamrazil joined forces with top professionals in the fields of security and luxury development</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>Mr Zamrazil joined forces with top professionals in the fields of security and luxury development</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>to put together the concept of the ultimate life-assurance solution for the modern age.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>to put together the concept of the ultimate life-assurance solution for the modern age.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>General Andor Šándor</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>General Andor Šándor</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg><bpt i="1" type="545" x="1" />General Andor Šándor (Retired) is the security director<ept i="1" /><bpt i="2" type="575" x="31" />and guarantor of the Oppidum project.<ept i="2" /></seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg><bpt i="1" type="545" x="1" />General Andor Šándor (Retired) is the security director<ept i="1" /><bpt i="2" type="575" x="31" />and guarantor of the Oppidum project.<ept i="2" /></seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>He is a former Chief of the Military Intelligence Service of the Czech Republic, with the rank</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>He is a former Chief of the Military Intelligence Service of the Czech Republic, with the rank</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>of Brigadier General.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>of Brigadier General.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>Since 2003, he has acted as a security consultant for Ruzyně Airport Prague (now renamed</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>Since 2003, he has acted as a security consultant for Ruzyně Airport Prague (now renamed</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>Václav Havel Airport Prague); the Prague Metro; the Czech Railways, Road and Motorway</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>Václav Havel Airport Prague); the Prague Metro; the Czech Railways, Road and Motorway</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>Directorate; and other organizations.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>Directorate; and other organizations.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>Currently, General Andor Šándor and General Jiří Šedivý are acting as consultants for upcoming</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>Currently, General Andor Šándor and General Jiří Šedivý are acting as consultants for upcoming</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>safety drills in Prague, including the largest blackout that the city will have experienced.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>safety drills in Prague, including the largest blackout that the city will have experienced.</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>A TOTO:</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>A TOTO:</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>„The best luck of all is the luck you make for yourself.“ Douglas MacArthur</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>„The best luck of all is the luck you make for yourself.“ Douglas MacArthur</seg>
+      </tuv>
+    </tu>
+  </body>
+</tmx>

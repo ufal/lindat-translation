@@ -1,0 +1,43 @@
+
+http://xml.coverpages.org/tmxSpec971212.html
+
+<TU>	Each <TU> (Translation Unit) element contains zero, one or more <NOTE> elements, followed by zero, one or more <PROP> elements, followed by one or more <TUV> elements. The first <TUV> element in a <TU> is expected to be the source.
+Logically, a translation-memory database is not complete unless there are at least two <TUV> elements in most Translation Units.
+Each <TU> has several optional attributes: ID, O-ENCODING, DATATYPE, USAGECOUNT, LASTUSAGEDATE. CREATIONTOOL, CREATIONDATE, CREATIONID, CHANGEDATE, SEGTYPE, CHANGEID and SRCLANG.
+<TUV>	Each <TUV> (Translation Unit Variant) specifies a text in a given language. It contains zero, one or more <NOTE> elements, followed by zero, one or more <PROP> elements, followed by one <SEG> element.
+It has one mandatory attribute: LANG and several optional attributes: O-ENCODING, DATATYPE, USAGECOUNT, LASTUSAGEDATE, CREATIONTOOL, CREATIONDATE, CREATIONID, CHANGEDATE and CHANGEID.
+<SEG>	Each <SEG> (Segment) contains the text of the <TUV>.
+It has no attributes.
+All spacing characters and line-breaks are significant inside a <SEG> element.
+
+
+
+# Texts
+
+Each TU is one translation unit. We can probably treat that as one sentence,
+ie translate each TU independently.
+
+In each TU, the first TUV contains one SEG which contains the text to be
+translated.
+The translation is to be filled into the SEG element of the second TUV (if
+present; maybe it can be missing and has to be added).
+
+
+# Languages
+
+source language = LANG of first TUV of first TU (or SRCLANG from HEADER if set); but
+as we are doing the translation sentence by senence, we can also simply
+extract the LANG for each TU from its first TUV independenty (this is a
+mandatory attribute)
+
+target language = LANG of second TU in the TUV (LANG mandatory, but existence
+of second TUV not mandatory; but in the sample it is always there)
+
+
+# Other
+
+Maybe we shpuld add some metadata from the translation system; e.g.
+marking the source of the translation in each TUV:
+            <PROP NAME="Origin">MT</PROP>
+
+
