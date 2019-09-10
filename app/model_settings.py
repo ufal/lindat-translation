@@ -131,8 +131,26 @@ class Model(object):
                     targets = get_or_create(self.supports, tgt_lang)
                     targets.append(src_lang)
 
-        self.problem = registry.problem(cfg['problem'])
-        self.problem.get_hparams(hparams)
+        if 'model_framework' in cfg:
+            self.model_framework = cfg['model_framework']
+        else:
+            self.model_framework = 't2t'
+
+        if self.model_framework == 't2t':
+            self.problem = registry.problem(cfg['problem'])
+            self.problem.get_hparams(hparams)
+        else:
+            self.problem = None
+
+        if 'sent_chars_limit' in cfg:
+            self.sent_chars_limit = cfg['sent_chars_limit']
+        else:
+            self.sent_chars_limit = current_app.config['SENT_LEN_LIMIT']
+
+        if self.model_framework == 'marian':
+            self.marian_server_host = cfg['marian_server_host']
+            self.marian_server_port = cfg['marian_server_port']
+
         if 'server' in cfg:
             self._server = cfg['server']
         self.domain = cfg.get('domain', None)
