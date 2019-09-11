@@ -3,7 +3,6 @@
 
 import sys
 import io
-import StringIO
 
 import logging
 logging.basicConfig(
@@ -14,79 +13,157 @@ logging.basicConfig(
 
 from translate.storage.tmx import tmxfile
 
-#with open("../file_samples/The-Oppidum-project.tmx", 'rb') as fin:
-#with open("../file_samples/sample.tmx", 'rb') as fin:
-#with open("../file_samples/sample.xliff", 'rb') as fin:
-    # tmx_file = tmxfile(fin, 'en', 'cs')
-    #tmx_file = tmxfile(fin)
-    #for unit in tmx_file.unit_iter():
-        # print(unit.getsource(), node.gettarget())
-        # print(unit.getsource())
+# TODO languages
+# read language codes from TMX file
+# write language codes to TMX file (settarget has a second argument lang='xx')
 
 
-
-def file2segments(inputfile):
-    # test type of inputfile -- open if filename, stringstream if string,
-    # use directly if stream, otherwise error
-    # inputstream = inputfile
-    logging.debug( type(inputfile))
-    logging.debug('inputfile is str: {}'.format(isinstance(inputfile, str)))
-    logging.debug('inputfile is stream: {}'.format(isinstance(inputfile, io.IOBase)))
-    
+def file2stream(inputfile):
+    # determine type of inputfile
     if isinstance(inputfile, io.IOBase):
+        # stream: use directly
         inputstream = inputfile
+        inputstream.seek(0)
     elif isinstance(inputfile, str):
         try:
-            inputstream = open(inputfile, 'rb')
+            # filename: open
+            inputstream = open(inputfile, 'r')
         except:
-            inputstream = StringIO(inputfile)
+            # string: build a stream around the string
+            inputstream = io.StringIO(inputfile)
+    else:
+        assert False, "Bad type of inputfile: {}, must be stream, filename, or string".format(type(inputfile))
     
-    logging.debug( type(inputstream))
-    logging.debug('inputstream is stream: {}'.format(isinstance(inputstream, io.IOBase)))
+    return inputstream
 
-    # guess type of input -- try to load as tmx and as xliff, otherwise assume
-    # text
-    # and extract input segments
-    # and  extract metadata if possible
-    inputsegments = None
+# determine input type, extract segments and metadata
+def stream2doc(inputstream):
     inputtype = None
-    srclang = None
-    tgtlang = None
+    inputdoc = None
+    
+    # TMX?
     if inputtype == None:
+        inputstream.seek(0)
         try:
-            document = tmxfile(inputstream)
+            inputdoc = tmxfile(inputstream)
             inputtype = 'TMX'
-            inputsegments = [unit.getsource() for unit in document.getunits()]
         except:
+            logging.debug(sys.exc_info()[0])
             inputtype = None
+    
+    # XLIFF?
     if inputtype == None:
+        inputstream.seek(0)
         try:
             # XLIFF
+            # TODO
+            # inputtype = 'XLIFF'
             pass
         except:
             inputtype = None
+    
+    # TXT fallback (anything can be parsed as plain text)
     if inputtype == None:
-        # fallback: anything can be parsed as plain text
+        inputstream.seek(0)
+        inputdoc = inputstream
         inputtype = 'TXT'
-        inputsegments = inputstream.readlines()    
 
-    return (inputsegments, inputtype, srclang, tgtlang)
+    return inputdoc, inputtype
 
-def translations2file(translationsegments, inputfile, tgtlang='en'):
-    # again, detect input type and file type (share code)
-    pass
+def doc2segments(inputdoc, inputtype):
+    inputsegments = []
+    if inputtype == 'TMX':
+        inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
+    elif inputtype == 'XLIFF':
+        # TODO
+        pass
+    elif inputtype == 'TXT':
+        inputsegments = [line.rstrip('\n\r') for line in inputdoc]
+    else:
+        assert False, 'Unsupported input type: {}'.format(inputtype)
+    return inputsegments
 
-    # insert translations
-    outputstring = translationsegments.join('\n')
 
-    # tmxfile -> unit -> settarget(targettext, lang=tgtlang)
+def file2segments(inputfile):
+    inputstream = file2stream(inputfile)
+    inputdoc, inputtype = stream2doc(inputstream)
+    inputsegments = doc2segments(inputdoc, inputtype)
+    return inputsegments, inputtype
 
-    # return file contents as string
+# TODO cannot read TMX from string, only from file
+# TODO cannot write TMX to string, only to file -- could do a temp file, but
+# better find the source code and implement a string variant
+
+# insert translations
+def docAddTrans(translationsegments, inputdoc, inputtype):
+    outputstring = None
+    if inputtype == 'TMX':
+        assert len(translationsegments) == len(inputdoc.getunits())
+        for unit, translation in zip(inputdoc.getunits(), translationsegments):
+            unit.settarget(translation)
+        #outputstream = io.StringIO()
+        #inputdoc.serialize(outputstream)
+        #inputdoc.savefile(outputstream)
+        #outputstring = outputstream.getvalue()
+        inputdoc.save()
+        outputstring = str(inputdoc)
+    elif inputtype == 'XLIFF':
+        # TODO
+        pass
+    elif inputtype == 'TXT':
+        outputstring = '\n'.join(translationsegments)
+    else:
+        assert False, 'Unsupported input type: {}'.format(inputtype)
+    return outputstring
+
+def translations2file(translationsegments, inputfile):
+    inputstream = file2stream(inputfile)
+    inputdoc, inputtype = stream2doc(inputstream)
+    outputstring = docAddTrans(translationsegments, inputdoc, inputtype)
     return outputstring
 
 
-inputsegments, inputtype, srclang, tgtlang = file2segments("../file_samples/sample.txt")
-print(inputtype, srclang, tgtlang)
+inputfile = "../file_samples/sample.tmx"
+#inputfile = "../file_samples/sample.txt"
+#inputfile = """Slezte z toho lustru, Donalde, vidím vás!
+#Kolik třešní, tolik višní.
+#"""
+inputfile = """<?xml version="1.0" encoding="utf-8"?>
+<tmx version="1.4">
+  <header creationtool="SDLXLiff2Tmx" creationtoolversion="1.0" o-tmf="SDLXliff2Tmx Generic 1.0 Format" datatype="xml" segtype="sentence" adminlang="en-US" srclang="en-US" creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx" />
+  <body>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>track record in real estate development, sales and marketing.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>track record in real estate development, sales and marketing.</seg>
+      </tuv>
+    </tu>
+  </body>
+</tmx>
+"""
+
+
+inputsegments, inputtype = file2segments(inputfile)
+
+print("INPUT")
+print(inputtype)
 print(inputsegments, sep="\n")
 
+translations = ["The nucmleus of an atom is composed of nucleons.",
+    "My hovercraft is full of eels."]
+
+result = translations2file(translations, inputfile)
+
+print("OUTPUT")
+print(result)
 
