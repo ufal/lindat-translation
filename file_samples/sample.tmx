@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tmx version="1.4">
+  <header creationtool="SDLXLiff2Tmx" creationtoolversion="1.0" o-tmf="SDLXliff2Tmx Generic 1.0 Format" datatype="xml" segtype="sentence" adminlang="en-US" srclang="en-US" creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx" />
+  <body>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+      </tuv>
+    </tu>
+    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+      <tuv xml:lang="en-GB">
+        <seg>track record in real estate development, sales and marketing.</seg>
+      </tuv>
+      <tuv xml:lang="cs-CZ">
+        <seg>track record in real estate development, sales and marketing.</seg>
+      </tuv>
+    </tu>
+  </body>
+</tmx>
