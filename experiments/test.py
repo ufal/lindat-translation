@@ -17,43 +17,45 @@ from translate.storage.tmx import tmxfile
 # read language codes from TMX file
 # write language codes to TMX file (settarget has a second argument lang='xx')
 
+# TODO change api: input will be string, not stream !!!!!
 
-def file2stream(inputfile):
+def data2string(inputdata):
     # determine type of inputfile
-    if isinstance(inputfile, io.IOBase):
-        # stream: use directly
-        inputstream = inputfile
-        inputstream.seek(0)
-    elif isinstance(inputfile, str):
+    if isinstance(inputdata, io.IOBase):
+        # stream: read in
+        inputdata.seek(0)
+        inputstring = inputstream.read()
+    elif isinstance(inputdata, str):
         try:
-            # filename: open
-            inputstream = open(inputfile, 'r')
+            # filename: open and read
+            with open(inputfile, 'r') as inputstream:
+                inputstring = inputstream.read()
         except:
-            # string: build a stream around the string
-            inputstream = io.StringIO(inputfile)
+            # string: just use it
+            inputstring = inputdata
     else:
-        assert False, "Bad type of inputfile: {}, must be stream, filename, or string".format(type(inputfile))
+        assert False, "Bad type of inputdata: {}, must be stream, filename, or string".format(type(inputdata))
     
     return inputstream
 
 # determine input type, extract segments and metadata
-def stream2doc(inputstream):
+def string2doc(inputstring):
     inputtype = None
     inputdoc = None
     
     # TMX?
     if inputtype == None:
-        inputstream.seek(0)
+        #inputstream.seek(0)
         try:
-            inputdoc = tmxfile(inputstream)
+            inputdoc = tmxfile(inputstring.encode('utf8'))
             inputtype = 'TMX'
         except:
             logging.debug(sys.exc_info()[0])
             inputtype = None
+            #raise
     
     # XLIFF?
     if inputtype == None:
-        inputstream.seek(0)
         try:
             # XLIFF
             # TODO
@@ -64,7 +66,6 @@ def stream2doc(inputstream):
     
     # TXT fallback (anything can be parsed as plain text)
     if inputtype == None:
-        inputstream.seek(0)
         inputdoc = inputstream
         inputtype = 'TXT'
 
