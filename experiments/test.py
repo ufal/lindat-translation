@@ -9,7 +9,8 @@ import logging
 logging.basicConfig(
     format='%(asctime)s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    level=logging.DEBUG)
+    #level=logging.DEBUG)
+    level=logging.INFO)
 
 
 from translate.storage.tmx import tmxfile
@@ -89,9 +90,6 @@ def file2segments(inputdata):
     inputsegments = doc2segments(inputdoc, inputtype)
     return inputsegments, inputtype
 
-# TODO cannot write TMX to string, only to file -- could do a temp file, but
-# better find the source code and implement a string variant
-
 # insert translations
 def docAddTrans(translationsegments, inputdoc, inputtype):
     outputstring = None
@@ -120,51 +118,72 @@ def translations2file(translationsegments, inputdata):
     outputstring = docAddTrans(translationsegments, inputdoc, inputtype)
     return outputstring
 
+if __name__ == "__main__":
 
-#inputdata = "../file_samples/sample.txt"
-inputdata = """<?xml version="1.0" encoding="utf-8"?>
-<tmx version="1.4">
-  <header creationtool="SDLXLiff2Tmx" creationtoolversion="1.0" o-tmf="SDLXliff2Tmx Generic 1.0 Format" datatype="xml" segtype="sentence" adminlang="en-US" srclang="en-US" creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx" />
-  <body>
-    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
-      <tuv xml:lang="en-GB">
-        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
-      </tuv>
-      <tuv xml:lang="cs-CZ">
-        <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
-      </tuv>
-    </tu>
-    <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
-      <tuv xml:lang="en-GB">
-        <seg>track record in real estate development, sales and marketing.</seg>
-      </tuv>
-      <tuv xml:lang="cs-CZ">
-        <seg>track record in real estate development, sales and marketing.</seg>
-      </tuv>
-    </tu>
-  </body>
-</tmx>"""
+    if len(sys.argv) > 1:
+        if len(sys.argv) == 3:
+            # read in data and translation
+            inputdata = sys.argv[1]
+            translationsfile = sys.argv[2]
+            with open(translationsfile) as infile:
+                translations = infile.read()
 
-#inputdata = """Slezte z toho lustru, Donalde, vidím vás!
-#Kolik třešní, tolik višní.
-#"""
+            inputsegments, inputtype = file2segments(inputdata)
+            result = translations2file(translations, inputdata)
+            print(result)
+        else:
+            # read in data, fake translations
+            inputdata = sys.argv[1]
+            inputsegments, inputtype = file2segments(inputdata)
+            translations = [x.upper() for x in inputsegments]
+            result = translations2file(translations, inputdata)
+            print(result)
+    else:
 
-inputdata = "../file_samples/sample.tmx"
-#inputdata = "../file_samples/sample.txt"
+        inputdata = """<?xml version="1.0" encoding="utf-8"?>
+        <tmx version="1.4">
+        <header creationtool="SDLXLiff2Tmx" creationtoolversion="1.0" o-tmf="SDLXliff2Tmx Generic 1.0 Format" datatype="xml" segtype="sentence" adminlang="en-US" srclang="en-US" creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx" />
+        <body>
+            <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+            <tuv xml:lang="en-GB">
+                <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+            </tuv>
+            <tuv xml:lang="cs-CZ">
+                <seg>The Oppidum project is headed by Jakub Zamrazil, a Czech entrepreneur with a successful</seg>
+            </tuv>
+            </tu>
+            <tu creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx">
+            <tuv xml:lang="en-GB">
+                <seg>track record in real estate development, sales and marketing.</seg>
+            </tuv>
+            <tuv xml:lang="cs-CZ">
+                <seg>track record in real estate development, sales and marketing.</seg>
+            </tuv>
+            </tu>
+        </body>
+        </tmx>"""
 
-inputsegments, inputtype = file2segments(inputdata)
+        inputdata = """Slezte z toho lustru, Donalde, vidím vás!
+        Kolik třešní, tolik višní.
+        """
 
-#print("INPUT", inputtype, ":")
-#print(inputsegments, sep="\n")
+        inputdata = "../file_samples/sample.tmx"
 
-translations = ["The nucmleus of an atom is composed of nucleons.",
-    "My hovercraft is full of eels."]
+        #inputdata = "../file_samples/sample.txt"
 
-result = translations2file(translations, inputdata)
+        inputsegments, inputtype = file2segments(inputdata)
 
-#print("")
-#print("OUTPUT:")
-#print("")
+        #print("INPUT", inputtype, ":")
+        #print(inputsegments, sep="\n")
 
-print(result)
+        translations = ["The nucmleus of an atom is composed of nucleons.",
+            "My hovercraft is full of eels."]
+
+        result = translations2file(translations, inputdata)
+
+        #print("")
+        #print("OUTPUT:")
+        #print("")
+
+        print(result)
 
