@@ -3,6 +3,7 @@
 
 import sys
 import io
+from lxml import etree 
 
 import logging
 logging.basicConfig(
@@ -88,7 +89,6 @@ def file2segments(inputdata):
     inputsegments = doc2segments(inputdoc, inputtype)
     return inputsegments, inputtype
 
-# TODO cannot read TMX from string, only from file
 # TODO cannot write TMX to string, only to file -- could do a temp file, but
 # better find the source code and implement a string variant
 
@@ -99,12 +99,29 @@ def docAddTrans(translationsegments, inputdoc, inputtype):
         assert len(translationsegments) == len(inputdoc.getunits())
         for unit, translation in zip(inputdoc.getunits(), translationsegments):
             unit.settarget(translation)
+        
+        # must be file (output is None)
         #outputstream = io.StringIO()
-        #inputdoc.serialize(outputstream)
-        #inputdoc.savefile(outputstream)
-        #outputstring = outputstream.getvalue()
-        #inputdoc.save()
-        outputstring = str(inputdoc)
+        #outputstring = inputdoc.savefile('tmpfile')
+       
+        # must be file (output is None)
+        # TODO this should work somehow!!!
+        # serialize(out)
+        # Converts to a bytes representation that can be parsed back using parsestring(). out should be an open file-like objects to write to.
+        #outputstream = io.StringIO()
+        #outputstring = inputdoc.serialize()
+        #outputstring = inputdoc.serialize(outputstream)
+        #outputstring = inputdoc.serialize('tmpfile')
+
+        outputstring = etree.tostring(inputdoc.document, pretty_print=True, xml_declaration=True,
+                encoding='utf-8')
+        
+        # this only works if input was file:
+        #outputstring = inputdoc.save()
+
+        # this prints out something like <translate.storage.tmx.tmxfile object at 0x7f7f8210a5f8>
+        #outputstring = str(inputdoc)
+
     elif inputtype == 'XLIFF':
         # TODO
         pass
@@ -146,11 +163,11 @@ inputdata = """<?xml version="1.0" encoding="utf-8"?>
 </tmx>
 """
 
-inputdata = """Slezte z toho lustru, Donalde, vidím vás!
-Kolik třešní, tolik višní.
-"""
+#inputdata = """Slezte z toho lustru, Donalde, vidím vás!
+#Kolik třešní, tolik višní.
+#"""
 
-inputdata = "../file_samples/sample.tmx"
+#inputdata = "../file_samples/sample.tmx"
 #inputdata = "../file_samples/sample.txt"
 
 inputsegments, inputtype = file2segments(inputdata)
