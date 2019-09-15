@@ -17,18 +17,16 @@ from translate.storage.tmx import tmxfile
 # read language codes from TMX file
 # write language codes to TMX file (settarget has a second argument lang='xx')
 
-# TODO change api: input will be string, not stream !!!!!
-
 def data2string(inputdata):
-    # determine type of inputfile
+    # determine type of inputdata
     if isinstance(inputdata, io.IOBase):
         # stream: read in
         inputdata.seek(0)
-        inputstring = inputstream.read()
+        inputstring = inputdata.read()
     elif isinstance(inputdata, str):
         try:
             # filename: open and read
-            with open(inputfile, 'r') as inputstream:
+            with open(inputdata, 'r') as inputstream:
                 inputstring = inputstream.read()
         except:
             # string: just use it
@@ -36,7 +34,7 @@ def data2string(inputdata):
     else:
         assert False, "Bad type of inputdata: {}, must be stream, filename, or string".format(type(inputdata))
     
-    return inputstream
+    return inputstring
 
 # determine input type, extract segments and metadata
 def string2doc(inputstring):
@@ -45,7 +43,6 @@ def string2doc(inputstring):
     
     # TMX?
     if inputtype == None:
-        #inputstream.seek(0)
         try:
             inputdoc = tmxfile(inputstring.encode('utf8'))
             inputtype = 'TMX'
@@ -66,7 +63,7 @@ def string2doc(inputstring):
     
     # TXT fallback (anything can be parsed as plain text)
     if inputtype == None:
-        inputdoc = inputstream
+        inputdoc = inputstring.split('\n')
         inputtype = 'TXT'
 
     return inputdoc, inputtype
@@ -85,9 +82,9 @@ def doc2segments(inputdoc, inputtype):
     return inputsegments
 
 
-def file2segments(inputfile):
-    inputstream = file2stream(inputfile)
-    inputdoc, inputtype = stream2doc(inputstream)
+def file2segments(inputdata):
+    inputstring = data2string(inputdata)
+    inputdoc, inputtype = string2doc(inputstring)
     inputsegments = doc2segments(inputdoc, inputtype)
     return inputsegments, inputtype
 
@@ -106,7 +103,7 @@ def docAddTrans(translationsegments, inputdoc, inputtype):
         #inputdoc.serialize(outputstream)
         #inputdoc.savefile(outputstream)
         #outputstring = outputstream.getvalue()
-        inputdoc.save()
+        #inputdoc.save()
         outputstring = str(inputdoc)
     elif inputtype == 'XLIFF':
         # TODO
@@ -117,19 +114,15 @@ def docAddTrans(translationsegments, inputdoc, inputtype):
         assert False, 'Unsupported input type: {}'.format(inputtype)
     return outputstring
 
-def translations2file(translationsegments, inputfile):
-    inputstream = file2stream(inputfile)
-    inputdoc, inputtype = stream2doc(inputstream)
+def translations2file(translationsegments, inputdata):
+    inputstring = data2string(inputdata)
+    inputdoc, inputtype = string2doc(inputstring)
     outputstring = docAddTrans(translationsegments, inputdoc, inputtype)
     return outputstring
 
 
-inputfile = "../file_samples/sample.tmx"
-#inputfile = "../file_samples/sample.txt"
-#inputfile = """Slezte z toho lustru, Donalde, vidím vás!
-#Kolik třešní, tolik višní.
-#"""
-inputfile = """<?xml version="1.0" encoding="utf-8"?>
+#inputdata = "../file_samples/sample.txt"
+inputdata = """<?xml version="1.0" encoding="utf-8"?>
 <tmx version="1.4">
   <header creationtool="SDLXLiff2Tmx" creationtoolversion="1.0" o-tmf="SDLXliff2Tmx Generic 1.0 Format" datatype="xml" segtype="sentence" adminlang="en-US" srclang="en-US" creationdate="20190724T150512Z" creationid="TMServe\SDLXliff2Tmx" />
   <body>
@@ -153,18 +146,23 @@ inputfile = """<?xml version="1.0" encoding="utf-8"?>
 </tmx>
 """
 
+inputdata = """Slezte z toho lustru, Donalde, vidím vás!
+Kolik třešní, tolik višní.
+"""
 
-inputsegments, inputtype = file2segments(inputfile)
+inputdata = "../file_samples/sample.tmx"
+#inputdata = "../file_samples/sample.txt"
 
-print("INPUT")
-print(inputtype)
+inputsegments, inputtype = file2segments(inputdata)
+
+print("INPUT", inputtype, ":")
 print(inputsegments, sep="\n")
 
 translations = ["The nucmleus of an atom is composed of nucleons.",
     "My hovercraft is full of eels."]
 
-result = translations2file(translations, inputfile)
+result = translations2file(translations, inputdata)
 
-print("OUTPUT")
+print("OUTPUT:")
 print(result)
 
