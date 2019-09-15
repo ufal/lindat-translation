@@ -100,28 +100,11 @@ def docAddTrans(translationsegments, inputdoc, inputtype):
         for unit, translation in zip(inputdoc.getunits(), translationsegments):
             unit.settarget(translation)
         
-        # must be file (output is None)
-        #outputstream = io.StringIO()
-        #outputstring = inputdoc.savefile('tmpfile')
-       
-        # must be file (output is None)
-        # TODO this should work somehow!!!
-        # serialize(out)
-        # Converts to a bytes representation that can be parsed back using parsestring(). out should be an open file-like objects to write to.
-        #outputstream = io.StringIO()
-        #outputstring = inputdoc.serialize()
-        #outputstring = inputdoc.serialize(outputstream)
-        #outputstring = inputdoc.serialize('tmpfile')
-
-        outputstring = etree.tostring(inputdoc.document, pretty_print=True, xml_declaration=True,
-                encoding='utf-8')
+        # serialization in the tmxfile class does not work,
+        # have to use the internal lxml serialization
+        outputstring = etree.tostring(inputdoc.document, xml_declaration=True, encoding='utf-8')
+        outputstring = outputstring.decode('utf8')    
         
-        # this only works if input was file:
-        #outputstring = inputdoc.save()
-
-        # this prints out something like <translate.storage.tmx.tmxfile object at 0x7f7f8210a5f8>
-        #outputstring = str(inputdoc)
-
     elif inputtype == 'XLIFF':
         # TODO
         pass
@@ -160,26 +143,28 @@ inputdata = """<?xml version="1.0" encoding="utf-8"?>
       </tuv>
     </tu>
   </body>
-</tmx>
-"""
+</tmx>"""
 
 #inputdata = """Slezte z toho lustru, Donalde, vidím vás!
 #Kolik třešní, tolik višní.
 #"""
 
-#inputdata = "../file_samples/sample.tmx"
+inputdata = "../file_samples/sample.tmx"
 #inputdata = "../file_samples/sample.txt"
 
 inputsegments, inputtype = file2segments(inputdata)
 
-print("INPUT", inputtype, ":")
-print(inputsegments, sep="\n")
+#print("INPUT", inputtype, ":")
+#print(inputsegments, sep="\n")
 
 translations = ["The nucmleus of an atom is composed of nucleons.",
     "My hovercraft is full of eels."]
 
 result = translations2file(translations, inputdata)
 
-print("OUTPUT:")
+#print("")
+#print("OUTPUT:")
+#print("")
+
 print(result)
 
