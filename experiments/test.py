@@ -77,7 +77,11 @@ def doc2segments(inputdoc, inputtype):
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
     elif inputtype == 'XLIFF':
         # TODO
+        logging.debug(inputdoc)
+        logging.debug(inputdoc.getunits())
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
+        logging.debug(inputsegments)
+        #inputsegments = [unit.getsource() for unit in inputdoc.unit_iter()]
     elif inputtype == 'TXT':
         inputsegments = [line.rstrip('\n\r') for line in inputdoc]
     else:
@@ -137,12 +141,14 @@ if __name__ == "__main__":
                 translations = infile.read()
 
             inputsegments, inputtype = file2segments(inputdata)
+            logging.debug("INPUT " + inputtype + ":\n" + "\n".join(inputsegments))
             result = translations2file(translations, inputdata)
             print(result)
         else:
             # read in data, fake translations
             inputdata = sys.argv[1]
             inputsegments, inputtype = file2segments(inputdata)
+            logging.debug("INPUT " + inputtype + ":\n" + "\n".join(inputsegments))
             translations = [x.upper() for x in inputsegments]
             result = translations2file(translations, inputdata)
             print(result)
@@ -181,8 +187,7 @@ if __name__ == "__main__":
 
         inputsegments, inputtype = file2segments(inputdata)
 
-        #print("INPUT", inputtype, ":")
-        #print(inputsegments, sep="\n")
+        logging.debug("INPUT " + inputtype + ":\n" + "\n".join(inputsegments))
 
         translations = ["The nucmleus of an atom is composed of nucleons.",
             "My hovercraft is full of eels."]
