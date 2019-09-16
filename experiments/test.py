@@ -77,7 +77,11 @@ def doc2segments(inputdoc, inputtype):
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
     elif inputtype == 'XLIFF':
         # TODO
-        logging.debug(inputdoc)
+        # TODO my example file returns isempty True, so maybe the example is
+        # bad...
+        #logging.debug(inputdoc)
+        #logging.debug(dir(inputdoc))
+        logging.debug(inputdoc.isempty())
         logging.debug(inputdoc.getunits())
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
         logging.debug(inputsegments)
