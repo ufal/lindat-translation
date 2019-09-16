@@ -9,11 +9,12 @@ import logging
 logging.basicConfig(
     format='%(asctime)s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    #level=logging.DEBUG)
-    level=logging.INFO)
+    level=logging.DEBUG)
+    #level=logging.INFO)
 
 
 from translate.storage.tmx import tmxfile
+from translate.storage.xliff import xlifffile
 
 # TODO languages
 # read language codes from TMX file
@@ -49,19 +50,19 @@ def string2doc(inputstring):
             inputdoc = tmxfile(inputstring.encode('utf8'))
             inputtype = 'TMX'
         except:
-            logging.debug(sys.exc_info()[0])
+            logging.debug("Cannot load as TMX: " + str(sys.exc_info()[0]))
             inputtype = None
             #raise
     
     # XLIFF?
     if inputtype == None:
         try:
-            # XLIFF
-            # TODO
-            # inputtype = 'XLIFF'
-            pass
+            inputdoc = xlifffile(inputstring.encode('utf8'))
+            inputtype = 'XLIFF'
         except:
+            logging.debug("Cannot load as XLIFF: " + str(sys.exc_info()[0]))
             inputtype = None
+            #raise
     
     # TXT fallback (anything can be parsed as plain text)
     if inputtype == None:
@@ -76,7 +77,7 @@ def doc2segments(inputdoc, inputtype):
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
     elif inputtype == 'XLIFF':
         # TODO
-        pass
+        inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
     elif inputtype == 'TXT':
         inputsegments = [line.rstrip('\n\r') for line in inputdoc]
     else:
@@ -105,7 +106,14 @@ def docAddTrans(translationsegments, inputdoc, inputtype):
         
     elif inputtype == 'XLIFF':
         # TODO
-        pass
+        assert len(translationsegments) == len(inputdoc.getunits())
+        for unit, translation in zip(inputdoc.getunits(), translationsegments):
+            unit.settarget(translation)
+        
+        # serialization in the tmxfile class does not work,
+        # have to use the internal lxml serialization
+        outputstring = etree.tostring(inputdoc.document, xml_declaration=True, encoding='utf-8')
+        outputstring = outputstring.decode('utf8')    
     elif inputtype == 'TXT':
         outputstring = '\n'.join(translationsegments)
     else:
