@@ -9,8 +9,8 @@ import logging
 logging.basicConfig(
     format='%(asctime)s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    level=logging.DEBUG)
-    #level=logging.INFO)
+    #level=logging.DEBUG)
+    level=logging.INFO)
 
 
 from translate.storage.tmx import tmxfile
@@ -19,6 +19,13 @@ from translate.storage.xliff import xlifffile
 # TODO languages
 # read language codes from TMX file
 # write language codes to TMX file (settarget has a second argument lang='xx')
+# TODO also for XLIFF
+
+# TODO limitations
+# we only support XLIFF 1.2; XLIFF 2.0 is not supported
+# I could add a detection for that; currently XLIFF 2.0 is loaded without
+# errors, just appears empty; I could check the version attribute in the root
+# element and warn if it is > 1.2
 
 def data2string(inputdata):
     # determine type of inputdata
@@ -76,20 +83,15 @@ def doc2segments(inputdoc, inputtype):
     if inputtype == 'TMX':
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
     elif inputtype == 'XLIFF':
-        # TODO
-        # TODO my example file returns isempty True, so maybe the example is
-        # bad...
-        #logging.debug(inputdoc)
-        #logging.debug(dir(inputdoc))
-        logging.debug(inputdoc.isempty())
-        logging.debug(inputdoc.getunits())
+        # logging.debug(inputdoc.isempty())
         inputsegments = [unit.getsource() for unit in inputdoc.getunits()]
-        logging.debug(inputsegments)
-        #inputsegments = [unit.getsource() for unit in inputdoc.unit_iter()]
     elif inputtype == 'TXT':
         inputsegments = [line.rstrip('\n\r') for line in inputdoc]
     else:
         assert False, 'Unsupported input type: {}'.format(inputtype)
+        
+    if len(inputsegments) == 0:
+        logging.warn("The document seems to be empty (or maybe it is in an unsupported format).")
     return inputsegments
 
 
@@ -113,14 +115,13 @@ def docAddTrans(translationsegments, inputdoc, inputtype):
         outputstring = outputstring.decode('utf8')    
         
     elif inputtype == 'XLIFF':
-        # TODO
         assert len(translationsegments) == len(inputdoc.getunits())
         for unit, translation in zip(inputdoc.getunits(), translationsegments):
             unit.settarget(translation)
         
         # serialization in the tmxfile class does not work,
         # have to use the internal lxml serialization
-        outputstring = etree.tostring(inputdoc.document, xml_declaration=True, encoding='utf-8')
+        outputstring = etree.tostring(inputdoc.document, encoding='utf-8')
         outputstring = outputstring.decode('utf8')    
     elif inputtype == 'TXT':
         outputstring = '\n'.join(translationsegments)
