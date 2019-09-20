@@ -147,10 +147,6 @@ class Model(object):
         else:
             self.sent_chars_limit = current_app.config['SENT_LEN_LIMIT']
 
-        if self.model_framework == 'marian':
-            self.marian_server_host = cfg['marian_server_host']
-            self.marian_server_port = cfg['marian_server_port']
-
         if 'server' in cfg:
             self._server = cfg['server']
         self.domain = cfg.get('domain', None)
@@ -173,7 +169,7 @@ class Model(object):
     def server(self):
         """
         This method needs a valid app context
-        :return:
+        :return: host:port
         """
         if hasattr(self, '_server'):
             return self._server.format(**current_app.config)

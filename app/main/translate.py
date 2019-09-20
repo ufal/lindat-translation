@@ -12,10 +12,7 @@ from websocket import create_connection
 
 def translate_with_marian_model(model, sentences):
 
-    ws = create_connection("ws://{}:{}/translate".format(
-        model.marian_server_host,
-        model.marian_server_port)
-    )
+    ws = create_connection("ws://{}/translate".format(model.server))
 
     batch = ""
     for sent in sentences:
@@ -33,7 +30,6 @@ def translate_with_marian_model(model, sentences):
 def translate_with_model(model, text, src=None, tgt=None):
     if not text or not text.strip():
         return []
-
 
     src = src or model.supports.keys()[0]
     tgt = tgt or model.supports[src][0]
@@ -101,7 +97,7 @@ def split_to_sent_array(text, lang, limit):
                 sent_array.append(sent[0:last_space_idx])
                 sent = sent[last_space_idx:]
             except ValueError:
-                print(sent, 0, limit, sent[0:limit])
+                # raised if no space found by rindex
                 sent_array.append(sent[0:limit])
                 sent = sent[limit:]
         sent_array.append(sent)
