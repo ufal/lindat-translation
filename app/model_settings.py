@@ -143,9 +143,7 @@ class Model(object):
             self.problem = None
 
         if 'sent_chars_limit' in cfg:
-            self.sent_chars_limit = cfg['sent_chars_limit']
-        else:
-            self.sent_chars_limit = current_app.config['SENT_LEN_LIMIT']
+            self._sent_chars_limit = cfg['sent_chars_limit']
 
         if 'server' in cfg:
             self._server = cfg['server']
@@ -168,13 +166,23 @@ class Model(object):
     @property
     def server(self):
         """
-        This method needs a valid app context
+        This method needs a valid app context, current_app is not available at init time.
         :return: host:port
         """
         if hasattr(self, '_server'):
             return self._server.format(**current_app.config)
         else:
             return current_app.config['DEFAULT_SERVER']
+
+    @property
+    def sent_chars_limit(self):
+        """
+        This method needs a valid app context, current_app is not available at init time.
+        """
+        if hasattr(self, '_sent_chars_limit'):
+            return self._sent_chars_limit
+        else:
+            return current_app.config['SENT_LEN_LIMIT']
 
     def add_href(self, url):
         self.href = url

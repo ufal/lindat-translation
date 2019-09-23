@@ -10,9 +10,14 @@ from flask import current_app, session
 # for Marian, by Dominik:
 from websocket import create_connection
 
-def translate_with_marian_model(model, sentences):
+import logging
+log = logging.getLogger(__name__)
 
-    ws = create_connection("ws://{}/translate".format(model.server))
+
+def translate_with_marian_model(model, sentences):
+    marian_endpoint = "ws://{}/translate".format(model.server)
+    log.debug("Connecting to '{}'".format(marian_endpoint))
+    ws = create_connection(marian_endpoint)
 
     batch = ""
     for sent in sentences:
