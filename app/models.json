@@ -1,18 +1,6 @@
 [
   {
     "source": ["en"],
-    "target": ["cs", "de", "es", "fr", "hu", "pl", "sv"],
-    "problem": "translate_medical8lang",
-    "domain": "medical",
-    "model": "cs-es_medical",
-    "display": "Experimentální překlad",
-    "prefix_with": "SRC{source} TRG{target} ",
-    "target_to_source": true,
-    "include_in_graph": false,
-    "server": "{T2T_TRANSFORMER2}"
-  },
-  {
-    "source": ["en"],
     "target": ["cs"],
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
