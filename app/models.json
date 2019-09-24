@@ -50,5 +50,37 @@
     "display": "French->English (CUBBITT)",
     "domain": "",
     "model": "fr-en"
+  },
+  {
+    "source": ["en"],
+    "target": ["de"],
+    "problem": "translate_ende",
+    "display": "English->German",
+    "domain": "",
+    "model": "en-de"
+  },
+  {
+    "source": ["de"],
+    "target": ["en"],
+    "problem": "translate_ende",
+    "display": "German->English",
+    "domain": "",
+    "model": "de-en"
+  },
+  {
+    "source": ["ru"],
+    "target": ["en"],
+    "problem": "translate_enru",
+    "display": "Russian->English",
+    "domain": "",
+    "model": "ru-en"
+  },
+  {
+    "source": ["en"],
+    "target": ["ru"],
+    "problem": "translate_enru",
+    "display": "English-Russian",
+    "domain": "",
+    "model": "en-ru"
   }
 ]

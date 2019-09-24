@@ -76,3 +76,17 @@ class TranslateMedical8lang(TranslateEncsWmt32k):
     @property
     def vocab_filename(self):
         return "vocab_medical8lang.%d" % self.approx_vocab_size
+
+
+@registry.register_problem
+class TranslateEnde(TranslateEncsWmtCzeng57m32k):
+    @property
+    def vocab_filename(self):
+        return "vocab.ende.%d" % self.approx_vocab_size
+
+
+@registry.register_problem
+class TranslateEnru(TranslateEncsWmtCzeng57m32k):
+    @property
+    def vocab_filename(self):
+        return "vocab.enru.%d" % self.approx_vocab_size
