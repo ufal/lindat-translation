@@ -19,17 +19,27 @@ def translate_with_marian_model(model, sentences):
     log.debug("Connecting to '{}'".format(marian_endpoint))
     ws = create_connection(marian_endpoint)
 
-    batch = ""
-    for sent in sentences:
-        batch += sent + "\n"
+    results = []
 
-    ws.send(batch)
-    result = ws.recv()
+    batch = ""
+    count = 0
+    for sent in sentences:
+        count += 1
+        batch += sent + "\n"
+        # TODO maybe batch size should be a model param.
+        if count == current_app.config['MARIAN_BATCH_SIZE']:
+            ws.send(batch)
+            results.extend(ws.recv().strip().splitlines())
+            count = 0
+            batch = ""
+    if count:
+        ws.send(batch)
+        results.extend(ws.recv().strip().splitlines())
     #print(result.rstrip())
 
     # close connection
     ws.close()
-    return result.rstrip().split("\n")
+    return results
 
 
 def translate_with_model(model, text, src=None, tgt=None):
