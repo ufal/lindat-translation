@@ -7,6 +7,7 @@ MAX_CONTENT_LENGTH = 100 * 1024
 BATCH_SIZE = 20 #1000
 MARIAN_BATCH_SIZE = 16
 SENT_LEN_LIMIT=500
+SPM_DEFAULT_LIMIT=100
 #CSRF prevention
 SECRET_KEY = (os.environ.get('SECRET_KEY') or
               b'\x0c\x11{\xd3\x11$\xeeel\xa6\xfb\x1d~\xfd\xb3\x9d\x11\x00\xfb4\xd64\xd4\xe0')

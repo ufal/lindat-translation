@@ -7,6 +7,9 @@ from tensor2tensor.utils import registry, usr_dir
 from iso639 import to_name
 import networkx as nx
 
+# for Marian, by Dominik:
+import sentencepiece as spm
+
 log = logging.getLogger(__name__)
 
 usr_dir.import_usr_dir('t2t_usr_dir')
@@ -136,11 +139,26 @@ class Model(object):
         else:
             self.model_framework = 't2t'
 
+        if 'spm_vocab' in cfg:
+            self.spm_vocab = cfg['spm_vocab']
+            self.spm_processor = spm.SentencePieceProcessor()
+            self.spm_processor.Load(self.spm_vocab)
+        else:
+            self.spm_vocab = None
+            self.spm_processor = None
+
+        if 'spm_limit' in cfg:
+            self.spm_limit = cfg['spm_limit']
+        else:
+            self.spm_limit = 100 #current_app.config['SPM_DEFAULT_LIMIT']
+
+
         if self.model_framework == 't2t':
             self.problem = registry.problem(cfg['problem'])
             self.problem.get_hparams(hparams)
         else:
             self.problem = None
+
 
         if 'sent_chars_limit' in cfg:
             self._sent_chars_limit = cfg['sent_chars_limit']
@@ -198,7 +216,6 @@ class Model(object):
             yield 'domain', self.domain
         if self.href:
             yield 'href', self.href
-
 
 class Language(object):
 
