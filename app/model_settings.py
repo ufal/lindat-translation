@@ -264,6 +264,3 @@ with open(os.path.join(os.path.dirname(__file__), 'models.json')) as models_json
 
 models = Models(models_cfg)
 languages = Languages(models)
-
-
-
