@@ -61,14 +61,16 @@
     "problem": "translate_enru",
     "display": "Russian->English",
     "domain": "",
+    "server": "{T2T_TRANSFORMER2}",
     "model": "ru-en"
   },
   {
     "source": ["en"],
     "target": ["ru"],
     "problem": "translate_enru",
-    "display": "English-Russian",
+    "display": "English->Russian",
     "domain": "",
+    "server": "{T2T_TRANSFORMER2}",
     "model": "en-ru"
   }
 ]
