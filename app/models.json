@@ -1,5 +1,27 @@
 [
   {
+    "source": ["de"],
+    "target": ["cs"],
+    "model_framework": "marian",
+    "domain": "",
+    "model": "de-cs",
+    "display": "German->Czech Marian",
+    "server": "{MARIAN}:5030",
+    "sent_chars_limit": 451,
+    "spm_vocab": "marian_data_dir/de-cs/vocab.encs.spm"
+  },
+  {
+    "source": ["cs"],
+    "target": ["de"],
+    "model_framework": "marian",
+    "domain": "",
+    "model": "cs-de",
+    "display": "Czech->German Marian",
+    "server": "{MARIAN}:8030",
+    "sent_chars_limit": 433,
+    "spm_vocab": "marian_data_dir/cs-de/vocab.encs.spm"
+  },
+  {
     "source": ["en"],
     "target": ["cs"],
     "problem": "translate_encs_wmt_czeng57m32k",

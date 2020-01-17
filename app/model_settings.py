@@ -1,25 +1,13 @@
 import json
 import logging
 import os
-from flask import current_app
-import tensorflow as tf
-from tensor2tensor.utils import registry, usr_dir
 from iso639 import to_name
 import networkx as nx
 
-# for Marian, by Dominik:
-import sentencepiece as spm
+from app.dict_utils import get_or_create
+from app.model import Model
 
 log = logging.getLogger(__name__)
-
-usr_dir.import_usr_dir('t2t_usr_dir')
-hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
-
-
-def get_or_create(aDict, key, default=lambda: []):
-    arr = aDict.get(key, default())
-    aDict[key] = arr
-    return arr
 
 
 class Models(object):
@@ -33,7 +21,7 @@ class Models(object):
                 log.error("Error in config source and target must be lists")
                 import sys
                 sys.exit(1)
-            model = Model(cfg)
+            model = Model.create(cfg)
             if model.model in self._models:
                 log.error("Model names should be unique")
                 import sys
@@ -51,7 +39,7 @@ class Models(object):
                         if flip_src_tgt:
                             self._G.add_edge(tgt_lang, src_lang, cfg=model)
 
-        # There may be more than one shortest path between sa source and target; this returns only one
+        # There may be more than one shortest path between source and target; this returns only one
         self._shortest_path = nx.shortest_path(self._G)
         _directions = []
         self._src_tgt = {}
@@ -113,109 +101,6 @@ class Models(object):
     def get_model(self, model_name):
         return self._models.get(model_name, self._models.get(self.get_default_model_name()))
 
-
-class Model(object):
-
-    @staticmethod
-    def lang_list_display(lang_list):
-        return ', '.join(map(to_name, lang_list))
-
-    def __init__(self, cfg):
-        self.model = cfg['model']
-        self.name = self.model
-        self.target_to_source = cfg.get('target_to_source', False)
-
-        self.supports = {}
-        for src_lang in cfg['source']:
-            for tgt_lang in cfg['target']:
-                targets = get_or_create(self.supports, src_lang)
-                targets.append(tgt_lang)
-                if self.target_to_source:
-                    targets = get_or_create(self.supports, tgt_lang)
-                    targets.append(src_lang)
-
-        if 'model_framework' in cfg:
-            self.model_framework = cfg['model_framework']
-        else:
-            self.model_framework = 't2t'
-
-        if 'spm_vocab' in cfg:
-            self.spm_vocab = cfg['spm_vocab']
-            self.spm_processor = spm.SentencePieceProcessor()
-            self.spm_processor.Load(self.spm_vocab)
-        else:
-            self.spm_vocab = None
-            self.spm_processor = None
-
-        if 'spm_limit' in cfg:
-            self.spm_limit = cfg['spm_limit']
-        else:
-            self.spm_limit = 100 #current_app.config['SPM_DEFAULT_LIMIT']
-
-
-        if self.model_framework == 't2t':
-            self.problem = registry.problem(cfg['problem'])
-            self.problem.get_hparams(hparams)
-        else:
-            self.problem = None
-
-
-        if 'sent_chars_limit' in cfg:
-            self._sent_chars_limit = cfg['sent_chars_limit']
-
-        if 'server' in cfg:
-            self._server = cfg['server']
-        self.domain = cfg.get('domain', None)
-        self.default = cfg.get('default', False)
-        self.prefix_with = cfg.get('prefix_with', None)
-
-        if self.domain:
-            ' ({})'.format(self.domain)
-        src = Model.lang_list_display(cfg['source'])
-        tgt = Model.lang_list_display(cfg['target'])
-        arrow = '->'
-        if cfg.get('target_to_source', False):
-            arrow = '<' + arrow
-        self.title = '{name} {domain}({display})'\
-            .format(name=cfg['model'],
-                    display=cfg.get('display', '{src}{arrow}{tgt}'.format(src=src, arrow=arrow, tgt=tgt)),
-                    domain='- ' + self.domain + ' domain - ' if self.domain else '')
-
-    @property
-    def server(self):
-        """
-        This method needs a valid app context, current_app is not available at init time.
-        :return: host:port
-        """
-        if hasattr(self, '_server'):
-            return self._server.format(**current_app.config)
-        else:
-            return current_app.config['DEFAULT_SERVER']
-
-    @property
-    def sent_chars_limit(self):
-        """
-        This method needs a valid app context, current_app is not available at init time.
-        """
-        if hasattr(self, '_sent_chars_limit'):
-            return self._sent_chars_limit
-        else:
-            return current_app.config['SENT_LEN_LIMIT']
-
-    def add_href(self, url):
-        self.href = url
-
-    def __iter__(self):
-        yield 'model', self.model
-        yield 'name', self.name
-        yield 'supports', self.supports
-        yield 'title', self.title
-        if self.default:
-            yield 'default', self.default
-        if self.domain:
-            yield 'domain', self.domain
-        if self.href:
-            yield 'href', self.href
 
 class Language(object):
 

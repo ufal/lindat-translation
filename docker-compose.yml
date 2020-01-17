@@ -10,7 +10,7 @@ services:
       - MODEL_NAME=en-hi
     volumes:
       - type: bind
-        source: /c/Users/ko_ok/sources/transformer_frontend/models/t2t-model.en-hi/export/Servo
+        source: ./models/t2t-model.en-hi/export/Servo
         target: /models/en-hi
     tty: true
     stdin_open: true
