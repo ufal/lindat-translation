@@ -25,6 +25,7 @@ There are several config files:
 - for systemd
   - see [systemd](./systemd) - service definitions for systemd (might need tweaking if using multiple systems)
   - to check how tensorflow is started see [tensorflow_serving.service](./systemd/tensorflow_serving.service)
+  - The systemd template file for marian uses the `src-tgt` model name to reference various files and directories. E.g. `cp systemd/marian@.service /etc/systemd/system; systemctl enable marian@cs-de.service; systemctl start marian@cs-de.service` should use env file `marian_cs-de.conf` and set a working directory `marian-models/cs-de`
 - application config
   - [app/settings.py](app/settings.py)
     - keep `BATCH_SIZE` in sync with `batching.config`
