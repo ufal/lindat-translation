@@ -1,0 +1,12 @@
+[Unit]
+Description=Marian server %I
+
+[Service]
+EnvironmentFile=/opt/lindat_translation/marian_%i.conf
+WorkingDirectory=/home/machacek/marian-models/%i
+ExecStart=/opt/marian/build/marian-server -c model/model.npz.decoder.yml -m model/model.npz -d 0 --mini-batch 16 --maxi-batch 128 --maxi-batch-sort src -w 128 --beam-size 4 -p $PORT
+Restart=always
+User=machacek
+
+[Install]
+WantedBy=multi-user.target
