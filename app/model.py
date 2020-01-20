@@ -181,6 +181,7 @@ class T2TModel(Model):
         return sent_array
 
 
+# for Marian, by Dominik:
 class MarianModel(Model):
 
     def __init__(self, cfg):

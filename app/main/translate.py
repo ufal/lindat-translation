@@ -1,8 +1,6 @@
 #from app.logging_utils import logged
 from app.model_settings import models
 
-# for Marian, by Dominik:
-
 import logging
 log = logging.getLogger(__name__)
 
