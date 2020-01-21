@@ -2,6 +2,8 @@ from flask import url_for
 from flask_restplus import Resource, marshal_with, fields
 from app.main.api.restplus import api
 
+from app.main.api_examples.root_resource_example import *
+
 ns = api.namespace('root', description='Root resource for navigation to languages/models', path='/')
 
 
@@ -27,7 +29,7 @@ root_resource = ns.model('RootResource', {
             '.root_root_resource')}, skip_none=True),
         'models': fields.Nested(link, skip_none=True),
         'languages': fields.Nested(link, skip_none=True)
-    }), attribute=identity),
+    }), attribute=identity, example=root_resource_links_example),
 })
 
 

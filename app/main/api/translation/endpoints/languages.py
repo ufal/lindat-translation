@@ -9,6 +9,8 @@ from app.main.api.translation.parsers import text_input_with_src_tgt # , file_in
 from app.model_settings import languages
 from app.main.translate import translate_from_to
 
+from app.main.api_examples.language_resource_example import *
+from app.main.api_examples.languages_resource_example import *
 
 ns = api.namespace('languages', description='Operations with source and target languages')
 
@@ -57,7 +59,6 @@ def get_templated_translate_link():
     return {'href': url + query_template, 'templated': True}
 
 
-
 # TODO refactor with @api.model? https://flask-restplus.readthedocs.io/en/stable/swagger.html
 language_resource = ns.model('LanguageResource', {
     '_links': fields.Nested(
@@ -74,9 +75,9 @@ language_resource = ns.model('LanguageResource', {
             #                      attribute=lambda x: [m for m in models.get_model_list(x['src'],
             #                                                                            x[
             #                                                                            'tgt'])]),
-        }), attribute=identity),
-    'name': fields.String,
-    'title': fields.String,
+        }), attribute=identity, example=language_resource_links_example),
+    'name': fields.String(example='cs'),
+    'title': fields.String(example="Czech"),
 })
 
 languages_links = ns.model('LanguageLinks', {
@@ -88,10 +89,10 @@ languages_links = ns.model('LanguageLinks', {
 })
 
 languages_resources = ns.model('LanguagesResource', {
-    '_links': fields.Nested(languages_links),
+    '_links': fields.Nested(languages_links, example=languages_resource_links_example),
     '_embedded': fields.Nested(ns.model('EmbeddedLanguages', {
         _models_item_relation: fields.List(fields.Nested(language_resource, skip_none=True))
-    }))
+    }), example=languages_resource_embedded_example)
 })
 
 

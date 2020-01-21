@@ -7,6 +7,9 @@ from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
 from app.main.translate import translate_with_model
 
+from app.main.api_examples.model_resource_example import *
+from app.main.api_examples.models_resource_example import *
+
 
 ns = api.namespace('models', description='Operations related to translation models')
 
@@ -52,12 +55,12 @@ model_resource = ns.model('ModelResource', {
             '.models_model_item', model=x.model)}, skip_none=True),
         'translate': fields.Nested(link, attribute=lambda x: get_templated_translate_link(x.model),
                                    skip_none=True)
-    }), attribute=identity),
-    'default': fields.Boolean,
-    'domain': fields.String,
-    'model': fields.String(required=True),
+    }), attribute=identity, example=model_resource_links_example),
+    'default': fields.Boolean(example=True),
+    'domain': fields.String(example="Domain name is usually empty"),
+    'model': fields.String(required=True, example='en-cs'),
     'supports': fields.Raw(required=True, example={'en': ['cs']}),
-    'title': fields.String,
+    'title': fields.String(example="en-cs (English->Czech (CUBBITT))"),
 })
 
 models_links = ns.model('ModelLinks', {
@@ -69,12 +72,13 @@ models_resources = ns.model('ModelsResource', {
     '_links': fields.Nested(models_links,
                             attribute=lambda x: {'self':
                                                  {'href': url_for('.models_model_collection')},
-                                                 'models': list(map(add_href, x['models']))}
+                                                 'models': list(map(add_href, x['models']))},
+                            example=models_resource_links_example
                             ),
     '_embedded': fields.Nested(ns.model('EmbeddedModels', {
         _models_item_relation: fields.List(fields.Nested(model_resource, skip_none=True),
                                         attribute='models')
-    }), attribute=identity)
+    }), attribute=identity, example=models_resource_embedded_example)
 })
 
 
