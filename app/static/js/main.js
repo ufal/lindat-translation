@@ -11,8 +11,10 @@ $(document).ready(function() {
     }
     var htmlString = '<div class="alert alert-' + category + ' alert-dismissible" role="alert">'
     htmlString += '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-    htmlString += '<span aria-hidden="true">&times;</span></button>' + message + '</div>'
-    $(htmlString).prependTo(".panel-group").hide().slideDown();
+    htmlString += '<span aria-hidden="true">&times;</span></button></div>';
+    var msg = $(htmlString);
+    msg.text(message);
+    msg.prependTo(".panel-group").hide().slideDown();
   }
 
   function remove_alerts() {
@@ -62,15 +64,19 @@ $(document).ready(function() {
       }
   }
 
+  var progressFunction = function(message){
+      var counter = 0;
+      return setInterval(function() {
+          var dots = Array((++counter % 5) + 2).join(".");
+          var progressMessage = message + dots;
+          flash_alert(progressMessage, "info");
+      }, 1500)
+  };
+
   // submit form
   $("#submit").on('click', function() {
     flash_alert("Running  ...", "info");
-    var counter = 0;
-    var progress = setInterval(function() {
-          var dots = Array((++counter % 5) + 2).join(".");
-          var message = "Running" + dots;
-          flash_alert(message, "info");
-      }, 1500);
+    var progress = progressFunction("Running ");
     $("#submit").attr("disabled", "disabled");
     $.ajax({
       url: get_action_url(),
@@ -218,6 +224,36 @@ $(document).ready(function() {
                     }
 				});
 		}
+
+  // for switchboard
+  let params = (new URL(document.location)).searchParams;
+  let remoteFileURL = decodeURIComponent(params.get('remoteFileURL'));
+  let requestedLang = params.get('requestedLang');
+  let requestedLangOptionField = select_source.find("option[value$='"+requestedLang+"']");
+  if(remoteFileURL && requestedLang && requestedLangOptionField.size() > 0 ){
+      var progress = progressFunction("Getting " + remoteFileURL + " ");
+      fetch(remoteFileURL,{
+          headers: {
+              'Accept': 'text/plain'
+          }
+      }).then((response) => {
+          if(response.ok){
+              return response.text();
+          }else{
+              return Promise.reject(response.status + ":" + response.statusText);
+          }
+      }).then((text)=>{
+          $("#input_text").val(text);
+          select_source.val(requestedLangOptionField.val());
+          select_source.trigger('change');
+          cancelCountDown();
+          remove_alerts();
+      }).catch((reason) => {
+          flash_alert("Failed to fetch" +remoteFileURL +":\n" + reason, "danger");
+      }).finally(() => {
+          clearInterval(progress);
+      })
+  }
 
   // textarea auto translate
     var countDownTimer;
