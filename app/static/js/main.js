@@ -247,7 +247,7 @@ $(document).ready(function() {
                       function pump() {
                           return reader.read().then(({done, value}) => {
                               if(done || bytes_left_to_limit - value.length <= 0){
-                                  if (bytes_left_to_limit - value.length <= 0) {
+                                  if (value && bytes_left_to_limit - value.length <= 0) {
                                       value = value.slice(0, bytes_left_to_limit);
                                       controller.enqueue(value);
                                       reader.cancel();
