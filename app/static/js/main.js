@@ -238,7 +238,33 @@ $(document).ready(function() {
           }
       }).then((response) => {
           if(response.ok){
-              return response.text();
+              const reader = response.body.getReader();
+              // XXX 2 is a magical number
+              let bytes_left_to_limit = $FILE_SIZE_LIMIT / 2;
+              return new Response(new ReadableStream({
+                  start(controller){
+                      return pump();
+                      function pump() {
+                          return reader.read().then(({done, value}) => {
+                              if(done || bytes_left_to_limit - value.length <= 0){
+                                  if (bytes_left_to_limit - value.length <= 0) {
+                                      value = value.slice(0, bytes_left_to_limit);
+                                      controller.enqueue(value);
+                                      reader.cancel();
+                                      alert("The file is too large; truncating it.")
+                                  }
+                                  controller.close();
+                                  return;
+                              }
+                              bytes_left_to_limit -= value.length;
+                              controller.enqueue(value);
+                              return pump();
+                          })
+
+                      }
+                  }
+              })
+              ).text();
           }else{
               return Promise.reject(response.status + ":" + response.statusText);
           }
@@ -249,7 +275,7 @@ $(document).ready(function() {
           cancelCountDown();
           remove_alerts();
       }).catch((reason) => {
-          flash_alert("Failed to fetch" +remoteFileURL +":\n" + reason, "danger");
+          flash_alert("Failed to fetch" + remoteFileURL + ":\n" + reason, "danger");
       }).finally(() => {
           clearInterval(progress);
       })
