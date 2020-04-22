@@ -15,3 +15,5 @@ iso639
 networkx
 websocket-client
 sentencepiece
+# see https://github.com/noirbizarre/flask-restplus/issues/777
+Werkzeug==0.16.1
