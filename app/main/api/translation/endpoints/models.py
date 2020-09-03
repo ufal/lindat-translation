@@ -125,7 +125,8 @@ class ModelItem(MyAbstractResource):
                       .format(src, tgt))
 
         self.set_media_type_representations()
-        return self.create_response(translate_with_model(model, text, src, tgt))
+        return self.create_response(translate_with_model(model, text, src, tgt),
+                                    'src={};tgt={};model={}'.format(src, tgt, model.name))
 
     @ns.marshal_with(model_resource, skip_none=True)
     def get(self, model):

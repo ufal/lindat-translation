@@ -135,7 +135,8 @@ class LanguageCollection(MyAbstractResource):
         tgt = args.get('tgt', 'cs')
         self.set_media_type_representations()
         try:
-            return self.create_response(translate_from_to(src, tgt, text))
+            return self.create_response(translate_from_to(src, tgt, text),
+                                        'src={};tgt={}'.format(src, tgt))
         except ValueError as e:
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
 

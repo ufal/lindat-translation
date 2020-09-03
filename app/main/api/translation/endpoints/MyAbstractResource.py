@@ -35,7 +35,7 @@ class MyAbstractResource(Resource):
         if 'application/json' not in self.representations:
             self.representations['application/json'] = output_json
 
-    def create_response(self, translation):
+    def create_response(self, translation, extra_msg):
         end = datetime.datetime.now()
         headers = {
             'X-Billing-Filename': self._input_file_name,
@@ -44,7 +44,8 @@ class MyAbstractResource(Resource):
                                                                                            '\n')),
             'X-Billing-Start-Time': self._start_time,
             'X-Billing-End-Time': end,
-            'X-Billing-Duration': str(end - self._start_time)
+            'X-Billing-Duration': str(end - self._start_time),
+            'X-Billing-Extra': extra_msg
         }
         return translation, HTTPStatus.OK, headers
 
