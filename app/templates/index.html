@@ -1,7 +1,7 @@
 {%- extends "main.html" %}
 {% block panel %}
     {{ super() }}
-    <p>The translation service is available for <strong><em>personal and non-nommercial use</em></strong> (see <a href="https://lindat.mff.cuni.cz/en/terms-of-use">terms of use</a> for more details).</p>
+    <p>The translation service is available for <strong><em>personal and non-commercial use</em></strong> (see <a href="https://lindat.mff.cuni.cz/en/terms-of-use">terms of use</a> for more details).</p>
     <form class="form" id="taskForm" method="POST"
           action="{{ url_for('api.languages_language_collection') }}">
         {{ wtf.form_field(form.models) }}
