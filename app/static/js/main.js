@@ -1,26 +1,13 @@
 $(document).ready(function() {
 
   // flash an alert
-  // remove previous alerts by default
-  // set clean to false to keep old alerts
-  function flash_alert(message, category, clean) {
+  function flash_alert(message, category) {
     //console.log(message);
-    if (typeof(clean) === "undefined") clean = true;
-    if(clean) {
-      remove_alerts();
+    var out = $("#output_text");
+    out.val(message);
+    if(category === 'danger'){
+        out.css("background-color", "#d9534f")
     }
-    var htmlString = '<div class="alert alert-' + category + ' alert-dismissible" role="alert">'
-    htmlString += '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
-    htmlString += '<span aria-hidden="true">&times;</span></button></div>';
-    var msg = $(htmlString);
-    msg.text(message);
-    msg.prependTo(".panel-group").hide().slideDown();
-  }
-
-  function remove_alerts() {
-    $(".alert").slideUp("normal", function() {
-      $(this).remove();
-    });
   }
 
   function show_translation(translation) {
@@ -273,7 +260,6 @@ $(document).ready(function() {
           select_source.val(requestedLangOptionField.val());
           select_source.trigger('change');
           cancelCountDown();
-          remove_alerts();
       }).catch((reason) => {
           flash_alert("Failed to fetch" + remoteFileURL + ":\n" + reason, "danger");
       }).finally(() => {
@@ -285,6 +271,10 @@ $(document).ready(function() {
     var countDownTimer;
     var cancelCountDown = function(){
         clearTimeout(countDownTimer)
+        $("#submit").removeAttr("disabled");
+        var out = $("#output_text");
+        out.css("background-color", "");
+        out.val("");
     }
     var countDown = function(){
         cancelCountDown()
