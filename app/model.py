@@ -4,8 +4,7 @@ from math import ceil
 from flask import current_app, session
 from iso639 import to_name
 import numpy as np
-import tensorflow as tf
-from tensor2tensor.utils import registry, usr_dir
+from tensor2tensor.utils import registry, usr_dir, hparam
 from tensor2tensor.serving import serving_utils
 import sentencepiece as spm
 from sentence_splitter import split_text_into_sentences
@@ -15,7 +14,7 @@ from app.dict_utils import get_or_create
 
 log = logging.getLogger(__name__)
 usr_dir.import_usr_dir('t2t_usr_dir')
-hparams = tf.contrib.training.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
+hparams = hparam.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
 
 
 class Model(object):

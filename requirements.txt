@@ -7,10 +7,9 @@ WTForms
 sentence_splitter
 gunicorn
 eventlet
-tensor2tensor==1.6.6
-tensorflow==1.9.0
-numpy==1.14.5
-tensorflow-serving-api==1.9.0
+tensor2tensor==1.15.7
+numpy==1.18.5
+tensorflow-serving-api==2.3.0
 iso639
 networkx
 websocket-client
