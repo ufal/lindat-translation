@@ -1,4 +1,20 @@
-FROM python:3.5
+FROM python:3.8
+
+# pygame dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libsdl-image1.2-dev \
+      libsdl-mixer1.2-dev \
+      libsdl-ttf2.0-dev \
+      libsmpeg-dev \
+      libsdl1.2-dev \
+      libportmidi-dev \
+      libswscale-dev \
+      libavformat-dev \
+      libavcodec-dev \
+      libfreetype6-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
+
 
 WORKDIR /srv/transformer_frontend
 COPY requirements.txt requirements.txt
