@@ -2,6 +2,7 @@ FROM python:3.8
 
 # pygame dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      cmake \
       libsdl-image1.2-dev \
       libsdl-mixer1.2-dev \
       libsdl-ttf2.0-dev \

@@ -1,4 +1,5 @@
 import datetime
+from unicodedata import normalize
 from flask import request
 from flask.helpers import make_response
 from flask_restplus import Resource
@@ -26,6 +27,7 @@ class MyAbstractResource(Resource):
             text = request.form.get('input_text')
             self._input_file_name = '_DIRECT_INPUT'
         self._input_word_count = self._count_words(text)
+        self._input_nfc_len = len(normalize('NFC', text))
         return text
 
     def set_media_type_representations(self):
@@ -45,6 +47,7 @@ class MyAbstractResource(Resource):
             'X-Billing-Start-Time': self._start_time,
             'X-Billing-End-Time': end,
             'X-Billing-Duration': str(end - self._start_time),
+            'X-Billing-Input-NFC-Len': self._input_nfc_len,
             'X-Billing-Extra': extra_msg
         }
         return translation, HTTPStatus.OK, headers
