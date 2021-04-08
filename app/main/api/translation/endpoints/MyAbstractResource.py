@@ -27,7 +27,8 @@ class MyAbstractResource(Resource):
             text = request.form.get('input_text')
             self._input_file_name = '_DIRECT_INPUT'
         self._input_word_count = self._count_words(text)
-        self._input_nfc_len = len(normalize('NFC', text))
+        text = normalize('NFC', text)
+        self._input_nfc_len = len(text)
         return text
 
     def set_media_type_representations(self):
