@@ -5,7 +5,7 @@ from iso639 import to_name
 import networkx as nx
 
 from app.dict_utils import get_or_create
-from app.model import Model
+from app.models import Model
 
 log = logging.getLogger(__name__)
 
