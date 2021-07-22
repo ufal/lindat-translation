@@ -48,8 +48,6 @@ class Model(object):
         self.default = cfg.get('default', False)
         self.prefix_with = cfg.get('prefix_with', None)
 
-        if self.domain:
-            ' ({})'.format(self.domain)
         src = Model.lang_list_display(cfg['source'])
         tgt = Model.lang_list_display(cfg['target'])
         arrow = '->'
