@@ -66,7 +66,7 @@ Few steps back you can also test cudnn (samples are in deb package downloadable 
 ## Configs
 There are several config files:
 - for serving
-  - [model.config](./model.config) - with model names and path; names are src-tgt_model
+  - [model.config](./model.config) - with model names and path; names can be arbitrary (usually src-tgt)
   - [batching.config](./batching.config) - batch configuration
 - for systemd
   - see [systemd](./systemd) - service definitions for systemd (might need tweaking if using multiple systems)
@@ -79,21 +79,28 @@ There are several config files:
   - [app/models.json](app/models.json) - a list defining model2problem, model2server, source & target mappings etc
 ```
   {
-    "source": "en",
-    "target": "cs",
-    "problem": "translate_encs_wmt_czeng57m32k",
-    "domain": "",
-    "model": "en-cs",
-    "server": "localhost:9000",
-    "default": true
+    "model_framework": "tensorflow", // optional, tensorflow is default, the other value is marian
+    "source": ["en"], // a list of src languages supported by the model, usually len==1
+    "target": ["cs", "de", "es", "fr", "hu", "pl", "sv"], // a list of tgt languages, usually len==1
+    "problem": "translate_medical8lang", // t2t problem
+    "domain": "medical", // shown in display if display omitted
+    "model": "cs-es_medical", // servable name in model.config
+    "display": "Experimentální překlad", // optional, override the default display name
+    "prefix_with": "SRC{source} TRG{target} ", // optional, this is added before each sentence
+    "target_to_source": true, // optional, this model supports translation from target to source (eg. also cs->en)
+    "include_in_graph": false, // optional, don't include this model in the shortest path search, ie. make it available only in advanced mode
+    "server": "{T2T_TRANSFORMER2}", // ip/hostname + port, interpolated with app config
+    "default": false
+    //other options for marian
   }
-  ```
+```
     
   
 ## Adding new model
-0. get Dusan to convert model to the right format (and put the data on `t2t-transformer`)
-1. update `_choices`, `model2problem` accordingly (on `transformer`)
-2. Upload dictionary to [t2t_data_dir](t2t_data_dir) (on `transformer`)
-3. update `model.config` with the new model (on `t2t-transformer` the systemd scripts expects that file in `/opt/lindat_tranformer_service`)
+Assume we have two machines `flask` and `gpu`
+0. see `scripts/export.sh` or https://github.com/tensorflow/tensor2tensor/blob/ae042f66e013494eb2c4c2b50963da5a3d3fc828/tensor2tensor/serving/README.md#1-export-for-serving , but set the appropriate params. Pick a name (`$MODEL`)
+1. update `app/models.json` appropriately, `model` is `$MODEL` (this needs to be on `flask`)
+2. add dictionary to [t2t_data_dir](t2t_data_dir) (this needs to be on `flask`)
+3. update `model.config`, `name` is `$MODEL` (this lives on `gpu`, the systemd scripts expects that file in `/opt/lindat_tranformer_service`)
 4. restart both - `sudo systemctl restart tensorflow_serving`, `sudo systemctl restart transformer`
 5. check serving logs for oom errors `sudo journalctl -f -u tensorflow_serving`; if you see them before translating anything, search for a way to dynamically swap the models; if you see them when translating you might try fiddling with `batching.config`
