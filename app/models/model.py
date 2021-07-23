@@ -8,6 +8,7 @@ from app.dict_utils import get_or_create
 import app.models as models
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 usr_dir.import_usr_dir('t2t_usr_dir')
 hparams = hparam.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
 
@@ -19,6 +20,8 @@ class Model(object):
         if 'model_framework' in cfg:
             if cfg['model_framework'] == 'marian':
                 return models.MarianModel(cfg)
+            elif cfg['model_framework'] == 'tensorflow_doclevel':
+                return models.T2TDocModel(cfg)
         return models.T2TModel(cfg)
 
     @staticmethod
@@ -99,9 +102,30 @@ class Model(object):
         src = src or list(self.supports.keys())[0]
         tgt = tgt or self.supports[src][0]
 
-        sentences, formatting = self.extract_sentences(text, src)
-        outputs = self.send_sentences_to_backend(sentences, src, tgt)
+        blocks_of_text, formatting = self.extract_blocks_of_text(text, src)
+        outputs = self.send_blocks_to_backend(blocks_of_text, src, tgt)
         return self.reconstruct_formatting(outputs, formatting)
+
+    def extract_blocks_of_text(self, text, text_lang):
+        """
+        Default block of text is a sentence
+        :param text:
+        :param text_lang:
+        :return:
+        """
+        log.error("Model::extract_blocks_of_text")
+        return self.extract_sentences(text, text_lang)
+
+    def send_blocks_to_backend(self, blocks, src, tgt):
+        """
+        By default calls send_sentences_to_backend
+        :param blocks:
+        :param src:
+        :param tgt:
+        :return:
+        """
+        log.error("Model::send_blocks_to_backend")
+        return self.send_sentences_to_backend(blocks, src, tgt)
 
     def extract_sentences(self, text, text_lang):
         sentences = []
