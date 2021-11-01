@@ -36,7 +36,7 @@ class T2TModel(models.Model):
         for batch in np.array_split(text_arr,
                                     ceil(len(text_arr) / self.batch_size)):
             try:
-                models.log.info(f"===== sending batch\n{pformat(batch)}\n")
+                models.log.debug(f"===== sending batch\n{pformat(batch)}\n")
                 outputs += list(map(lambda sent_score: sent_score[0],
                                     serving_utils.predict(
                                         batch.tolist(),
@@ -94,13 +94,13 @@ class T2TDocModel(T2TModel):
         return current + next_len < limit
 
     def extract_blocks_of_text(self, text, src):
-        models.log.error("T2TDocLevel::extract_blocks_of_text")
+        models.log.debug("T2TDocLevel::extract_blocks_of_text")
         sentences, formatting = self.extract_sentences(text, src)  # honors the sent max len setting
         clever_context = self._create_clever_context(sentences)
         return {"clever_context": clever_context, "sentences": sentences}, formatting
 
     def send_blocks_to_backend(self, clever_context_with_sentences, src, tgt):
-        models.log.error("T2TDocLevel::send_blocks_to_backend")
+        models.log.debug("T2TDocLevel::send_blocks_to_backend")
         sequences = clever_context_with_sentences["clever_context"]
         sentences = clever_context_with_sentences["sentences"]
         outputs = self._do_send_request([x["sequence"] for x in sequences])
@@ -167,7 +167,7 @@ class T2TDocModel(T2TModel):
                 pre_context_start -= 1
                 too_long_pre_sent = sentences[pre_context_start]
                 cut_sent = too_long_pre_sent[-(self.PRE_CHARS - pre_context_len):]
-                models.log.info(f"====WTF===={pre_context_len}:{too_long_pre_sent}->{cut_sent}")
+                models.log.debug(f"====CUT_PRE===={pre_context_len}:{too_long_pre_sent}->{cut_sent}")
                 after_first_space = cut_sent.index(" ") + 1
                 cut_sent = cut_sent[after_first_space:]
                 if cut_sent:
@@ -201,7 +201,7 @@ class T2TDocModel(T2TModel):
         i = 0
         outputs = []
         for block in translated_blocks:
-            models.log.info(f"===== postprocessing block\n{block}\n")
+            models.log.debug(f"===== postprocessing block\n{block}\n")
             sents = block.split(' ¬ ')
             pattern = patterns[i]
             i += 1
@@ -211,7 +211,7 @@ class T2TDocModel(T2TModel):
                 models.log.warn(f"expected={expected} ({pattern}), but got {found}:\n{block}\n")
                 current_sent_i = len(outputs)
                 translate_again = original_untranslated_sentences[current_sent_i:current_sent_i+sum(pattern)]
-                models.log.info(f"===WTF==={current_sent_i}:{sum(pattern)}={translate_again}")
+                models.log.warn(f"===TRANSLATING_AGAIN==={current_sent_i}:{sum(pattern)}={translate_again}")
                 outputs += self._do_send_request(translate_again)
             else:
                 for b, sent in zip(pattern, sents):
