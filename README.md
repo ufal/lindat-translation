@@ -79,7 +79,7 @@ There are several config files:
   - [app/models.json](app/models.json) - a list defining model2problem, model2server, source & target mappings etc
 ```
   {
-    "model_framework": "tensorflow", // optional, tensorflow is default, the other value is marian
+    "model_framework": "tensorflow", // optional, tensorflow is default, the other values are tensorflow_doclevel and marian
     "source": ["en"], // a list of src languages supported by the model, usually len==1
     "target": ["cs", "de", "es", "fr", "hu", "pl", "sv"], // a list of tgt languages, usually len==1
     "problem": "translate_medical8lang", // t2t problem
@@ -90,7 +90,8 @@ There are several config files:
     "target_to_source": true, // optional, this model supports translation from target to source (eg. also cs->en)
     "include_in_graph": false, // optional, don't include this model in the shortest path search, ie. make it available only in advanced mode
     "server": "{T2T_TRANSFORMER2}", // ip/hostname + port, interpolated with app config
-    "default": false
+    "default": false,
+    "batch_size": 7 // optional, override {MARIAN_}BATCH_SIZE from settings.py for this model
     //other options for marian
   }
 ```

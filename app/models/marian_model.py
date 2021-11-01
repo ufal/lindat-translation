@@ -19,6 +19,16 @@ class MarianModel(models.Model):
         else:
             self.spm_limit = 100
 
+    @property
+    def batch_size(self):
+        """
+        This method needs a valid app context, current_app is not available at init time.
+        """
+        if hasattr(self, '_batch_size'):
+            return self._batch_size
+        else:
+            return current_app.config['MARIAN_BATCH_SIZE']
+
     def send_sentences_to_backend(self, sentences, src=None, tgt=None):
         marian_endpoint = "ws://{}/translate".format(self.server)
         models.log.debug("Connecting to '{}'".format(marian_endpoint))
@@ -31,8 +41,7 @@ class MarianModel(models.Model):
         for sent in sentences:
             count += 1
             batch += sent + "\n"
-            # TODO maybe batch size should be a model param.
-            if count == current_app.config['MARIAN_BATCH_SIZE']:
+            if count == self.batch_size:
                 ws.send(batch)
                 results.extend(ws.recv().strip().splitlines())
                 count = 0

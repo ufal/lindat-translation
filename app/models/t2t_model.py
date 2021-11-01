@@ -34,7 +34,7 @@ class T2TModel(models.Model):
                                                         server=self.server)
 
         for batch in np.array_split(text_arr,
-                                    ceil(len(text_arr) / current_app.config['BATCH_SIZE'])):
+                                    ceil(len(text_arr) / self.batch_size)):
             try:
                 models.log.info(f"===== sending batch\n{pformat(batch)}\n")
                 outputs += list(map(lambda sent_score: sent_score[0],

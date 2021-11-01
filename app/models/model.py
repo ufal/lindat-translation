@@ -47,6 +47,10 @@ class Model(object):
 
         if 'server' in cfg:
             self._server = cfg['server']
+
+        if 'batch_size' in cfg:
+            self._batch_size = cfg['batch_size']
+
         self.domain = cfg.get('domain', None)
         self.default = cfg.get('default', False)
         self.prefix_with = cfg.get('prefix_with', None)
@@ -82,6 +86,16 @@ class Model(object):
             return self._sent_chars_limit
         else:
             return current_app.config['SENT_LEN_LIMIT']
+
+    @property
+    def batch_size(self):
+        """
+        This method needs a valid app context, current_app is not available at init time.
+        """
+        if hasattr(self, '_batch_size'):
+            return self._batch_size
+        else:
+            return current_app.config['BATCH_SIZE']
 
     def add_href(self, url):
         self.href = url
