@@ -1,3 +1,4 @@
+import logging
 from flask import request, url_for
 from flask.helpers import make_response
 from flask_restplus import Resource, fields
@@ -11,6 +12,9 @@ from app.main.translate import translate_from_to
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 ns = api.namespace('languages', description='Operations with source and target languages')
 
@@ -138,6 +142,7 @@ class LanguageCollection(MyAbstractResource):
             return self.create_response(translate_from_to(src, tgt, text),
                                         'src={};tgt={}'.format(src, tgt))
         except ValueError as e:
+            log.exception(e)
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
 
 
