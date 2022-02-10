@@ -117,9 +117,13 @@ class ModelItem(MyAbstractResource):
         model = models.get_model(model)
         src_default = list(model.supports.keys())[0]
         src = args.get('src', src_default) or src_default
+        if src not in model.supports.keys():
+            api.abort(code=404,
+                      message='This model does not support translation from {}'
+                      .format(src))
         tgt_default = list(model.supports[src])[0]
         tgt = args.get('tgt', tgt_default) or tgt_default
-        if src not in model.supports.keys() or tgt not in model.supports[src]:
+        if tgt not in model.supports[src]:
             api.abort(code=404,
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
