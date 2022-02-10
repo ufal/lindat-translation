@@ -26,6 +26,8 @@ class MyAbstractResource(Resource):
         else:
             text = request.form.get('input_text')
             self._input_file_name = '_DIRECT_INPUT'
+        if not text:
+            api.abort(code=400, message='No text found in the input_text form/field or in request files')
         self._input_word_count = self._count_words(text)
         text = normalize('NFC', text)
         self._input_nfc_len = len(text)
