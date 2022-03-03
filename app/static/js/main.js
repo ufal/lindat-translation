@@ -285,10 +285,7 @@ $(document).ready(function() {
             }
         }, 1000)
     }
-    // TODO mobile seems lacking keyup/keydown
-    $("#input_text").on("keyup", countDown)
-                    .on("keydown", cancelCountDown)
-                    .on("paste", countDown)
+    $("#input_text").on("input", countDown)
     $("#models").on("change", countDown)
     $("#advanced").on("change", countDown)
     $("#source").on("change", countDown)
