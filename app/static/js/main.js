@@ -204,7 +204,7 @@ $(document).ready(function() {
                         var reader = new FileReader();
                         reader.onload = function(event){
                             $("#input_text").val(event.target.result)
-                            $("#input_text").trigger('paste')
+                            $("#input_text").trigger('input')
                         }
                         //console.log(files[0])
                         reader.readAsText(files[0]);
