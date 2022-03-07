@@ -1,9 +1,9 @@
 import sentencepiece as spm
 from flask import current_app
-from sentence_splitter import split_text_into_sentences
 from websocket import create_connection
 
 import app.models as models
+from app.text_utils import split_text_into_sentences
 
 
 # for Marian, by Dominik:

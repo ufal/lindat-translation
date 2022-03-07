@@ -3,11 +3,11 @@ from pprint import pformat
 
 import numpy as np
 from flask import current_app, session
-from sentence_splitter import split_text_into_sentences
 from tensor2tensor.serving import serving_utils
 from tensor2tensor.utils import registry
 
 import app.models as models
+from app.text_utils import split_text_into_sentences
 
 
 class T2TModel(models.Model):
