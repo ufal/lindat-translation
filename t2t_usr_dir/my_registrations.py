@@ -98,3 +98,9 @@ class TranslateEnpl(TranslateEncsWmtCzeng57m32k):
     def vocab_filename(self):
         return "vocab.enpl.%d" % self.approx_vocab_size
 
+@registry.register_problem
+class TranslateCsUk(TranslateEncsWmtCzeng57m32k):
+    @property
+    def vocab_filename(self):
+        return "vocab.csuk.%d" % self.approx_vocab_size
+
