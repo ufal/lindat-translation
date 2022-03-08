@@ -12,5 +12,9 @@ _instances = {}
 
 
 def split_text_into_sentences(text, language):
-    instance = _instances.setdefault(language, SentenceSplitter(language, _lang2file[language]))
+    if language not in _instances:
+        instance = SentenceSplitter(language, _lang2file[language])
+        _instances[language] = instance
+    else:
+        instance = _instances[language]
     return instance.split(text=text)
