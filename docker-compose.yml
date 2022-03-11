@@ -2,16 +2,9 @@ version: '2.4'
 services:
   # Tensorflow serving
   serving:
-    image: "tensorflow/serving"
-    #command: --enable_batching=true --model_config_file=/configs/model.config --batching_parameters_file=/config/batching.config
-    #ports:
-    # - 9000:8500
+    image: "ghcr.io/ufal/lindat-translation:hackathon"
     environment:
-      - MODEL_NAME=en-hi
-    volumes:
-      - type: bind
-        source: ./models/t2t-model.en-hi/export/Servo
-        target: /models/en-hi
+      - MODEL_NAME=uk-cs
     tty: true
     stdin_open: true
     platform: linux

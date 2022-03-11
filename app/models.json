@@ -1,98 +1,10 @@
 [
   {
-    "source": ["de"],
+    "source": ["uk"],
     "target": ["cs"],
-    "model_framework": "marian",
+    "problem": "translate_csuk",
     "domain": "",
-    "model": "de-cs",
-    "display": "German->Czech Marian",
-    "server": "{MARIAN}:5030",
-    "sent_chars_limit": 451,
-    "spm_vocab": "marian_data_dir/de-cs/vocab.encs.spm"
-  },
-  {
-    "source": ["cs"],
-    "target": ["de"],
-    "model_framework": "marian",
-    "domain": "",
-    "model": "cs-de",
-    "display": "Czech->German Marian",
-    "server": "{MARIAN}:8030",
-    "sent_chars_limit": 433,
-    "spm_vocab": "marian_data_dir/cs-de/vocab.encs.spm"
-  },
-  {
-    "source": ["en"],
-    "target": ["cs"],
-    "problem": "translate_encs_wmt_czeng57m32k",
-    "domain": "",
-    "model": "en-cs",
-    "display": "English->Czech (CUBBITT)",
+    "model": "uk-cs",
     "default": true
-  },
-  {
-    "source": ["cs"],
-    "target": ["en"],
-    "problem": "translate_encs_wmt_czeng57m32k",
-    "display": "Czech->English (CUBBITT)",
-    "domain": "",
-    "model": "cs-en"
-  },
-  {
-    "source": ["en"],
-    "target": ["hi"],
-    "problem": "translate_enhi_wat18",
-    "domain": "",
-    "model": "en-hi"
-  },
-  {
-    "source": ["en"],
-    "target": ["fr"],
-    "problem": "translate_enfr_wmt32k",
-    "display": "English->French (CUBBITT)",
-    "domain": "",
-    "model": "en-fr"
-  },
-  {
-    "source": ["fr"],
-    "target": ["en"],
-    "problem": "translate_enfr_wmt32k",
-    "display": "French->English (CUBBITT)",
-    "domain": "",
-    "model": "fr-en"
-  },
-  {
-    "source": ["en"],
-    "target": ["de"],
-    "problem": "translate_ende",
-    "display": "English->German",
-    "domain": "",
-    "model": "en-de"
-  },
-  {
-    "source": ["de"],
-    "target": ["en"],
-    "problem": "translate_ende",
-    "display": "German->English",
-    "domain": "",
-    "model": "de-en"
-  },
-  {
-    "source": ["ru"],
-    "target": ["en"],
-    "problem": "translate_enru",
-    "display": "Russian->English",
-    "domain": "",
-    "server": "{T2T_TRANSFORMER2}",
-    "model": "ru-en"
-  },
-  {
-    "source": ["en"],
-    "target": ["ru"],
-    "problem": "translate_enru",
-    "display": "English->Russian",
-    "domain": "",
-    "server": "{T2T_TRANSFORMER2}",
-    "model": "en-ru"
   }
 ]
