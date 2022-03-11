@@ -153,7 +153,7 @@ class LanguageCollection(MyAbstractResource):
         finally:
             try:
                 if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=translation, author=author, frontend=frontend)
+                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend)
             except:
                 pass
 
