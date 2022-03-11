@@ -9,6 +9,7 @@ from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractReso
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
 from app.model_settings import languages
 from app.main.translate import translate_from_to
+from app.db import log_translation
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
@@ -137,13 +138,24 @@ class LanguageCollection(MyAbstractResource):
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src', 'en')
         tgt = args.get('tgt', 'cs')
+        author = args.get('author', 'unknown')
+        frontend = args.get('frontend', 'unknown')
+        log_input = args.get('logInput', False)
+        translation = ''
         self.set_media_type_representations()
         try:
-            return self.create_response(translate_from_to(src, tgt, text),
+            translation = translate_from_to(src, tgt, text)
+            return self.create_response(translation,
                                         'src={};tgt={}'.format(src, tgt))
         except ValueError as e:
             log.exception(e)
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
+        finally:
+            try:
+                if log_input:
+                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=translation, author=author, frontend=frontend)
+            except:
+                pass
 
 
 @ns.route('/<string(length=2):language>')

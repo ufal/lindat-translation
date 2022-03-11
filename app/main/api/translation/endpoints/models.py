@@ -6,6 +6,7 @@ from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractReso
 from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
 from app.main.translate import translate_with_model
+from app.db import log_translation
 
 from app.main.api_examples.model_resource_example import *
 from app.main.api_examples.models_resource_example import *
@@ -128,9 +129,22 @@ class ModelItem(MyAbstractResource):
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 
+        author = args.get('author', 'unknown')
+        frontend = args.get('frontend', 'unknown')
+        log_input = args.get('logInput', False)
+        translation = ''
+
         self.set_media_type_representations()
-        return self.create_response(translate_with_model(model, text, src, tgt),
-                                    'src={};tgt={};model={}'.format(src, tgt, model.name))
+        try:
+            translation = translate_with_model(model, text, src, tgt)
+            return self.create_response(translation,
+                                        'src={};tgt={};model={}'.format(src, tgt, model.name))
+        finally:
+            try:
+                if log_input:
+                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=translation, author=author, frontend=frontend)
+            except:
+                pass
 
     @ns.marshal_with(model_resource, skip_none=True)
     def get(self, model):
