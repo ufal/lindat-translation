@@ -23,6 +23,6 @@ def init_db():
 
 def log_translation(src_lang, tgt_lang, src, tgt, author, frontend):
     db = get_db()
-    db.cursor().execute("INSERT INTO translations (src_lang, tgt_lang, src, tgt, author, frontend) VALUES (?,?,?,?,?,"
-                        "?)", (src_lang, tgt_lang, src, tgt, author, frontend))
+    db.cursor().execute("INSERT INTO translations (src_lang, tgt_lang, src, tgt, author, frontend) VALUES (?,?,?,?,?,?)",
+            (src_lang, tgt_lang, src, tgt, author, frontend))
     db.commit()
