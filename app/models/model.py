@@ -127,7 +127,7 @@ class Model(object):
         :param text_lang:
         :return:
         """
-        log.error("Model::extract_blocks_of_text")
+        log.debug("Model::extract_blocks_of_text")
         return self.extract_sentences(text, text_lang)
 
     def send_blocks_to_backend(self, blocks, src, tgt):
@@ -138,7 +138,7 @@ class Model(object):
         :param tgt:
         :return:
         """
-        log.error("Model::send_blocks_to_backend")
+        log.debug("Model::send_blocks_to_backend")
         return self.send_sentences_to_backend(blocks, src, tgt)
 
     def extract_sentences(self, text, text_lang):
