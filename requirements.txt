@@ -16,3 +16,5 @@ websocket-client
 sentencepiece
 # see https://github.com/noirbizarre/flask-restplus/issues/777
 Werkzeug==0.16.1
+# see https://github.com/aws/aws-sam-cli/issues/3661
+markupsafe==2.0.1

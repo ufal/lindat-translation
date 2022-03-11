@@ -1,4 +1,4 @@
-from flask_restplus import reqparse
+from flask_restplus import reqparse, inputs
 #import werkzeug
 
 #text_input = reqparse.RequestParser()
@@ -9,3 +9,6 @@ text_input_with_src_tgt = reqparse.RequestParser()
 text_input_with_src_tgt.add_argument('input_text', type=str,  location='form')
 text_input_with_src_tgt.add_argument('src', type=str)
 text_input_with_src_tgt.add_argument('tgt', type=str)
+text_input_with_src_tgt.add_argument('author', type=str)
+text_input_with_src_tgt.add_argument('frontend', type=str)
+text_input_with_src_tgt.add_argument('logInput', type=inputs.boolean)
