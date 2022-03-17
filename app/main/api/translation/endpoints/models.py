@@ -132,6 +132,7 @@ class ModelItem(MyAbstractResource):
         author = args.get('author', 'unknown')
         frontend = args.get('frontend', 'unknown')
         log_input = args.get('logInput', False)
+        ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
 
         self.set_media_type_representations()
@@ -142,7 +143,7 @@ class ModelItem(MyAbstractResource):
         finally:
             try:
                 if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend)
+                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend, ip_address=ip_address)
             except:
                 pass
 
