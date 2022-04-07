@@ -148,8 +148,8 @@ class ModelItem(MyAbstractResource):
                            input_nfc_len=self._input_nfc_len, duration_us=duration_us)
                 if log_input:
                     log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend, ip_address=ip_address)
-            except:
-                pass
+            except Exception as ex:
+                log.exception(ex)
 
     @ns.marshal_with(model_resource, skip_none=True)
     def get(self, model):
