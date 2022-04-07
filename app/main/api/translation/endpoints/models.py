@@ -130,7 +130,7 @@ class ModelItem(MyAbstractResource):
                       .format(src, tgt))
 
         author = args.get('author', 'unknown')
-        frontend = args.get('frontend', 'unknown')
+        frontend = args.get('frontend') or args.get('X-Frontend', 'unknown')
         log_input = args.get('logInput', False)
         ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
