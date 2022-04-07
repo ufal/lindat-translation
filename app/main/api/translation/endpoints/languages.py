@@ -1,3 +1,4 @@
+import datetime
 import logging
 from flask import request, url_for
 from flask.helpers import make_response
@@ -9,7 +10,7 @@ from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractReso
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
 from app.model_settings import languages
 from app.main.translate import translate_from_to
-from app.db import log_translation
+from app.db import log_translation, log_access
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
@@ -153,6 +154,9 @@ class LanguageCollection(MyAbstractResource):
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
+                duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
+                log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
+                           input_nfc_len=self._input_nfc_len, duration_us=duration_us)
                 if log_input:
                     log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend, ip_address=ip_address)
             except:
