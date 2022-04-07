@@ -30,4 +30,6 @@ def log_translation(src_lang, tgt_lang, src, tgt, author, frontend, ip_address):
 
 def log_access(src_lang, tgt_lang, author, frontend, input_nfc_len, duration_us):
     db = get_db()
-    db.cursor().execute("INSERT INTO access (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us) VALUES (?,?,?,?,?,?)")
+    db.cursor().execute("INSERT INTO access (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us) VALUES (?,?,?,?,?,?)",
+            (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us))
+    db.commit()
