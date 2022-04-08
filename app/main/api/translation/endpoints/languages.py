@@ -141,7 +141,7 @@ class LanguageCollection(MyAbstractResource):
         tgt = args.get('tgt') or 'cs'
         author = args.get('author') or 'unknown'
         frontend = args.get('frontend') or args.get('X-Frontend') or 'unknown'
-        input_type = args.get('X-Input-Type') or 'keyboard'
+        input_type = args.get('inputType') or 'keyboard'
         log_input = args.get('logInput', False)
         ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
