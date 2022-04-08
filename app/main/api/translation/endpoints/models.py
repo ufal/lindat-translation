@@ -133,9 +133,9 @@ class ModelItem(MyAbstractResource):
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 
-        author = args.get('author', 'unknown')
-        frontend = args.get('frontend') or args.get('X-Frontend', 'unknown')
-        input_type = args.get('X-Input-Type', 'keyboard')
+        author = args.get('author') or 'unknown'
+        frontend = args.get('frontend') or args.get('X-Frontend') or 'unknown'
+        input_type = args.get('X-Input-Type') or 'keyboard'
         log_input = args.get('logInput', False)
         ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
@@ -153,7 +153,7 @@ class ModelItem(MyAbstractResource):
                 if log_input:
                     log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
                                                                                                             '\n'),
-                                    author=author, frontend=frontend, ip_address=ip_address, input_type = input_type)
+                                    author=author, frontend=frontend, ip_address=ip_address, input_type=input_type)
             except Exception as ex:
                 log.exception(ex)
 
