@@ -141,6 +141,7 @@ class LanguageCollection(MyAbstractResource):
         tgt = args.get('tgt', 'cs')
         author = args.get('author', 'unknown')
         frontend = args.get('frontend') or args.get('X-Frontend', 'unknown')
+        input_type = args.get('X-Input-Type', 'keyboard')
         log_input = args.get('logInput', False)
         ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
@@ -156,9 +157,11 @@ class LanguageCollection(MyAbstractResource):
             try:
                 duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
                 log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
-                           input_nfc_len=self._input_nfc_len, duration_us=duration_us)
+                           input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type)
                 if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend, ip_address=ip_address)
+                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
+                                                                                                            '\n'),
+                                    author=author, frontend=frontend, ip_address=ip_address, input_type = input_type)
             except Exception as ex:
                 log.exception(ex)
 

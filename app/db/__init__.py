@@ -21,15 +21,17 @@ def init_db():
     db.commit()
 
 
-def log_translation(src_lang, tgt_lang, src, tgt, author, frontend, ip_address):
+def log_translation(src_lang, tgt_lang, src, tgt, author, frontend, ip_address, input_type):
     db = get_db()
-    db.cursor().execute("INSERT INTO translations (src_lang, tgt_lang, src, tgt, author, frontend, ip_address) VALUES (?,?,?,?,?,?,?)",
-            (src_lang, tgt_lang, src, tgt, author, frontend, ip_address))
+    db.cursor().execute("INSERT INTO translations (src_lang, tgt_lang, src, tgt, author, frontend, ip_address, "
+                        "input_type) VALUES (?,?,?,?,?,?,?,?)",
+            (src_lang, tgt_lang, src, tgt, author, frontend, ip_address, input_type))
     db.commit()
 
 
-def log_access(src_lang, tgt_lang, author, frontend, input_nfc_len, duration_us):
+def log_access(src_lang, tgt_lang, author, frontend, input_nfc_len, duration_us, input_type):
     db = get_db()
-    db.cursor().execute("INSERT INTO access (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us) VALUES (?,?,?,?,?,?)",
-            (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us))
+    db.cursor().execute("INSERT INTO access (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us, "
+                        "input_type) VALUES (?,?,?,?,?,?,?)",
+            (src_lang, tgt_lang, input_nfc_len, author, frontend, duration_us, input_type))
     db.commit()
