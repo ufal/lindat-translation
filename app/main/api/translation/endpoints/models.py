@@ -1,4 +1,3 @@
-import datetime
 import logging
 from flask import request, url_for
 from flask_restplus import Resource, fields
@@ -8,7 +7,6 @@ from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractReso
 from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
 from app.main.translate import translate_with_model
-from app.db import log_translation, log_access
 
 from app.main.api_examples.model_resource_example import *
 from app.main.api_examples.models_resource_example import *
@@ -133,11 +131,6 @@ class ModelItem(MyAbstractResource):
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 
-        author = args.get('author') or 'unknown'
-        frontend = args.get('frontend') or args.get('X-Frontend') or 'unknown'
-        input_type = args.get('inputType') or 'keyboard'
-        log_input = args.get('logInput', False)
-        ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
 
         self.set_media_type_representations()
@@ -147,13 +140,7 @@ class ModelItem(MyAbstractResource):
                                         'src={};tgt={};model={}'.format(src, tgt, model.name))
         finally:
             try:
-                duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
-                log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
-                           input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type)
-                if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
-                                                                                                            '\n'),
-                                    author=author, frontend=frontend, ip_address=ip_address, input_type=input_type)
+                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
             except Exception as ex:
                 log.exception(ex)
 
@@ -163,4 +150,3 @@ class ModelItem(MyAbstractResource):
         Get model's details
         """
         return models.get_model(model)
-

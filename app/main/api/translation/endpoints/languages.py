@@ -1,4 +1,3 @@
-import datetime
 import logging
 from flask import request, url_for
 from flask.helpers import make_response
@@ -7,10 +6,9 @@ from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
-from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
+from app.main.api.translation.parsers import text_input_with_src_tgt  # , file_input
 from app.model_settings import languages
 from app.main.translate import translate_from_to
-from app.db import log_translation, log_access
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
@@ -139,11 +137,6 @@ class LanguageCollection(MyAbstractResource):
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src') or 'en'
         tgt = args.get('tgt') or 'cs'
-        author = args.get('author') or 'unknown'
-        frontend = args.get('frontend') or args.get('X-Frontend') or 'unknown'
-        input_type = args.get('inputType') or 'keyboard'
-        log_input = args.get('logInput', False)
-        ip_address = request.headers.get('X-Real-IP', 'unknown')
         translation = ''
         self.set_media_type_representations()
         try:
@@ -155,13 +148,7 @@ class LanguageCollection(MyAbstractResource):
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
-                duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
-                log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
-                           input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type)
-                if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
-                                                                                                            '\n'),
-                                    author=author, frontend=frontend, ip_address=ip_address, input_type=input_type)
+                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
             except Exception as ex:
                 log.exception(ex)
 
