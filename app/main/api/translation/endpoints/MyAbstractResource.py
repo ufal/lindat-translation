@@ -73,14 +73,16 @@ class MyAbstractResource(Resource):
         self.log_request_with_additional_args(src=src, tgt=tgt, text=text, translation=translation, **self.get_additional_args_from_request())
 
     def log_request_with_additional_args(self, src, tgt, author, frontend, input_type, log_input, ip_address, text,
-                                         translation):
+                                         translation, app_version, user_lang):
         duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
         log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
-                   input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type)
+                   input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type,
+                   app_version=app_version, user_lang=user_lang)
         if log_input:
             log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
                                                                                                     '\n'),
-                            author=author, frontend=frontend, ip_address=ip_address, input_type=input_type)
+                            author=author, frontend=frontend, ip_address=ip_address, input_type=input_type,
+                            app_version=app_version, user_lang=user_lang)
 
     @staticmethod
     def _count_words(text):
