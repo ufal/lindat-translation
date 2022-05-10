@@ -7,6 +7,8 @@ from flask_restplus.api import output_json
 from flask_restplus._http import HTTPStatus
 
 from app.main.api.restplus import api
+from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
+from app.db import log_translation, log_access
 
 
 class MyAbstractResource(Resource):
@@ -33,6 +35,18 @@ class MyAbstractResource(Resource):
         self._input_nfc_len = len(text)
         return text
 
+    def get_additional_args_from_request(self):
+        args = text_input_with_src_tgt.parse_args(request)
+        return {
+            'author': args.get('author') or 'unknown',
+            'frontend': args.get('frontend') or args.get('X-Frontend') or 'unknown',
+            'app_version': args.get('X-App-Version') or 'unknown',
+            'user_lang': args.get('X-User-Language') or 'unknown',
+            'input_type': args.get('inputType') or 'keyboard',
+            'log_input': args.get('logInput', False),
+            'ip_address': request.headers.get('X-Real-IP', 'unknown')
+             }
+
     def set_media_type_representations(self):
         self.representations = self.representations if self.representations else {}
         if 'text/plain' not in self.representations:
@@ -55,6 +69,20 @@ class MyAbstractResource(Resource):
         }
         return translation, HTTPStatus.OK, headers
 
+    def log_request(self, src, tgt, text, translation):
+        self.log_request_with_additional_args(src=src, tgt=tgt, text=text, translation=translation, **self.get_additional_args_from_request())
+
+    def log_request_with_additional_args(self, src, tgt, author, frontend, input_type, log_input, ip_address, text,
+                                         translation, app_version, user_lang):
+        duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
+        log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
+                   input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type,
+                   app_version=app_version, user_lang=user_lang)
+        if log_input:
+            log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
+                                                                                                    '\n'),
+                            author=author, frontend=frontend, ip_address=ip_address, input_type=input_type,
+                            app_version=app_version, user_lang=user_lang)
 
     @staticmethod
     def _count_words(text):

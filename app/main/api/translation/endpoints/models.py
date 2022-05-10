@@ -1,3 +1,4 @@
+import logging
 from flask import request, url_for
 from flask_restplus import Resource, fields
 
@@ -6,11 +7,12 @@ from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractReso
 from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
 from app.main.translate import translate_with_model
-from app.db import log_translation
 
 from app.main.api_examples.model_resource_example import *
 from app.main.api_examples.models_resource_example import *
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 ns = api.namespace('models', description='Operations related to translation models')
 
@@ -129,9 +131,6 @@ class ModelItem(MyAbstractResource):
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 
-        author = args.get('author', 'unknown')
-        frontend = args.get('frontend', 'unknown')
-        log_input = args.get('logInput', False)
         translation = ''
 
         self.set_media_type_representations()
@@ -141,10 +140,9 @@ class ModelItem(MyAbstractResource):
                                         'src={};tgt={};model={}'.format(src, tgt, model.name))
         finally:
             try:
-                if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend)
-            except:
-                pass
+                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
+            except Exception as ex:
+                log.exception(ex)
 
     @ns.marshal_with(model_resource, skip_none=True)
     def get(self, model):
@@ -152,4 +150,3 @@ class ModelItem(MyAbstractResource):
         Get model's details
         """
         return models.get_model(model)
-

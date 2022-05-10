@@ -6,10 +6,9 @@ from flask_restplus.api import output_json
 
 from app.main.api.restplus import api
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
-from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
+from app.main.api.translation.parsers import text_input_with_src_tgt  # , file_input
 from app.model_settings import languages
 from app.main.translate import translate_from_to
-from app.db import log_translation
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
@@ -136,11 +135,8 @@ class LanguageCollection(MyAbstractResource):
         """
         text = self.get_text_from_request()
         args = text_input_with_src_tgt.parse_args(request)
-        src = args.get('src', 'en')
-        tgt = args.get('tgt', 'cs')
-        author = args.get('author', 'unknown')
-        frontend = args.get('frontend', 'unknown')
-        log_input = args.get('logInput', False)
+        src = args.get('src') or 'en'
+        tgt = args.get('tgt') or 'cs'
         translation = ''
         self.set_media_type_representations()
         try:
@@ -152,10 +148,9 @@ class LanguageCollection(MyAbstractResource):
             api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
-                if log_input:
-                    log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ', '\n'), author=author, frontend=frontend)
-            except:
-                pass
+                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
+            except Exception as ex:
+                log.exception(ex)
 
 
 @ns.route('/<string(length=2):language>')
