@@ -49,7 +49,7 @@ class T2TModel(models.Model):
         else:
             # change (sent, score) tuples to list; tuples are immutable; reconstruct_formatting needs mutable
             # np.float32 ... `Object of type float32 is not JSON serializable` .item() turns it into python scalar 
-            return list(map(lambda tup: list((tup[0], tup[1].item())), outputs_with_scores))
+            return list(map(lambda tup: {'output_text': tup[0], 'output_score': tup[1].item()}, outputs_with_scores))
 
     def split_to_sent_array(self, text, lang):
         charlimit = self.sent_chars_limit
@@ -233,10 +233,7 @@ class T2TModelWithScores(T2TModel):
         :param newlines_after:
         :return:
         """
-        models.log.error(type(outputs))
         for i in newlines_after:
             if i >= 0:
-                models.log.error(type(outputs[i]))
-                models.log.error(type(outputs[i][0]))
-                outputs[i][0] += '\n'
+                outputs[i]['output_text'] += '\n'
         return outputs

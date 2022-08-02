@@ -90,6 +90,8 @@ class MyAbstractResource(Resource):
                 text_arr = translation
             elif isinstance(translation[0], list):
                 text_arr = [t[0] for t in translation]
+            elif isinstance(translation[0], dict):
+                text_arr = [t['output_text'] for t in translation]
         else:
             return 0
         text = ' '.join(text_arr).replace('\n ', '\n')
