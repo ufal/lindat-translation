@@ -59,8 +59,7 @@ class MyAbstractResource(Resource):
         headers = {
             'X-Billing-Filename': self._input_file_name,
             'X-Billing-Input-Word-Count': self._input_word_count,
-            'X-Billing-Output-Word-Count': self._count_words(' '.join(translation).replace('\n ',
-                                                                                           '\n')),
+            'X-Billing-Output-Word-Count': self._count_words(translation),
             'X-Billing-Start-Time': self._start_time,
             'X-Billing-End-Time': end,
             'X-Billing-Duration': str(end - self._start_time),
@@ -85,5 +84,14 @@ class MyAbstractResource(Resource):
                             app_version=app_version, user_lang=user_lang)
 
     @staticmethod
-    def _count_words(text):
+    def _count_words(translation):
+        if translation:
+            if isinstance(translation[0], str):
+                text_arr = translation
+            elif isinstance(translation[0], list):
+                text_arr = [t[0] for t in translation]
+        else:
+            return 0
+        text = ' '.join(text_arr).replace('\n ', '\n')
+        
         return len(text.split())
