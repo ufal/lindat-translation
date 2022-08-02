@@ -6,7 +6,7 @@
     "domain": "",
     "model": "cs",
     "display": "GEC CS",
-    "server": "{GPU4}",
+    "model_framework": "tensorflow_with_scores",
     "batch_size": 7,
     "default": true
   },
@@ -17,7 +17,7 @@
     "domain": "",
     "model": "en",
     "display": "GEC EN",
-    "server": "{GPU4}",
+    "model_framework": "tensorflow_with_scores",
     "batch_size": 7
   },
   {
@@ -27,7 +27,7 @@
     "domain": "",
     "model": "de",
     "display": "GEC DE",
-    "server": "{GPU4}",
+    "model_framework": "tensorflow_with_scores",
     "batch_size": 7
   },
   {
@@ -37,7 +37,7 @@
     "domain": "",
     "model": "ru",
     "display": "GEC RU",
-    "server": "{GPU4}",
+    "model_framework": "tensorflow_with_scores",
     "batch_size": 7
   }
 ]
