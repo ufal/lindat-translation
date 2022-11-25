@@ -23,13 +23,13 @@ class T2TModel(models.Model):
 
         return self._do_send_request(sentences)
 
-    def _do_send_request(self, text_arr):
+    def _do_send_request(self, text_arr, with_scores=False):
         """
         Divide the arr into batches and send the batches to the backend to be processed
         :param text_arr: individual elements of arr will be grouped into batches
         :return:
         """
-        outputs = []
+        outputs_with_scores = []
         request_fn = serving_utils.make_grpc_request_fn(servable_name=self.model, timeout_secs=500,
                                                         server=self.server)
 
@@ -37,17 +37,19 @@ class T2TModel(models.Model):
                                     ceil(len(text_arr) / self.batch_size)):
             try:
                 models.log.debug(f"===== sending batch\n{pformat(batch)}\n")
-                outputs += list(map(lambda sent_score: sent_score[0],
-                                    serving_utils.predict(
-                                        batch.tolist(),
-                                        self.problem,
-                                        request_fn)))
+                outputs_with_scores += serving_utils.predict(batch.tolist(), self.problem, request_fn)
             except:
                 # When tensorflow serving restarts web clients seem to "remember" the channel where
                 # the connection have failed. clearing up the session, seems to solve that
                 session.clear()
                 raise
-        return outputs
+
+        if not with_scores:
+            return list(map(lambda sent_score: sent_score[0], outputs_with_scores))
+        else:
+            # change (sent, score) tuples to list; tuples are immutable; reconstruct_formatting needs mutable
+            # np.float32 ... `Object of type float32 is not JSON serializable` .item() turns it into python scalar 
+            return list(map(lambda tup: {'output_text': tup[0], 'output_score': tup[1].item()}, outputs_with_scores))
 
     def split_to_sent_array(self, text, lang):
         charlimit = self.sent_chars_limit
@@ -217,4 +219,21 @@ class T2TDocModel(T2TModel):
                 for b, sent in zip(pattern, sents):
                     if b:
                         outputs.append(sent)
+        return outputs
+
+
+class T2TModelWithScores(T2TModel):
+    def send_sentences_to_backend(self, sentences, src, tgt):
+        return self._do_send_request(sentences, with_scores=True)
+
+    def reconstruct_formatting(self, outputs, newlines_after):
+        """
+        reimplemeneted for outputs_with_scores
+        :param outputs:
+        :param newlines_after:
+        :return:
+        """
+        for i in newlines_after:
+            if i >= 0:
+                outputs[i]['output_text'] += '\n'
         return outputs

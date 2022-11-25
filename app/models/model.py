@@ -22,6 +22,8 @@ class Model(object):
                 return models.MarianModel(cfg)
             elif cfg['model_framework'] == 'tensorflow_doclevel':
                 return models.T2TDocModel(cfg)
+            elif cfg['model_framework'] == 'tensorflow_with_scores':
+                return models.T2TModelWithScores(cfg)
         return models.T2TModel(cfg)
 
     @staticmethod
