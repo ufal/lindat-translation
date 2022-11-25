@@ -9,13 +9,14 @@ from flask_restplus._http import HTTPStatus
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
 from app.db import log_translation, log_access
+from app.text_utils import extract_text as _extract_text
 
 
 class MyAbstractResource(Resource):
 
     @classmethod
     def to_text(cls, data, code, headers):
-        return make_response(' '.join(data).replace('\n ', '\n'), code, headers)
+        return make_response(_extract_text(data), code, headers)
 
     def get_text_from_request(self):
         self._start_time = datetime.datetime.now()
@@ -78,22 +79,10 @@ class MyAbstractResource(Resource):
                    input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type,
                    app_version=app_version, user_lang=user_lang)
         if log_input:
-            log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=' '.join(translation).replace('\n ',
-                                                                                                    '\n'),
+            log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=_extract_text(translation),
                             author=author, frontend=frontend, ip_address=ip_address, input_type=input_type,
                             app_version=app_version, user_lang=user_lang)
 
     @staticmethod
     def _count_words(translation):
-        if translation:
-            if isinstance(translation[0], str):
-                text_arr = translation
-            elif isinstance(translation[0], list):
-                text_arr = [t[0] for t in translation]
-            elif isinstance(translation[0], dict):
-                text_arr = [t['output_text'] for t in translation]
-        else:
-            return 0
-        text = ' '.join(text_arr).replace('\n ', '\n')
-        
-        return len(text.split())
+        return len(_extract_text(translation).split())

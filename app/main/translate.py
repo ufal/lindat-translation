@@ -1,5 +1,6 @@
 #from app.logging_utils import logged
 from app.model_settings import models
+from app.text_utils import extract_text as _extract_text
 
 import logging
 log = logging.getLogger(__name__)
@@ -18,5 +19,5 @@ def translate_from_to(source, target, text):
     translation = []
     for obj in models_on_path:
         translation = translate_with_model(obj['model'], text, obj['src'], obj['tgt'])
-        text = ' '.join(translation).replace('\n ', '\n')
+        text = _extract_text(translation)
     return translation
