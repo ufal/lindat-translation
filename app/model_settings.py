@@ -40,7 +40,7 @@ class Models(object):
                             self._G.add_edge(tgt_lang, src_lang, cfg=model)
 
         # There may be more than one shortest path between source and target; this returns only one
-        self._shortest_path = nx.shortest_path(self._G)
+        self._shortest_path = dict(nx.all_pairs_shortest_path(self._G, cutoff=2))
         _directions = []
         self._src_tgt = {}
         self._tgt_src = {}
