@@ -8,7 +8,7 @@ sentence-splitter==1.4
 gunicorn==20.1.0
 eventlet==0.31.1
 tensor2tensor==1.15.7
-numpy==1.18.5
+numpy==1.22.0
 tensorflow-serving-api==2.3.0
 iso639==0.1.4
 networkx==2.5.1
