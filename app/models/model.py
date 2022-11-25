@@ -143,6 +143,9 @@ class Model(object):
         log.debug("Model::send_blocks_to_backend")
         return self.send_sentences_to_backend(blocks, src, tgt)
 
+    def send_sentences_to_backend(self, sentences, src, tgt):
+        raise NotImplementedError("Abstract method")
+
     def extract_sentences(self, text, text_lang):
         sentences = []
         newlines_after = []
@@ -152,6 +155,9 @@ class Model(object):
                                                       )
             newlines_after.append(len(sentences) - 1)
         return sentences, newlines_after
+
+    def split_to_sent_array(self, segment, lang):
+        raise NotImplementedError("Abstract method")
 
     def reconstruct_formatting(self, outputs, newlines_after):
         for i in newlines_after:
