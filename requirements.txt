@@ -27,7 +27,7 @@ atari-py==0.2.9
 attrs==21.2.0
 bz2file==0.98
 cachetools==4.2.2
-certifi==2021.5.30
+certifi==2022.12.7
 charset-normalizer==2.0.3
 chex==0.0.8
 click==7.1.2
