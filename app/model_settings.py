@@ -34,13 +34,14 @@ class Models(object):
                 flip_src_tgt = cfg.get('target_to_source', False)
                 for src_lang in cfg['source']:
                     for tgt_lang in cfg['target']:
+                        weight = cfg.get('weight', 1)
                         # This will keep only the last model
-                        self._G.add_edge(src_lang, tgt_lang, cfg=model)
+                        self._G.add_edge(src_lang, tgt_lang, cfg=model, weight=weight)
                         if flip_src_tgt:
-                            self._G.add_edge(tgt_lang, src_lang, cfg=model)
+                            self._G.add_edge(tgt_lang, src_lang, cfg=model, weight=weight)
 
         # There may be more than one shortest path between source and target; this returns only one
-        self._shortest_path = dict(nx.all_pairs_shortest_path(self._G, cutoff=2))
+        self._shortest_path = dict(nx.all_pairs_dijkstra_path(self._G, cutoff=2))
         _directions = []
         self._src_tgt = {}
         self._tgt_src = {}
