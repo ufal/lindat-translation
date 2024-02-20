@@ -2,7 +2,7 @@ version: '2.4'
 services:
   # Tensorflow serving
   serving:
-    image: "tensorflow/serving@sha256:6651f4839e1124dbde75ee531825112af0a6b8ef082c88ab14ca53eb69a2e4bb"
+    image: "tensorflow/serving@sha256:fdc296e313fa4454173c5728fceda38f5d18cdb44c71a9f279ce61bc5818335e"
     #command: --enable_batching=true --model_config_file=/configs/model.config --batching_parameters_file=/config/batching.config
     #ports:
     # - 9000:8500
