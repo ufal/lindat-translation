@@ -1,5 +1,5 @@
 from flask import url_for
-from flask_restplus import Resource, marshal_with, fields
+from flask_restx import Resource, marshal_with, fields
 from app.main.api.restplus import api
 
 from app.main.api_examples.root_resource_example import *

@@ -2,9 +2,9 @@ import datetime
 from unicodedata import normalize
 from flask import request
 from flask.helpers import make_response
-from flask_restplus import Resource
-from flask_restplus.api import output_json
-from flask_restplus._http import HTTPStatus
+from flask_restx import Resource
+from flask_restx.api import output_json
+from flask_restx._http import HTTPStatus
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input

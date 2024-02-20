@@ -1,0 +1,12 @@
+#AttributeError: module 'numpy' has no attribute 'bool'.
+#`np.bool` was a deprecated alias for the builtin `bool`. To avoid this error in existing code, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+#The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+#    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations. Did you mean: 'bool_'?
+numpy==1.23.1
+# https://github.com/tensorflow/probability/issues/1752
+#tensorflow >2, <2.14
+tensorflow==2.13.1
+#site-packages/gym/envs/registration.py", line 572, in make
+#    _kwargs = spec_.kwargs.copy()
+#AttributeError: 'NoneType' object has no attribute 'copy'
+gym==0.18.3

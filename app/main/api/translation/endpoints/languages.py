@@ -1,8 +1,8 @@
 import logging
 from flask import request, url_for
 from flask.helpers import make_response
-from flask_restplus import Resource, fields
-from flask_restplus.api import output_json
+from flask_restx import Resource, fields
+from flask_restx.api import output_json
 
 from app.main.api.restplus import api
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
