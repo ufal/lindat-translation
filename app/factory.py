@@ -4,6 +4,9 @@ from . import settings
 from .extensions import bootstrap
 from .main.views import bp as main
 from app.main.api.restplus import api
+from app.main.api.translation.endpoints.models import ns as models_ns
+from app.main.api.translation.endpoints.languages import ns as languages_ns
+from app.main.api.translation.endpoints.root import ns as root_ns
 
 
 class ReverseProxied(object):
@@ -55,5 +58,8 @@ def create_app():
 
     api_bp = Blueprint('api', __name__, url_prefix='/api/v2')
     api.init_app(api_bp)
+    api.add_namespace(models_ns)
+    api.add_namespace(languages_ns)
+    api.add_namespace(root_ns)
     app.register_blueprint(api_bp)
     return app

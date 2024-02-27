@@ -1,10 +1,9 @@
 from flask import url_for
-from flask_restx import Resource, fields
-from app.main.api.restplus import api
+from flask_restx import Namespace, Resource, fields
 
 from app.main.api_examples.root_resource_example import *
 
-ns = api.namespace('root', description='Root resource for navigation to languages/models', path='/')
+ns = Namespace('root', description='Root resource for navigation to languages/models', path='/')
 
 
 def identity(x):

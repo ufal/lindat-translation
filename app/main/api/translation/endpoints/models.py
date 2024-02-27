@@ -1,8 +1,7 @@
 import logging
 from flask import request, url_for
-from flask_restx import Resource, fields
+from flask_restx import Namespace, Resource, fields
 
-from app.main.api.restplus import api
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
 from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
@@ -14,7 +13,7 @@ from app.main.api_examples.models_resource_example import *
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-ns = api.namespace('models', description='Operations related to translation models')
+ns = Namespace('models', description='Operations related to translation models')
 
 _models_item_relation = 'item'
 
@@ -121,13 +120,13 @@ class ModelItem(MyAbstractResource):
         src_default = list(model.supports.keys())[0]
         src = args.get('src', src_default) or src_default
         if src not in model.supports.keys():
-            api.abort(code=404,
+            ns.abort(code=404,
                       message='This model does not support translation from {}'
                       .format(src))
         tgt_default = list(model.supports[src])[0]
         tgt = args.get('tgt', tgt_default) or tgt_default
         if tgt not in model.supports[src]:
-            api.abort(code=404,
+            ns.abort(code=404,
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
 

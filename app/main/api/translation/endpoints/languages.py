@@ -1,10 +1,9 @@
 import logging
 from flask import request, url_for
 from flask.helpers import make_response
-from flask_restx import Resource, fields
+from flask_restx import Namespace, Resource, fields
 from flask_restx.api import output_json
 
-from app.main.api.restplus import api
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
 from app.main.api.translation.parsers import text_input_with_src_tgt  # , file_input
 from app.model_settings import languages
@@ -16,7 +15,7 @@ from app.main.api_examples.languages_resource_example import *
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-ns = api.namespace('languages', description='Operations with source and target languages')
+ns = Namespace('languages', description='Operations with source and target languages')
 
 _models_item_relation = 'item'
 
@@ -145,7 +144,7 @@ class LanguageCollection(MyAbstractResource):
                                         'src={};tgt={}'.format(src, tgt))
         except ValueError as e:
             log.exception(e)
-            api.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
+            ns.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
                 self.log_request(src=src, tgt=tgt, text=text, translation=translation)
