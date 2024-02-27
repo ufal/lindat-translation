@@ -4,9 +4,6 @@ from . import settings
 from .extensions import bootstrap
 from .main.views import bp as main
 from app.main.api.restplus import api
-from app.main.api.translation.endpoints.models import ns as models_ns
-from app.main.api.translation.endpoints.languages import ns as languages_ns
-from app.main.api.translation.endpoints.root import ns as root_ns
 
 
 class ReverseProxied(object):
@@ -42,7 +39,6 @@ class ReverseProxied(object):
             environ['wsgi.url_scheme'] = scheme
         return self.app(environ, start_response)
 
-
 def create_app():
     app = Flask(__name__)
     app.wsgi_app = ReverseProxied(app.wsgi_app)
@@ -52,10 +48,12 @@ def create_app():
     bootstrap.init_app(app)
     app.register_blueprint(main)
 
+    # https://github.com/noirbizarre/flask-restplus/issues/712
+    # Api.render_root returns 404; hence this hack
+    # not sure why this is suddenly needed; it was working without it before
+    app.add_url_rule('/api/v2/', endpoint='api.root_root_resource')
+
     api_bp = Blueprint('api', __name__, url_prefix='/api/v2')
     api.init_app(api_bp)
-    api.add_namespace(models_ns)
-    api.add_namespace(languages_ns)
-    api.add_namespace(root_ns)
     app.register_blueprint(api_bp)
     return app

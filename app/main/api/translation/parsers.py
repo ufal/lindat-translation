@@ -1,4 +1,4 @@
-from flask_restplus import reqparse, inputs
+from flask_restx import reqparse, inputs
 #import werkzeug
 
 #text_input = reqparse.RequestParser()

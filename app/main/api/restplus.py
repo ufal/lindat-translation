@@ -1,5 +1,5 @@
 from flask import render_template
-from flask_restplus import Api
+from flask_restx import Api
 
 # TODO terms, etc.
 api = Api(version='2.0', title='LINDAT Translation API', default_mediatype=None,
