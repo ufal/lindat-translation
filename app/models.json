@@ -1,34 +1,13 @@
 [
   {
-    "source": ["de"],
-    "target": ["cs"],
-    "model_framework": "marian",
-    "domain": "",
-    "model": "de-cs",
-    "display": "German->Czech Marian",
-    "server": "{MARIAN}:5030",
-    "sent_chars_limit": 451,
-    "spm_vocab": "marian_data_dir/de-cs/vocab.encs.spm"
-  },
-  {
-    "source": ["cs"],
-    "target": ["de"],
-    "model_framework": "marian",
-    "domain": "",
-    "model": "cs-de",
-    "display": "Czech->German Marian",
-    "server": "{MARIAN}:8030",
-    "sent_chars_limit": 433,
-    "spm_vocab": "marian_data_dir/cs-de/vocab.encs.spm"
-  },
-  {
     "source": ["en"],
     "target": ["cs"],
     "problem": "translate_encs_wmt_czeng57m32k",
     "domain": "",
+    "server": "{ENCS_LOAD_BALANCED}",
     "model": "en-cs",
-    "display": "English->Czech (CUBBITT)",
-    "default": true
+    "include_in_graph": false,
+    "display": "English->Czech (CUBBITT)"
   },
   {
     "source": ["cs"],
@@ -36,7 +15,32 @@
     "problem": "translate_encs_wmt_czeng57m32k",
     "display": "Czech->English (CUBBITT)",
     "domain": "",
+    "server": "{CSEN_LOAD_BALANCED}",
+    "include_in_graph": false,
     "model": "cs-en"
+  },
+  {
+    "source": ["en"],
+    "target": ["cs"],
+    "problem": "translate_encs_wmt_czeng57m32k",
+    "domain": "",
+    "model": "doc-en-cs",
+    "display": "English->Czech (CUBBITT document level)",
+    "server": "{DOCLVL_LOAD_BALANCED}",
+    "model_framework": "tensorflow_doclevel",
+    "batch_size": 7,
+    "default": true
+  },
+  {
+    "source": ["cs"],
+    "target": ["en"],
+    "problem": "translate_encs_wmt_czeng57m32k",
+    "domain": "",
+    "model": "doc-cs-en",
+    "display": "Czech->English (CUBBITT document level)",
+    "server": "{DOCLVL_LOAD_BALANCED}",
+    "model_framework": "tensorflow_doclevel",
+    "batch_size": 7
   },
   {
     "source": ["en"],
@@ -59,6 +63,7 @@
     "problem": "translate_enfr_wmt32k",
     "display": "French->English (CUBBITT)",
     "domain": "",
+    "server": "{GPU2}",
     "model": "fr-en"
   },
   {
@@ -75,6 +80,7 @@
     "problem": "translate_ende",
     "display": "German->English",
     "domain": "",
+    "server": "{GPU2}",
     "model": "de-en"
   },
   {
@@ -83,7 +89,7 @@
     "problem": "translate_enru",
     "display": "Russian->English",
     "domain": "",
-    "server": "{T2T_TRANSFORMER2}",
+    "server": "{GPU2}",
     "model": "ru-en"
   },
   {
@@ -92,7 +98,63 @@
     "problem": "translate_enru",
     "display": "English->Russian",
     "domain": "",
-    "server": "{T2T_TRANSFORMER2}",
     "model": "en-ru"
+  },
+  {
+    "source": ["en"],
+    "target": ["pl"],
+    "problem": "translate_enpl",
+    "domain": "",
+    "model": "en-pl",
+    "server": "{GPU3}",
+    "display": "English->Polish (CUBBITT)"
+  },
+  {
+    "source": ["pl"],
+    "target": ["en"],
+    "problem": "translate_enpl",
+    "domain": "",
+    "model": "pl-en",
+    "server": "{GPU3}",
+    "display": "Polish->English (CUBBITT)"
+  },
+  {
+    "source": ["uk"],
+    "target": ["cs"],
+    "problem": "translate_csuk4",
+    "domain": "",
+    "model": "uk-cs",
+    "server": "10.10.51.49:12345",
+    "batch_size": 7
+  },
+  {
+    "source": ["cs"],
+    "target": ["uk"],
+    "problem": "translate_csuk4",
+    "domain": "",
+    "model": "cs-uk",
+    "batch_size": 7,
+    "server": "10.10.51.49:12345"
+  },
+  {
+    "source": ["ru"],
+    "target": ["cs"],
+    "problem": "translate_csru",
+    "weight": 1.5,
+    "domain": "",
+    "model": "ru-cs",
+    "server": "10.10.51.78:9000",
+    "batch_size": 7
+  },
+  {
+    "source": ["cs"],
+    "target": ["ru"],
+    "problem": "translate_csru",
+    "weight": 1.5,
+    "domain": "",
+    "model": "cs-ru",
+    "batch_size": 7,
+    "server": "10.10.51.78:9000"
   }
 ]
+
