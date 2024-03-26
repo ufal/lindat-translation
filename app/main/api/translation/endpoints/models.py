@@ -113,6 +113,7 @@ class ModelItem(MyAbstractResource):
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         If you don't provide src or tgt some will be chosen for you!
         """
+        self.start_time_request()
         text = self.get_text_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         # map model name to model obj
@@ -132,7 +133,6 @@ class ModelItem(MyAbstractResource):
 
         translation = ''
 
-        self.set_media_type_representations()
         try:
             translation = translate_with_model(model, text, src, tgt)
             return self.create_response(translation,

@@ -13,12 +13,19 @@ from app.text_utils import extract_text as _extract_text
 
 
 class MyAbstractResource(Resource):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._start_time = None
+        self._input_file_name = None
+        self._input_word_count = None
+        self._input_nfc_len = None
+        self.set_media_type_representations()
 
     @classmethod
     def to_text(cls, data, code, headers):
         return make_response(_extract_text(data), code, headers)
 
-    def get_text_from_request(self):
+    def start_time_request(self):
         self._start_time = datetime.datetime.now()
         if request.files and 'input_text' in request.files:
             input_file = request.files.get('input_text')

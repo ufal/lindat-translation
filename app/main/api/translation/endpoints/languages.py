@@ -132,12 +132,12 @@ class LanguageCollection(MyAbstractResource):
         Translate input from scr lang to tgt lang.
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         """
+        self.start_time_request()
         text = self.get_text_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src') or 'en'
         tgt = args.get('tgt') or 'cs'
         translation = ''
-        self.set_media_type_representations()
         try:
             translation = translate_from_to(src, tgt, text)
             return self.create_response(translation,
