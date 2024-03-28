@@ -33,3 +33,7 @@ def extract_text(translation):
     else:
         text_arr = []
     return ' '.join(text_arr).replace('\n ', '\n')
+
+def count_words(translation):
+    return len(extract_text(translation).split())
+

@@ -1,13 +1,10 @@
 import logging
 from flask import request, url_for
-from flask.helpers import make_response
 from flask_restx import Namespace, Resource, fields
-from flask_restx.api import output_json
 
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
 from app.main.api.translation.parsers import text_input_with_src_tgt  # , file_input
 from app.model_settings import languages
-from app.main.translate import translate_from_to
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
@@ -133,21 +130,20 @@ class LanguageCollection(MyAbstractResource):
         It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
         """
         self.start_time_request()
-        text = self.get_text_from_request()
+        translatable = self.get_translatable_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src') or 'en'
         tgt = args.get('tgt') or 'cs'
-        translation = ''
         try:
-            translation = translate_from_to(src, tgt, text)
-            return self.create_response(translation,
-                                        'src={};tgt={}'.format(src, tgt))
+            translatable.translate_from_to(src, tgt)
+            extra_msg = 'src={};tgt={}'.format(src, tgt)
+            return translatable.create_response(self.extra_headers(extra_msg))
         except ValueError as e:
             log.exception(e)
             ns.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
-                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
+                self.log_request(src=src, tgt=tgt, text=translatable.get_text(), translation=translatable.get_translation())
             except Exception as ex:
                 log.exception(ex)
 

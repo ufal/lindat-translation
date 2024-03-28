@@ -5,7 +5,6 @@ from flask_restx import Namespace, Resource, fields
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
 from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.model_settings import models
-from app.main.translate import translate_with_model
 
 from app.main.api_examples.model_resource_example import *
 from app.main.api_examples.models_resource_example import *
@@ -114,7 +113,7 @@ class ModelItem(MyAbstractResource):
         If you don't provide src or tgt some will be chosen for you!
         """
         self.start_time_request()
-        text = self.get_text_from_request()
+        translatable = self.get_translatable_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         # map model name to model obj
         model = models.get_model(model)
@@ -130,16 +129,13 @@ class ModelItem(MyAbstractResource):
             ns.abort(code=404,
                       message='This model does not support translation from {} to {}'
                       .format(src, tgt))
-
-        translation = ''
-
         try:
-            translation = translate_with_model(model, text, src, tgt)
-            return self.create_response(translation,
-                                        'src={};tgt={};model={}'.format(src, tgt, model.name))
+            translatable.translate_with_model(model, src, tgt)
+            extra_msg = 'src={};tgt={};model={}'.format(src, tgt, model.name)
+            return translatable.create_response(self.extra_headers(extra_msg))
         finally:
             try:
-                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
+                self.log_request(src=src, tgt=tgt, text=translatable.get_text(), translation=translatable.get_translation())
             except Exception as ex:
                 log.exception(ex)
 
