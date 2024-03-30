@@ -143,7 +143,7 @@ class LanguageCollection(MyAbstractResource):
             ns.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
-                self.log_request(src=src, tgt=tgt, text=translatable.get_text(), translation=translatable.get_translation())
+                self.log_request(src, tgt, translatable)
             except Exception as ex:
                 log.exception(ex)
 

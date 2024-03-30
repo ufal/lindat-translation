@@ -125,16 +125,15 @@ class MyAbstractResource(Resource):
             'X-Billing-Extra': extra_msg
         }
 
-    def log_request(self, src, tgt, text, translation):
-        self.log_request_with_additional_args(src=src, tgt=tgt, text=text, translation=translation, **self.get_additional_args_from_request())
+    def log_request(self, src, tgt, translatable):
+        self.log_request_with_additional_args(src=src, tgt=tgt, translatable=translatable, **self.get_additional_args_from_request())
 
-    def log_request_with_additional_args(self, src, tgt, author, frontend, input_type, log_input, ip_address, text,
-                                         translation, app_version, user_lang):
+    def log_request_with_additional_args(self, src, tgt, author, frontend, input_type, log_input, ip_address, translatable, app_version, user_lang):
         duration_us = int((datetime.datetime.now() - self._start_time) / datetime.timedelta(microseconds=1))
         log_access(src_lang=src, tgt_lang=tgt, author=author, frontend=frontend,
-                   input_nfc_len=self._input_nfc_len, duration_us=duration_us, input_type=input_type,
+                   input_nfc_len=translatable._input_nfc_len, duration_us=duration_us, input_type=input_type,
                    app_version=app_version, user_lang=user_lang)
         if log_input:
-            log_translation(src_lang=src, tgt_lang=tgt, src=text, tgt=extract_text(translation),
+            log_translation(src_lang=src, tgt_lang=tgt, src=translatable.get_text(), tgt=extract_text(translatable.get_translation()),
                             author=author, frontend=frontend, ip_address=ip_address, input_type=input_type,
                             app_version=app_version, user_lang=user_lang)

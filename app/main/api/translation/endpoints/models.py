@@ -135,7 +135,7 @@ class ModelItem(MyAbstractResource):
             return translatable.create_response(self.extra_headers(extra_msg))
         finally:
             try:
-                self.log_request(src=src, tgt=tgt, text=translatable.get_text(), translation=translatable.get_translation())
+                self.log_request(src, tgt, translatable)
             except Exception as ex:
                 log.exception(ex)
 
