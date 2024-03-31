@@ -1,9 +1,13 @@
 import unittest
 import requests
+import os
 from pprint import pp
 
 class ModelsEndpointTester(unittest.TestCase):
     ADDRESS = 'http://127.0.0.1:5000/api/v2/models'
+
+    def setUp(self):
+        os.makedirs("test_data", exist_ok=True)
 
     def test_list_models(self):
         r = requests.get(self.ADDRESS)
@@ -76,16 +80,47 @@ class ModelsEndpointTester(unittest.TestCase):
             self.assertEqual(r.status_code, 404)
             self.assertIn('This model does not support ', r.text)
 
-    def test_document(self):
+    def test_document_html(self):
         # Test successful translation request, file upload
-        r = requests.post(self.ADDRESS+"/en-cs", headers={
-            "accept": "application/json",
-        }, files={
+        r = requests.post(self.ADDRESS+"/en-cs", files={
             'input_text': ('hello.html', '<p>This is <i>a <b>sample</b> text</i></p>', 'text/html')
         })
-        pp(r.json())
         self.assertEqual(r.status_code, 200)
-        # self.assertEqual(r.json()[0], 'toto je ukázkový text\n')
+        self.assertEqual(r.text.replace(" ", ""), '<p>Totoje<i><b>ukázkový</b>text</i></p>')
+
+    def test_document_xml(self):
+        # Test successful translation request, file upload
+        r = requests.post(self.ADDRESS+"/en-cs", files={
+            'input_text': ('hello.xml', '<p>This is <i>a <b>sample</b> text</i></p>', 'text/xml')
+        })
+        self.assertEqual(r.status_code, 200)
+        expected = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        expected += '<p>Tohle je<i>a<b>vzorek</b>text</i></p>'
+        self.assertEqual(r.text, expected)
+
+    def _upload_binary_file(self, filename, outname, langpair):
+        with open(filename, "rb") as f:
+            r = requests.post(self.ADDRESS+"/"+langpair, files={
+                'input_text': f
+            })
+        with open(outname, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024): 
+                if chunk:
+                    f.write(chunk)
+        return r
+
+    def test_document_docx(self):
+        # Test successful translation request, file upload
+        r = self._upload_binary_file("./test_data/test.docx", "./test_data/test_response.docx", "cs-en")
+        pp(r)
+        pp(r.headers)
+        self.assertEqual(r.status_code, 200)
+
+    def test_document_odt(self):
+        r = self._upload_binary_file("./test_data/kentucky_russian.odt", "./test_data/kentucky_eng_translation.odt", "ru-en")
+        pp(r)
+        pp(r.headers)
+        self.assertEqual(r.status_code, 200)
 
 
 if __name__ == "__main__":

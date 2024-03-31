@@ -1,5 +1,7 @@
 import datetime
 import os
+import subprocess
+import re
 from unicodedata import normalize
 from flask import request
 from flask.helpers import make_response
@@ -7,6 +9,7 @@ from flask_restx import Resource
 from flask_restx.api import output_json
 from flask_restx._http import HTTPStatus
 from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
@@ -14,8 +17,15 @@ from app.db import log_translation, log_access
 from app.text_utils import count_words, extract_text
 from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
 from app.main.translate import translate_from_to, translate_with_model
+from app.main.align import align_tokens
 
 class Translatable:
+    def __init__(self):
+        self._input_file_name = None
+        self._input_word_count = None
+        self._output_word_count = None
+        self._input_nfc_len = None
+
     def translate_from_to(self, src, tgt):
         raise NotImplementedError()
     def translate_with_model(self, model, src, tgt):
@@ -26,6 +36,14 @@ class Translatable:
         raise NotImplementedError()
     def create_response(self, extra_headers, extra_msg):
         raise NotImplementedError()
+
+    def prep_billing_headers(self):
+        return {
+            'X-Billing-Filename': self._input_file_name,
+            'X-Billing-Input-Word-Count': self._input_word_count,
+            'X-Billing-Output-Word-Count': self._output_word_count,
+            'X-Billing-Input-NFC-Len': self._input_nfc_len,
+        }
 
 class Text(Translatable):
     def __init__(self, text):
@@ -57,20 +75,109 @@ class Text(Translatable):
         return self.text
 
     def get_translation(self):
-        return self.translation
+        return extract_text(self.translation)
     
     def create_response(self, extra_headers):
         headers = {
-            'X-Billing-Filename': self._input_file_name,
-            'X-Billing-Input-Word-Count': self._input_word_count,
-            'X-Billing-Output-Word-Count': self._output_word_count,
-            'X-Billing-Input-NFC-Len': self._input_nfc_len,
+            **self.prep_billing_headers(),
             **extra_headers
         }
         return self.translation, HTTPStatus.OK, headers
 
 class Document(Translatable):
-    pass
+    def __init__(self, input_file):
+        self.file = input_file
+        self._input_word_count = 0
+        self._output_word_count = 0
+        self._input_nfc_len = 0
+
+        if input_file and self.allowed_file(input_file.filename):
+            filename = secure_filename(input_file.filename)
+            self._input_file_name = filename
+
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            self.orig_full_path = os.path.join(UPLOAD_FOLDER, filename)
+            input_file.save(self.orig_full_path)
+
+    def allowed_file(self, filename):
+        return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    def translate_from_to(self, src, tgt):
+        pass
+
+    def remove_tags(self, text):
+        regex = r'</?(g|x|bx|ex|lb|mrk)(\s|\/?.*?)?>'
+        text = re.sub(regex, ' ', text)
+        text = re.sub(r'\s\s+', ' ', text)
+        text = text.lstrip()
+        text = text.rstrip()
+
+        return text
+    
+    def translate_with_model(self, model, src, tgt):
+        TIKAL_PATH = "/home/balhar/okapi/"
+        orig_root, file_extension = os.path.splitext(self.orig_full_path)
+        # run Tikal to extract text for translation
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path])
+        assert out.returncode == 0
+        extracted_texts_path = self.orig_full_path+"."+src
+        assert os.path.exists(extracted_texts_path)
+
+        # remove markup
+        with open(extracted_texts_path, 'r') as f:
+            lines = f.readlines()
+            self.text = "\n".join(lines)
+        removed_tags = map(lambda x: self.remove_tags(x), lines)
+        removed_tags = "\n".join(removed_tags)
+
+        self._input_word_count = count_words(removed_tags)
+        self._input_nfc_len = len(normalize('NFC', self.text))
+
+        # translate
+        self.translation = translate_with_model(model, removed_tags, src, tgt)
+        self.translation = extract_text(self.translation)
+        if self.translation.endswith("\n"):
+            self.translation = self.translation[:-1]
+
+        self._output_word_count = count_words(self.translation)
+
+        # align
+        source_tokens = [line.split() for line in removed_tags.split("\n")]
+        target_tokens = [line.split() for line in self.translation.split("\n")]
+
+        alignment = align_tokens(source_tokens, target_tokens, src, tgt)
+        alignment = alignment["alignment"]
+        # write alignment
+        alignment_path = self.orig_full_path+f".{src}-{tgt}.align.nomarkup"
+        with open(alignment_path, 'w') as f:
+            for al in alignment:
+                alignment_string = [f"{a}-{b}" for a,b in al]
+                f.write(" ".join(alignment_string)+"\n")
+        # reinsert tags
+        reinserted_path = self.orig_full_path+f".{tgt}.withmarkup"
+        with open(reinserted_path, 'w') as f:
+            p = subprocess.Popen(['perl', '/home/balhar/document-translation/m4loc/xliff/reinsert_wordalign.pm', extracted_texts_path, alignment_path], stdin=subprocess.PIPE, stdout=f)
+            p.communicate(self.translation.encode('utf-8'), timeout=15)
+        # reinsert translation using Tikal
+        self.translated_path = f"{orig_root}.{tgt}{file_extension}"
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', reinserted_path, '-to', self.translated_path])
+        
+    def get_text(self):
+        return self.text
+
+    def get_translation(self):
+        return self.translation
+
+    def create_response(self, extra_headers):
+        headers = {
+            **self.prep_billing_headers(),
+            **extra_headers
+        }
+        basename = os.path.basename(self.translated_path)
+        response = send_from_directory(UPLOAD_FOLDER, basename)
+        response.headers.extend(headers)
+        return response
 
 class MyAbstractResource(Resource):
     def __init__(self, *args, **kwargs):
@@ -134,6 +241,6 @@ class MyAbstractResource(Resource):
                    input_nfc_len=translatable._input_nfc_len, duration_us=duration_us, input_type=input_type,
                    app_version=app_version, user_lang=user_lang)
         if log_input:
-            log_translation(src_lang=src, tgt_lang=tgt, src=translatable.get_text(), tgt=extract_text(translatable.get_translation()),
+            log_translation(src_lang=src, tgt_lang=tgt, src=translatable.get_text(), tgt=translatable.get_translation(),
                             author=author, frontend=frontend, ip_address=ip_address, input_type=input_type,
                             app_version=app_version, user_lang=user_lang)
