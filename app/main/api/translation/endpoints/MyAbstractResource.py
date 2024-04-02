@@ -108,9 +108,6 @@ class Document(Translatable):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    def translate_from_to(self, src, tgt):
-        pass
-
     def remove_tags(self, text):
         regex = r'</?(g|x|bx|ex|lb|mrk)(\s|\/?.*?)?>'
         text = re.sub(regex, ' ', text)
@@ -119,8 +116,14 @@ class Document(Translatable):
         text = text.rstrip()
 
         return text
-    
+
+    def translate_from_to(self, src, tgt):
+        self._translate(src, tgt, "from_to")
+
     def translate_with_model(self, model, src, tgt):
+        self._translate(src, tgt, "with_model", model)
+
+    def _translate(self, src, tgt, method, model=None):
         TIKAL_PATH = "/home/balhar/okapi/"
         orig_root, file_extension = os.path.splitext(self.orig_full_path)
         # run Tikal to extract text for translation
@@ -140,7 +143,10 @@ class Document(Translatable):
         self._input_nfc_len = len(normalize('NFC', self.text))
 
         # translate
-        self.translation = translate_with_model(model, removed_tags, src, tgt)
+        if method == "with_model":
+            self.translation = translate_with_model(model, removed_tags, src, tgt)
+        else:
+            self.translation = translate_from_to(src, tgt, removed_tags)
         self.translation = extract_text(self.translation)
         if self.translation.endswith("\n"):
             self.translation = self.translation[:-1]
