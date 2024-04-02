@@ -95,10 +95,8 @@ languages_resources = ns.model('LanguagesResource', {
     }), example=languages_resource_embedded_example)
 })
 
-
 @ns.route('/')
-class LanguageCollection(MyAbstractResource):
-
+class LanguageCollection(Resource):
     @ns.marshal_with(languages_resources, skip_none=True)
     def get(self):
         """
@@ -117,9 +115,12 @@ class LanguageCollection(MyAbstractResource):
             },
         }
 
+
+@ns.route('/')
+class LanguageTranslate(MyAbstractResource):
     @ns.produces(['application/json', 'text/plain'])
     @ns.response(code=200, description="Success", model=str)
-    @ns.response(code=415, description="You sent a file but it was not text/plain")
+    @ns.response(code=415, description="Unsupported file type for translation")
     @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
     @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
     @ns.param(**{'name': 'input_text', 'description': 'text to translate',
@@ -127,7 +128,7 @@ class LanguageCollection(MyAbstractResource):
     def post(self):
         """
         Translate input from scr lang to tgt lang.
-        It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
+        It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading files)
         """
         self.start_time_request()
         translatable = self.get_translatable_from_request()

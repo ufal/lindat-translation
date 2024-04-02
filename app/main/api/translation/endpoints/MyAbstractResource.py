@@ -91,13 +91,18 @@ class Document(Translatable):
         self._output_word_count = 0
         self._input_nfc_len = 0
 
-        if input_file and self.allowed_file(input_file.filename):
-            filename = secure_filename(input_file.filename)
-            self._input_file_name = filename
+        if not input_file:
+            api.abort(code=400, message='Empty file')
+        
+        if not self.allowed_file(input_file.filename):
+            api.abort(code=415, message='Unsupported file type for translation')
 
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            self.orig_full_path = os.path.join(UPLOAD_FOLDER, filename)
-            input_file.save(self.orig_full_path)
+        filename = secure_filename(input_file.filename)
+        self._input_file_name = filename
+
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        self.orig_full_path = os.path.join(UPLOAD_FOLDER, filename)
+        input_file.save(self.orig_full_path)
 
     def allowed_file(self, filename):
         return '.' in filename and \
