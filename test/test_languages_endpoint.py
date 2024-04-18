@@ -6,7 +6,10 @@ from math import ceil
 
 class LanguagesEndpointTester(unittest.TestCase):
     ADDRESS = 'http://127.0.0.1:5000/api/v2/languages/'
-
+    en_cs = {
+        "src": "en",
+        "tgt": "cs",
+    }
     def setUp(self):
         os.makedirs("test_data", exist_ok=True)
 
@@ -34,10 +37,7 @@ class LanguagesEndpointTester(unittest.TestCase):
         # Test successful translation request, file upload
         r = requests.post(self.ADDRESS, headers={
             "accept": "application/json",
-        }, data={
-            "src": "en",
-            "tgt": "cs",
-        }, files={
+        }, data=self.en_cs, files={
             'input_text': ('hello.txt', 'this is a sample text', 'text/plain')
         })
         self.assertEqual(r.status_code, 200)
@@ -46,10 +46,7 @@ class LanguagesEndpointTester(unittest.TestCase):
 
     def test_empty(self):
         # Test empty request (input_text not set)
-        r = requests.post(self.ADDRESS, data={
-            "src": "en",
-            "tgt": "cs",
-        })
+        r = requests.post(self.ADDRESS, data=self.en_cs)
         self.assertEqual(r.status_code, 400)
         self.assertIn("No text found", r.text)
 
@@ -60,18 +57,12 @@ class LanguagesEndpointTester(unittest.TestCase):
         })
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.text, '')
-        r = requests.post(self.ADDRESS, data={
-            "src": "en",
-            "tgt": "cs",
-        }, files={
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
             'input_text': ('empty.txt', '', 'text/plain')
         })
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.text, '')
-        r = requests.post(self.ADDRESS, data={
-            "src": "en",
-            "tgt": "cs",
-        }, files={
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
             'input_text': ('empty.txt', None, 'text/plain')
         })
         self.assertEqual(r.status_code, 400)
@@ -79,10 +70,7 @@ class LanguagesEndpointTester(unittest.TestCase):
 
     def test_wrong_extension(self):
         # wrong extension
-        r = requests.post(self.ADDRESS, data={
-            "src": "en",
-            "tgt": "cs",
-        }, files={
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
             'input_text': ('empty.zip', b"asdfasdaf", 'application/zip')
         })
         self.assertEqual(r.status_code, 415)
@@ -111,10 +99,7 @@ class LanguagesEndpointTester(unittest.TestCase):
 
     def test_document_html(self):
         # Test successful translation request, file upload
-        r = requests.post(self.ADDRESS, data={
-            "src": "en",
-            "tgt": "cs",
-        }, files={
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
             'input_text': ('hello.html', '<p>This is <i>a <b>sample</b> text</i></p><p><p><p></p></p></p>', 'text/html')
         })
         self.assertEqual(r.status_code, 200)
@@ -122,10 +107,7 @@ class LanguagesEndpointTester(unittest.TestCase):
 
     def test_document_xml(self):
         # Test successful translation request, file upload
-        r = requests.post(self.ADDRESS, data={
-            "src": "en",
-            "tgt": "cs",
-        }, files={
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
             'input_text': ('hello.xml', '<p>This is <i>a <b>sample</b> text</i></p>', 'text/xml')
         })
         self.assertEqual(r.status_code, 200)
