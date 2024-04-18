@@ -15,7 +15,7 @@ from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
 from app.db import log_translation, log_access
 from app.text_utils import count_words, extract_text
-from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER
+from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
 from app.main.translate import translate_from_to, translate_with_model
 from app.main.align import align_tokens
 
@@ -54,6 +54,8 @@ class Text(Translatable):
         self._input_word_count = count_words(text)
         text = normalize('NFC', text)
         self._input_nfc_len = len(text)
+        if self._input_nfc_len >= MAX_TEXT_LENGTH:
+            api.abort(code=413, message='The data value transmitted exceeds the capacity limit.')
     
     @classmethod
     def from_file(cls, input_file):
@@ -141,6 +143,10 @@ class Document(Translatable):
 
         self._input_word_count = count_words(removed_tags)
         self._input_nfc_len = len(normalize('NFC', self.text))
+        # TODO: activate character limit for uploaded documents
+        # print("line number",  len(lines))
+        # if self._input_nfc_len >= MAX_TEXT_LENGTH:
+        #     api.abort(code=413, message='The data value transmitted exceeds the capacity limit.')
 
         # translate
         if method == "with_model":
@@ -173,7 +179,7 @@ class Document(Translatable):
         # reinsert translation using Tikal
         self.translated_path = f"{orig_root}.{tgt}{file_extension}"
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', reinserted_path, '-to', self.translated_path])
-        
+
     def get_text(self):
         return self.text
 

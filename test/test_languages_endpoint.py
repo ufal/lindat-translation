@@ -2,6 +2,7 @@ import unittest
 import requests
 import os
 from pprint import pp
+from math import ceil
 
 class LanguagesEndpointTester(unittest.TestCase):
     ADDRESS = 'http://127.0.0.1:5000/api/v2/languages/'
@@ -76,6 +77,7 @@ class LanguagesEndpointTester(unittest.TestCase):
         self.assertEqual(r.status_code, 400)
         self.assertEqual(r.text, '{"message": "No text found in the input_text form/field or in request files"}\n')
 
+    def test_wrong_extension(self):
         # wrong extension
         r = requests.post(self.ADDRESS, data={
             "src": "en",
@@ -113,10 +115,10 @@ class LanguagesEndpointTester(unittest.TestCase):
             "src": "en",
             "tgt": "cs",
         }, files={
-            'input_text': ('hello.html', '<p>This is <i>a <b>sample</b> text</i></p>', 'text/html')
+            'input_text': ('hello.html', '<p>This is <i>a <b>sample</b> text</i></p><p><p><p></p></p></p>', 'text/html')
         })
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.text.replace(" ", ""), '<p>Totoje<i><b>ukázkový</b>text</i></p>')
+        self.assertEqual(r.text.replace(" ", ""), '<p>Totoje<i><b>ukázkový</b>text</i></p><p><p><p></p></p></p>')
 
     def test_document_xml(self):
         # Test successful translation request, file upload
@@ -155,9 +157,39 @@ class LanguagesEndpointTester(unittest.TestCase):
 
     def test_document_odt(self):
         r = self._upload_binary_file("./test_data/kentucky_russian.odt", "./test_data/kentucky_eng_translation.odt", "ru-en")
-        # pp(r)
-        # pp(r.headers)
         self.assertEqual(r.status_code, 200)
+
+    def test_too_long_text(self):
+        # too long text
+        r = requests.post(self.ADDRESS, data={
+            "input_text": "This is a "*(1024*10) # 100kB
+        })
+        self.assertEqual(r.status_code, 413)
+        self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
+
+        r = requests.post(self.ADDRESS, files={
+            'input_text': ('hello.txt', "This is a "*(1024*10), 'text/plain') # 100kB
+        })
+        self.assertEqual(r.status_code, 413)
+        self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
+
+    def test_too_long_doc(self):
+        # disable test for now, file upload is temporarily unlimited
+        return
+
+        text = "<p><p><p><p>How are you?</p></p></p></p>"
+        repeats = ceil(102400/len(text)) + 1
+        print(repeats, len(text), len(text)*repeats)
+        final = text*repeats
+        print("message length:", len(final))
+        print("without tags: ", len(final.replace("<p>", "").replace("</p>", "")))
+        r = requests.post(self.ADDRESS, files={
+            'input_text': ('hello.html', final, 'text/html')
+        })
+        pp(r.status_code)
+        pp(r.text)
+        self.assertEqual(r.status_code, 413)
+        self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
 
 
 if __name__ == "__main__":
