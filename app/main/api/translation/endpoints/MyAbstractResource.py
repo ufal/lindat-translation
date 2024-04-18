@@ -170,7 +170,8 @@ class Document(Translatable):
         with open(alignment_path, 'w') as f:
             for al in alignment:
                 alignment_string = [f"{a}-{b}" for a,b in al]
-                f.write(" ".join(alignment_string)+"\n")
+                alignment_string = " ".join(alignment_string)+"\n"
+                f.write(alignment_string)
         # reinsert tags
         reinserted_path = self.orig_full_path+f".{tgt}.withmarkup"
         with open(reinserted_path, 'w') as f:
