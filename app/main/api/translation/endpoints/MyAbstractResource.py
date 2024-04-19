@@ -58,10 +58,10 @@ class Text(Translatable):
             api.abort(code=413, message='The data value transmitted exceeds the capacity limit.')
     
     @classmethod
-    def from_file(cls, input_file):
-        text = input_file.read().decode('utf-8')
+    def from_file(cls, request_file):
+        text = request_file.read().decode('utf-8')
         obj = cls(text)
-        obj._input_file_name = input_file.filename or '_NO_FILENAME_SET'
+        obj._input_file_name = request_file.filename or '_NO_FILENAME_SET'
 
         return obj
 
@@ -87,26 +87,31 @@ class Text(Translatable):
         return self.translation, HTTPStatus.OK, headers
 
 class Document(Translatable):
-    def __init__(self, input_file):
-        self.file = input_file
+    def __init__(self, orig_full_path):
+        self.orig_full_path = orig_full_path
+        self._input_file_name = os.path.basename(orig_full_path)
         self._input_word_count = 0
         self._output_word_count = 0
         self._input_nfc_len = 0
-
-        if not input_file:
+    
+    @classmethod
+    def from_file(cls, request_file):
+        if not request_file:
             api.abort(code=400, message='Empty file')
         
-        if not self.allowed_file(input_file.filename):
+        if not cls.allowed_file(request_file.filename):
             api.abort(code=415, message='Unsupported file type for translation')
 
-        filename = secure_filename(input_file.filename)
-        self._input_file_name = filename
+        filename = secure_filename(request_file.filename)
 
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        self.orig_full_path = os.path.join(UPLOAD_FOLDER, filename)
-        input_file.save(self.orig_full_path)
+        orig_full_path = os.path.join(UPLOAD_FOLDER, filename)
+        request_file.save(orig_full_path)
 
-    def allowed_file(self, filename):
+        return cls(orig_full_path)
+
+    @classmethod
+    def allowed_file(cls, filename):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -222,7 +227,7 @@ class MyAbstractResource(Resource):
             if input_file.content_type == 'text/plain':
                 return Text.from_file(input_file)
             else:
-                return Document(input_file)
+                return Document.from_file(input_file)
         # if contains direct text
         elif request.form and 'input_text' in request.form:
             return Text(request.form.get('input_text'))
