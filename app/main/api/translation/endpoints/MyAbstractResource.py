@@ -1,23 +1,13 @@
 import datetime
-import os
-import subprocess
-import re
-from unicodedata import normalize
 from flask import request
 from flask.helpers import make_response
 from flask_restx import Resource
 from flask_restx.api import output_json
-from flask_restx._http import HTTPStatus
-from werkzeug.utils import secure_filename
-from flask import send_from_directory
 
 from app.main.api.restplus import api
-from app.main.api.translation.parsers import text_input_with_src_tgt # , file_input
+from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.db import log_translation, log_access
-from app.text_utils import count_words, extract_text
-from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
-from app.main.translate import translate_from_to, translate_with_model
-from app.main.align import align_tokens
+from app.text_utils import extract_text
 from app.main.translatable import Text, Document
 
 class MyAbstractResource(Resource):
