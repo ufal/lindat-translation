@@ -154,17 +154,13 @@ class Document(Translatable):
         else:
             self.translation = translate_from_to(src, tgt, removed_tags)
         self.translation = extract_text(self.translation)
-        if self.translation.endswith("\n"):
-            self.translation = self.translation[:-1]
 
         self._output_word_count = count_words(self.translation)
 
         # align
         source_tokens = [line.split() for line in removed_tags.split("\n")]
         target_tokens = [line.split() for line in self.translation.split("\n")]
-
         alignment = align_tokens(source_tokens, target_tokens, src, tgt)
-        alignment = alignment["alignment"]
         # write alignment
         alignment_path = self.orig_full_path+f".{src}-{tgt}.align.nomarkup"
         with open(alignment_path, 'w') as f:
