@@ -13,6 +13,9 @@ from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
 from app.main.translate import translate_from_to, translate_with_model
 from app.main.align import align_tokens
 
+TAG = "tag"
+WHITESPACE = "wspace"
+WORD = "word"
 
 class Translatable:
     def __init__(self):
@@ -110,14 +113,69 @@ class Document(Translatable):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    def remove_tags(self, text):
-        regex = r'</?(g|x|bx|ex|lb|mrk)(\s|\/?.*?)?>'
-        text = re.sub(regex, ' ', text)
-        text = re.sub(r'\s\s+', ' ', text)
-        text = text.lstrip()
-        text = text.rstrip()
+    tag_pattern = r'</?(g|x|bx|ex|lb|mrk)(\s|\/?.*?)?>'
+    segments_regex = re.compile(r'('+tag_pattern+r'|\s+|[^<\s]+|[^>\s]+)')
 
-        return text
+    def words_tags_whitespaces(self, line):
+        substrings = self.segments_regex.findall(line)
+        substrings = [groups[0] for groups in substrings if groups]
+        assert "".join(substrings) == line
+        
+        return self.substrings_to_segments(substrings)
+
+    def substrings_to_segments(self, substrings):
+        types = []
+        for segment in substrings:
+            if re.match(self.tag_pattern, segment):
+                types.append(TAG)
+            elif re.match(r'\s+', segment):
+                types.append(WHITESPACE)
+            else:
+                types.append(WORD)
+        return list(zip(substrings, types))
+
+    def whitespaces_to_tags(self, segments):
+        padded = [("", WHITESPACE)] + segments + [("", WHITESPACE)]
+        result = []
+        for i in range(1, len(padded) - 1):
+            current = padded[i]
+            previous = padded[i - 1]
+            next = padded[i + 1]
+            # we skip single spaces between words
+            if current[0] == " " and previous[1] == WORD and next[1] == WORD:
+                continue
+            elif current[1] == WHITESPACE:
+                result.append((f"<x equiv-text=\"{current[0]}\"/>", TAG))
+            else:
+                result.append(current)
+        return result
+
+    def tags_to_whitespaces(self, segments):
+        padded = [("", WHITESPACE)] + segments + [("", WHITESPACE)]
+        result = []
+        for i in range(1, len(padded) - 1):
+            current = padded[i]
+            previous = padded[i - 1]
+            next = padded[i + 1]
+            # we keep single spaces between words
+            if current[0] == " " and previous[1] == WORD and next[1] == WORD:
+                result.append(current)
+            # we remove any other whitespaces
+            elif current[1] == WHITESPACE:
+                # the line should contain only single spaces since we escaped anything else
+                assert current[0] == " "
+                continue
+            elif current[0].startswith("<x equiv-text=\""):
+                result.append((current[0][15:-3], WHITESPACE))
+            else:
+                result.append(current)
+        return result
+
+    def remove_tags(self, segments):
+        return [s for s in segments if s[1] != TAG]
+
+    def segments_to_text(self, segments, sep=" "):
+        return sep.join(s[0] for s in segments)
 
     def translate_from_to(self, src, tgt):
         self._translate(src, tgt, "from_to")
@@ -135,14 +193,26 @@ class Document(Translatable):
         assert os.path.exists(extracted_texts_path)
 
         # remove markup
-        with open(extracted_texts_path, 'r') as f:
-            lines = f.readlines()
-            self.text = "\n".join(lines)
-        removed_tags = map(lambda x: self.remove_tags(x), lines)
-        removed_tags = "\n".join(removed_tags)
+        with open(extracted_texts_path) as f:
+            lines = f.read().splitlines()
+            self.text = "\n".join(lines) + "\n"
+        words_tags_whitespaces = [self.words_tags_whitespaces(x) for x in lines]
+        words_tags = [self.whitespaces_to_tags(w) for w in words_tags_whitespaces]
+        words = [self.remove_tags(w) for w in words_tags]
+        words_str = [self.segments_to_text(w) for w in words]
+
+        removed_tags = "\n".join(words_str) + "\n"
+
+        # write text with encoded whitespaces
+        words_tags_str = map(lambda x: self.segments_to_text(x), words_tags)
+        words_tags_str = "\n".join(words_tags_str) + "\n"
+        extracted_texts_encoded_whitespaces_path = self.orig_full_path+"."+src+".withmarkup.encoded"
+        with open(extracted_texts_encoded_whitespaces_path, 'w') as f:
+            f.write(words_tags_str)
 
         self._input_word_count = count_words(removed_tags)
         self._input_nfc_len = len(normalize('NFC', self.text))
+
         # TODO: activate character limit for uploaded documents
         # print("line number",  len(lines))
         # if self._input_nfc_len >= MAX_TEXT_LENGTH:
@@ -170,12 +240,24 @@ class Document(Translatable):
                 f.write(alignment_string)
         # reinsert tags
         reinserted_path = self.orig_full_path+f".{tgt}.withmarkup"
+
         with open(reinserted_path, 'w') as f:
-            p = subprocess.Popen(['perl', '/home/balhar/document-translation/m4loc/xliff/reinsert_wordalign.pm', extracted_texts_path, alignment_path], stdin=subprocess.PIPE, stdout=f)
+            p = subprocess.Popen(['perl', '/home/balhar/document-translation/m4loc/xliff/reinsert_wordalign.pm', extracted_texts_encoded_whitespaces_path, alignment_path], stdin=subprocess.PIPE, stdout=f)
             p.communicate(self.translation.encode('utf-8'), timeout=15)
+        with open(reinserted_path, 'r') as f:
+            reinserted = f.read().splitlines()
+        
+        reinserted_segments = [self.words_tags_whitespaces(line) for line in reinserted]
+        decoded_whitespaces = [self.tags_to_whitespaces(line) for line in reinserted_segments]
+        reconstructed = "\n".join([self.segments_to_text(line, sep="") for line in decoded_whitespaces]) + "\n"
+
+        reconstructed_path = self.orig_full_path+f".{tgt}.withmarkup.decoded"
+        with open(reconstructed_path, 'w') as f:
+            f.write(reconstructed)
+        
         # reinsert translation using Tikal
         self.translated_path = f"{orig_root}.{tgt}{file_extension}"
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', reinserted_path, '-to', self.translated_path])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', reconstructed_path, '-to', self.translated_path])
 
     def get_text(self):
         return self.text

@@ -173,6 +173,22 @@ class LanguagesEndpointTester(unittest.TestCase):
         self.assertEqual(r.status_code, 413)
         self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
 
+    def test_do_not_add_whitespace(self):
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
+            'input_text': ('hello.html', '<p><b>Sample</b>. <i>text</i>.<br />Hello!</p>', 'text/html')
+        })
+        pp(r.status_code)
+        pp(r.text)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.text, '<p><b>Ukázka</b>. <i>textu</i>.<br />Ahoj!</p>')
+
+    def test_preserve_whitespace(self):
+        r = requests.post(self.ADDRESS, data=self.en_cs, files={
+            'input_text': ('hello.html', '<pre>This\t\t\tis   <i>a <b>sample</b> text</i></pre><pre>A\t  \t<b>\t \t </b> <i>\t \t</i> </pre>', 'text/html')
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.text, '<pre>Toto\t\t\tje   <i> <b>ukázkový</b> text</i></pre><pre>A\t  \t<b>\t \t </b> <i>\t \t</i> </pre>')
+
 
 if __name__ == "__main__":
     unittest.main()
