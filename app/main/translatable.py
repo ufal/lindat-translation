@@ -171,6 +171,47 @@ class Document(Translatable):
                 result.append(current)
         return result
 
+    def join_sentences_and_alignments(self, source_tokens, target_tokens, alignments):
+        source_paragraphs = []
+        target_paragraphs = []
+        alignment_paragraphs = []
+        print(source_tokens)
+
+        src_current = []
+        tgt_current = []
+        align_current = []
+        src_len = 0
+        tgt_len = 0
+        for source_sentence, target_sentence, alignment in zip(source_tokens, target_tokens, alignments):
+            print(source_sentence, target_sentence, alignment)
+            src_current += source_sentence
+            tgt_current += target_sentence
+            offset_alignment = [(s + src_len, t + tgt_len) for s, t in alignment]
+            align_current += offset_alignment
+            src_len += len(source_sentence)
+            tgt_len += len(target_sentence)
+            last_token = source_sentence[-1]
+            if last_token.endswith("\n"):
+                assert target_sentence[-1].endswith("\n")
+                source_paragraphs.append(src_current)
+                target_paragraphs.append(tgt_current)
+                alignment_paragraphs.append(align_current)
+                src_current = []
+                tgt_current = []
+                align_current = []
+                src_len = 0
+                tgt_len = 0
+                for i in range(len(last_token) - 2, 0, -1):
+                    if last_token[i] == "\n":
+                        source_paragraphs.append([])
+                        target_paragraphs.append([])
+                        alignment_paragraphs.append([])
+        if len(src_current) > 0:
+            source_paragraphs.append(src_current)
+            target_paragraphs.append(tgt_current)
+            alignment_paragraphs.append(align_current)
+        return source_paragraphs, target_paragraphs, alignment_paragraphs
+
     def remove_tags(self, segments):
         return [s for s in segments if s[1] != TAG]
 
@@ -219,18 +260,21 @@ class Document(Translatable):
         #     api.abort(code=413, message='The data value transmitted exceeds the capacity limit.')
 
         # translate
+        print("Translating")
         if method == "with_model":
-            self.translation = translate_with_model(model, removed_tags, src, tgt)
+            src_sents, tgt_sents = translate_with_model(model, removed_tags, src, tgt, return_source_sentences=True)
         else:
-            self.translation = translate_from_to(src, tgt, removed_tags)
-        self.translation = extract_text(self.translation)
+            src_sents, tgt_sents = translate_from_to(src, tgt, removed_tags, return_source_sentences=True)
+        self.translation = extract_text(tgt_sents)
 
         self._output_word_count = count_words(self.translation)
 
         # align
-        source_tokens = [line.split() for line in removed_tags.split("\n")]
-        target_tokens = [line.split() for line in self.translation.split("\n")]
+        print("Aligning")
+        source_tokens = [sentence.split(" ") for sentence in src_sents]
+        target_tokens = [sentence.split(" ") for sentence in tgt_sents]
         alignment = align_tokens(source_tokens, target_tokens, src, tgt)
+        _, _, alignment = self.join_sentences_and_alignments(source_tokens, target_tokens, alignment)
         # write alignment
         alignment_path = self.orig_full_path+f".{src}-{tgt}.align.nomarkup"
         with open(alignment_path, 'w') as f:
