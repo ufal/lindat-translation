@@ -135,15 +135,39 @@ class Document(Translatable):
         return list(zip(substrings, types))
 
     def whitespaces_to_tags(self, segments):
-        padded = [("", WHITESPACE)] + segments + [("", WHITESPACE)]
+        padded = [("", None)] + segments + [("", None)]
         result = []
         for i in range(1, len(padded) - 1):
             current = padded[i]
             previous = padded[i - 1]
             next = padded[i + 1]
+            # skip non-breaking spaces 
+            # TODO: pass these through to the model and handle them after
+            if current[0] == "\xa0":
+                current = (" ", WHITESPACE)
+
+            if current == ("", None):
+                continue
             # we skip single spaces between words
             if current[0] == " " and previous[1] == WORD and next[1] == WORD:
                 continue
+            elif current[1] == WHITESPACE and (previous[1] == TAG or next[1] == TAG):
+                continue
+            elif current[1] == TAG and (previous[1] == WHITESPACE or next[1] == WHITESPACE):
+                tag = current[0]
+                if previous[1] == WHITESPACE:
+                    head, tail, empty = re.split("(\/?>)", tag, 1)
+                    assert empty == ""
+                    tag = f"{head} pre-whitespace=\"{previous[0]}\"{tail}"
+                if next[1] == WHITESPACE:
+                    head, tail, empty = re.split("(\/?>)", tag, 1)
+                    assert empty == ""
+                    tag = f"{head} post-whitespace=\"{next[0]}\"{tail}"
+                    # we replace the next whitespace with a empty segment
+                    # because we do not want the next whitespace to be handled twice
+                    # in the situation TAG WHITESPACE TAG
+                    padded[i + 1] = ("", None)
+                result.append((tag, TAG))
             elif current[1] == WHITESPACE:
                 result.append((f"<x equiv-text=\"{current[0]}\"/>", TAG))
             else:
@@ -165,6 +189,22 @@ class Document(Translatable):
                 # the line should contain only single spaces since we escaped anything else
                 assert current[0] == " "
                 continue
+            elif current[1] == TAG and ("pre-whitespace" in current[0] or "post-whitespace" in current[0]):
+                tag = current[0]
+                if "pre-whitespace" in tag:
+                    whitespace = re.search(r"pre-whitespace=\"(\s+)\"", tag).group(1)
+                    tag = re.sub(r" pre-whitespace=\"(\s+)\"", "", tag)
+                    # we insert the whitespace before the tag
+                    result.append((whitespace, WHITESPACE))
+                    # if there is nothing to insert after the tag,
+                    # we can insert the tag now
+                    if "post-whitespace" not in tag:
+                        result.append((tag, TAG))
+                if "post-whitespace" in tag:
+                    whitespace = re.search(r"post-whitespace=\"(\s+)\"", tag).group(1)
+                    tag = re.sub(r" post-whitespace=\"(\s+)\"", "", tag)
+                    result.append((tag, TAG))
+                    result.append((whitespace, WHITESPACE))
             elif current[0].startswith("<x equiv-text=\""):
                 result.append((current[0][15:-3], WHITESPACE))
             else:

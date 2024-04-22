@@ -10,6 +10,10 @@ class LanguagesEndpointTester(unittest.TestCase):
         "src": "en",
         "tgt": "cs",
     }
+    cs_en = {
+        "src": "cs",
+        "tgt": "en",
+    }
     def setUp(self):
         os.makedirs("test_data", exist_ok=True)
 
@@ -112,18 +116,20 @@ class LanguagesEndpointTester(unittest.TestCase):
         })
         self.assertEqual(r.status_code, 200)
         expected = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        expected += '<p>Toto je<i>a<b>ukázka</b>text</i></p>'
+        expected += '<p>Toto je <i>a <b>ukázka</b> text</i></p>'
         self.assertEqual(r.text, expected)
 
-    def _upload_binary_file(self, filename, outname, langpair):
+    def _upload_binary_file(self, filename, langpair):
         src, tgt = langpair.split("-")
-        with open(filename, "rb") as f:
+        path_in = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data", filename)
+        with open(path_in, "rb") as f:
             r = requests.post(self.ADDRESS, data={
                 "src": src,
                 "tgt": tgt,
             }, files={
                 'input_text': f
             })
+            outname = r.headers["X-Billing-Filename"]
         with open(outname, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024): 
                 if chunk:
@@ -132,13 +138,13 @@ class LanguagesEndpointTester(unittest.TestCase):
 
     def test_document_docx(self):
         # Test successful translation request, file upload
-        r = self._upload_binary_file("./test_data/test.docx", "./test_data/test_response.docx", "cs-en")
+        r = self._upload_binary_file("test.docx", "cs-en")
         # pp(r)
         # pp(r.headers)
         self.assertEqual(r.status_code, 200)
 
     def test_document_odt(self):
-        r = self._upload_binary_file("./test_data/kentucky_russian.odt", "./test_data/kentucky_eng_translation.odt", "ru-en")
+        r = self._upload_binary_file("kentucky_russian.odt", "ru-en")
         self.assertEqual(r.status_code, 200)
 
     def test_too_long_text(self):
@@ -177,8 +183,6 @@ class LanguagesEndpointTester(unittest.TestCase):
         r = requests.post(self.ADDRESS, data=self.en_cs, files={
             'input_text': ('hello.html', '<p><b>Sample</b>. <i>text</i>.<br />Hello!</p>', 'text/html')
         })
-        pp(r.status_code)
-        pp(r.text)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.text, '<p><b>Ukázka</b>. <i>textu</i>.<br />Ahoj!</p>')
 
@@ -188,6 +192,13 @@ class LanguagesEndpointTester(unittest.TestCase):
         })
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.text, '<pre>Toto\t\t\tje   <i> <b>ukázkový</b> text</i></pre><pre>A\t  \t<b>\t \t </b> <i>\t \t</i> </pre>')
+
+    def test_whitespace_after_removed_comma(self):
+        r = requests.post(self.ADDRESS, data=self.cs_en, files={
+            'input_text': ('kofr1.html', 'V 8. stol. př. n. l. vznikly v Řecku eposy <i>Ilias a Odysseia</i>, jejichž autorství je tradičně připisováno Homérovi (1200–700 př. n. l.).', 'text/html')
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.text, 'In the 8th century BC, the Greek epics <i>Iliad and Odysseus</i> were created, the authorship of which is traditionally attributed to Homer (1200–700 BC).\n')
 
 
 if __name__ == "__main__":
