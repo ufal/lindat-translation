@@ -113,7 +113,7 @@ class Document(Translatable):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    tag_pattern = r'</?(g|x|bx|ex|lb|mrk)(\s|\/?.*?)?>'
+    tag_pattern = r'<\/?(g|x|bx|ex|lb|mrk).*?>'
     segments_regex = re.compile(r'('+tag_pattern+r'|\s+|[^<\s]+|[^>\s]+)')
 
     def words_tags_whitespaces(self, line):
