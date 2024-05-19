@@ -270,8 +270,10 @@ class Document(Translatable):
         # run Tikal to extract text for translation
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path])
         assert out.returncode == 0
-        extracted_texts_path = self.orig_full_path+"."+src
-        assert os.path.exists(extracted_texts_path)
+        tikal_output = f"{self.orig_full_path}.{src}"
+        assert os.path.exists(tikal_output)
+        extracted_texts_path = f"{self.orig_full_path}.{src}.withmarkup"
+        os.rename(tikal_output, extracted_texts_path)
 
         # remove markup
         with open(extracted_texts_path) as f:
