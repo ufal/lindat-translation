@@ -141,10 +141,6 @@ class Document(Translatable):
             current = padded[i]
             previous = padded[i - 1]
             next = padded[i + 1]
-            # skip non-breaking spaces 
-            # TODO: pass these through to the model and handle them after
-            if current[0] == "\xa0":
-                current = (" ", WHITESPACE)
 
             if current == ("", None):
                 continue
@@ -279,6 +275,8 @@ class Document(Translatable):
         with open(extracted_texts_path) as f:
             lines = f.read().splitlines()
             self.text = "\n".join(lines) + "\n"
+        # remove non-breaking spaces
+        lines = [x.replace("\xa0", " ") for x in lines]
         words_tags_whitespaces = [self.words_tags_whitespaces(x) for x in lines]
         words_tags = [self.whitespaces_to_tags(w) for w in words_tags_whitespaces]
         words = [self.remove_tags(w) for w in words_tags]
