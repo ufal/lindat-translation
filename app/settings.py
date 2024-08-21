@@ -5,7 +5,7 @@ ERROR_404_HELP = False
 RESTX_MASK_SWAGGER = False
 
 # Maximum uploaded file size length is checked by Flask: https://flask.palletsprojects.com/en/2.3.x/patterns/fileuploads/#improving-uploads
-MAX_CONTENT_LENGTH = 5000 * 1024
+MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 # Maximum text length inside the uploaded file
 MAX_TEXT_LENGTH = 100 * 1024
 
