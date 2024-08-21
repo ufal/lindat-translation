@@ -53,7 +53,7 @@ class Text(Translatable):
         text = normalize('NFC', text)
         self._input_nfc_len = len(text)
         if self._input_nfc_len >= MAX_TEXT_LENGTH:
-            api.abort(code=413, message='The data value transmitted exceeds the capacity limit.')
+            api.abort(code=413, message='The total text length in the document exceeds the translation limit.')
     
     @classmethod
     def from_file(cls, request_file):
@@ -296,8 +296,8 @@ class Document(Translatable):
 
         # TODO: activate character limit for uploaded documents
         # print("line number",  len(lines))
-        # if self._input_nfc_len >= MAX_TEXT_LENGTH:
-        #     api.abort(code=413, message='The data value transmitted exceeds the capacity limit.')
+        if self._input_nfc_len >= MAX_TEXT_LENGTH:
+            api.abort(code=413, message='The total text length in the document exceeds the translation limit.')
 
         # translate
         print("Translating")
