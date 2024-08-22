@@ -4,6 +4,7 @@ BOOTSTRAP_SERVE_LOCAL = True
 ERROR_404_HELP = False
 RESTX_MASK_SWAGGER = False
 
+# These should match with the appropriate constants in the frontend
 # Maximum uploaded file size length is checked by Flask: https://flask.palletsprojects.com/en/2.3.x/patterns/fileuploads/#improving-uploads
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 # Maximum text length inside the uploaded file
@@ -27,4 +28,12 @@ CSEN_LOAD_BALANCED = '10.10.51.72:9000'
 DOCLVL_LOAD_BALANCED = '10.10.51.76:9000'
 
 UPLOAD_FOLDER = '/tmp/translator_uploads'
-ALLOWED_EXTENSIONS = {'xml', 'html', 'docx', 'odt'}
+
+# These should match with the appropriate constants in the frontend
+ALLOWED_EXTENSIONS = {'txt', 'xml', 'html', 'htm', 'docx', 'odt', 'pptx', 'odp', 'xlsx', 'ods'}
+ALLOWED_MIMETYPE = {
+    'text/plain', 'text/xml', 'text/html', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text', 
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'
+}

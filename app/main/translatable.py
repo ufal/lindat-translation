@@ -9,7 +9,7 @@ from flask_restx._http import HTTPStatus
 
 from app.main.api.restplus import api
 from app.text_utils import count_words, extract_text
-from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
+from app.settings import ALLOWED_EXTENSIONS, ALLOWED_MIMETYPE, UPLOAD_FOLDER, MAX_TEXT_LENGTH
 from app.main.translate import translate_from_to, translate_with_model
 from app.main.align import align_tokens
 
@@ -97,7 +97,7 @@ class Document(Translatable):
         if not request_file:
             api.abort(code=400, message='Empty file')
         
-        if not cls.allowed_file(request_file.filename):
+        if not cls.allowed_file(request_file.filename, request_file.mimetype):
             api.abort(code=415, message='Unsupported file type for translation')
 
         filename = secure_filename(request_file.filename)
@@ -109,9 +109,11 @@ class Document(Translatable):
         return cls(orig_full_path)
 
     @classmethod
-    def allowed_file(cls, filename):
-        return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    def allowed_file(cls, filename, mimetype):
+        extension_check = '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        mimetype_check = mimetype in ALLOWED_MIMETYPE
+        return extension_check and mimetype_check
+           
 
     tag_pattern = r'<\/?(g|x|bx|ex|lb|mrk).*?>'
     segments_regex = re.compile(r'('+tag_pattern+r'|\s+|[^<\s]+|[^>\s]+)')
