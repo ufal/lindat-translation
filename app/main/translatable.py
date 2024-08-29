@@ -97,7 +97,7 @@ class Document(Translatable):
         if not request_file:
             api.abort(code=400, message='Empty file')
         
-        if not cls.allowed_file(request_file.filename, request_file.mimetype):
+        if not cls.allowed_file(request_file.filename):
             api.abort(code=415, message='Unsupported file type for translation')
 
         filename = secure_filename(request_file.filename)
@@ -109,10 +109,9 @@ class Document(Translatable):
         return cls(orig_full_path)
 
     @classmethod
-    def allowed_file(cls, filename, mimetype):
+    def allowed_file(cls, filename):
         extension_check = '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-        mimetype_check = mimetype in ALLOWED_MIMETYPE
-        return extension_check and mimetype_check
+        return extension_check
            
 
     tag_pattern = r'<\/?(g|x|bx|ex|lb|mrk).*?>'
@@ -213,7 +212,6 @@ class Document(Translatable):
         source_paragraphs = []
         target_paragraphs = []
         alignment_paragraphs = []
-        print(source_tokens)
 
         src_current = []
         tgt_current = []
@@ -221,7 +219,6 @@ class Document(Translatable):
         src_len = 0
         tgt_len = 0
         for source_sentence, target_sentence, alignment in zip(source_tokens, target_tokens, alignments):
-            print(source_sentence, target_sentence, alignment)
             src_current += source_sentence
             tgt_current += target_sentence
             offset_alignment = [(s + src_len, t + tgt_len) for s, t in alignment]
@@ -296,8 +293,6 @@ class Document(Translatable):
         self._input_word_count = count_words(removed_tags)
         self._input_nfc_len = len(normalize('NFC', self.text))
 
-        # TODO: activate character limit for uploaded documents
-        # print("line number",  len(lines))
         if self._input_nfc_len >= MAX_TEXT_LENGTH:
             api.abort(code=413, message='The total text length in the document exceeds the translation limit.')
 
