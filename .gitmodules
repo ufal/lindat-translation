@@ -4,3 +4,6 @@
 [submodule "app/static/hal-browser"]
 	path = app/static/hal-browser
 	url = https://github.com/mikekelly/hal-browser.git
+[submodule "app/main/document-translation"]
+	path = app/main/document-translation
+	url = https://github.com/kukas/document-translation
