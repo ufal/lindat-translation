@@ -8,7 +8,8 @@ from app.main.api.restplus import api
 from app.main.api.translation.parsers import text_input_with_src_tgt
 from app.db import log_translation, log_access
 from app.text_utils import extract_text
-from app.main.translatable import Text, Document
+from app.main.text import Text
+from app.main.document import Document
 
 class MyAbstractResource(Resource):
     def __init__(self, *args, **kwargs):

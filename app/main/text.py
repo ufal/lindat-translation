@@ -6,7 +6,7 @@ from app.text_utils import count_words, extract_text
 from app.settings import MAX_TEXT_LENGTH
 from app.main.translate import translate_from_to, translate_with_model
 
-from translatable import Translatable
+from app.main.translatable import Translatable
 
 class Text(Translatable):
     def __init__(self, text):

@@ -1,7 +1,9 @@
 import os
 import subprocess
 import re
+from typing import List, Tuple
 from unicodedata import normalize
+import logging
 
 from flask import send_from_directory
 
@@ -13,11 +15,41 @@ from app.text_utils import count_words, extract_text
 from app.main.translate import translate_from_to, translate_with_model
 from app.main.align import align_tokens
 
-from translatable import Translatable
+from app.main.translatable import Translatable
+from document_translation.markuptranslator import MarkupTranslator, Translator
+from document_translation.lindat_services.align import LindatAligner
+from document_translation.regextokenizer import RegexTokenizer
 
-TAG = "tag"
-WHITESPACE = "wspace"
-WORD = "word"
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict if "document_translation" in name]
+for _logger in loggers:
+    _logger.setLevel(logger.level)
+
+class InnerLindatTranslator(Translator):
+    def __init__(self, method, src, tgt, model=None):
+        self.method = method
+        self.src = src
+        self.tgt = tgt
+        self.model = model
+
+    def translate(self, input_text: str) -> Tuple[List[str], List[str]]:
+        logger.info("translator input text:")
+        logger.info(repr(input_text))
+        if self.method == "with_model":
+            src_sents, tgt_sents = translate_with_model(self.model, input_text, self.src, self.tgt, return_source_sentences=True)
+        else:
+            src_sents, tgt_sents = translate_from_to(self.src, self.tgt, input_text, return_source_sentences=True)
+        logger.info(f"Translated {len(src_sents)} sentences")
+
+        # remove final newline (translator adds it)
+        src_sents[-1] = src_sents[-1][:-1]
+        tgt_sents[-1] = tgt_sents[-1][:-1]
+
+        logger.info(src_sents)
+        logger.info(tgt_sents)
+
+        return src_sents, tgt_sents
 
 class Document(Translatable):
     def __init__(self, orig_full_path):
@@ -47,146 +79,6 @@ class Document(Translatable):
     def allowed_file(cls, filename):
         extension_check = '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
         return extension_check
-           
-
-    tag_pattern = r'<\/?(g|x|bx|ex|lb|mrk).*?>'
-    segments_regex = re.compile(r'('+tag_pattern+r'|\s+|[^<\s]+|[^>\s]+)')
-
-    def words_tags_whitespaces(self, line):
-        substrings = self.segments_regex.findall(line)
-        substrings = [groups[0] for groups in substrings if groups]
-        assert "".join(substrings) == line
-        
-        return self.substrings_to_segments(substrings)
-
-    def substrings_to_segments(self, substrings):
-        types = []
-        for segment in substrings:
-            if re.match(self.tag_pattern, segment):
-                types.append(TAG)
-            elif re.match(r'\s+', segment):
-                types.append(WHITESPACE)
-            else:
-                types.append(WORD)
-        return list(zip(substrings, types))
-
-    def whitespaces_to_tags(self, segments):
-        padded = [("", None)] + segments + [("", None)]
-        result = []
-        for i in range(1, len(padded) - 1):
-            current = padded[i]
-            previous = padded[i - 1]
-            next = padded[i + 1]
-
-            if current == ("", None):
-                continue
-            # we skip single spaces between words
-            if current[0] == " " and previous[1] == WORD and next[1] == WORD:
-                continue
-            elif current[1] == WHITESPACE and (previous[1] == TAG or next[1] == TAG):
-                continue
-            elif current[1] == TAG and (previous[1] == WHITESPACE or next[1] == WHITESPACE):
-                tag = current[0]
-                if previous[1] == WHITESPACE:
-                    head, tail, empty = re.split("(\/?>)", tag, 1)
-                    assert empty == ""
-                    tag = f"{head} pre-whitespace=\"{previous[0]}\"{tail}"
-                if next[1] == WHITESPACE:
-                    head, tail, empty = re.split("(\/?>)", tag, 1)
-                    assert empty == ""
-                    tag = f"{head} post-whitespace=\"{next[0]}\"{tail}"
-                    # we replace the next whitespace with a empty segment
-                    # because we do not want the next whitespace to be handled twice
-                    # in the situation TAG WHITESPACE TAG
-                    padded[i + 1] = ("", None)
-                result.append((tag, TAG))
-            elif current[1] == WHITESPACE:
-                result.append((f"<x equiv-text=\"{current[0]}\"/>", TAG))
-            else:
-                result.append(current)
-        return result
-
-    def tags_to_whitespaces(self, segments):
-        padded = [("", WHITESPACE)] + segments + [("", WHITESPACE)]
-        result = []
-        for i in range(1, len(padded) - 1):
-            current = padded[i]
-            previous = padded[i - 1]
-            next = padded[i + 1]
-            # we keep single spaces between words
-            if current[0] == " " and previous[1] == WORD and next[1] == WORD:
-                result.append(current)
-            # we remove any other whitespaces
-            elif current[1] == WHITESPACE:
-                # the line should contain only single spaces since we escaped anything else
-                assert current[0] == " "
-                continue
-            elif current[1] == TAG and ("pre-whitespace" in current[0] or "post-whitespace" in current[0]):
-                tag = current[0]
-                if "pre-whitespace" in tag:
-                    whitespace = re.search(r"pre-whitespace=\"(\s+)\"", tag).group(1)
-                    tag = re.sub(r" pre-whitespace=\"(\s+)\"", "", tag)
-                    # we insert the whitespace before the tag
-                    result.append((whitespace, WHITESPACE))
-                    # if there is nothing to insert after the tag,
-                    # we can insert the tag now
-                    if "post-whitespace" not in tag:
-                        result.append((tag, TAG))
-                if "post-whitespace" in tag:
-                    whitespace = re.search(r"post-whitespace=\"(\s+)\"", tag).group(1)
-                    tag = re.sub(r" post-whitespace=\"(\s+)\"", "", tag)
-                    result.append((tag, TAG))
-                    result.append((whitespace, WHITESPACE))
-            elif current[0].startswith("<x equiv-text=\""):
-                result.append((current[0][15:-3], WHITESPACE))
-            else:
-                result.append(current)
-        return result
-
-    def join_sentences_and_alignments(self, source_tokens, target_tokens, alignments):
-        source_paragraphs = []
-        target_paragraphs = []
-        alignment_paragraphs = []
-
-        src_current = []
-        tgt_current = []
-        align_current = []
-        src_len = 0
-        tgt_len = 0
-        for source_sentence, target_sentence, alignment in zip(source_tokens, target_tokens, alignments):
-            src_current += source_sentence
-            tgt_current += target_sentence
-            offset_alignment = [(s + src_len, t + tgt_len) for s, t in alignment]
-            align_current += offset_alignment
-            src_len += len(source_sentence)
-            tgt_len += len(target_sentence)
-            last_token = source_sentence[-1]
-            if last_token.endswith("\n"):
-                assert target_sentence[-1].endswith("\n")
-                source_paragraphs.append(src_current)
-                target_paragraphs.append(tgt_current)
-                alignment_paragraphs.append(align_current)
-                src_current = []
-                tgt_current = []
-                align_current = []
-                src_len = 0
-                tgt_len = 0
-                for i in range(len(last_token) - 2, 0, -1):
-                    if last_token[i] == "\n":
-                        source_paragraphs.append([])
-                        target_paragraphs.append([])
-                        alignment_paragraphs.append([])
-        if len(src_current) > 0:
-            source_paragraphs.append(src_current)
-            target_paragraphs.append(tgt_current)
-            alignment_paragraphs.append(align_current)
-        return source_paragraphs, target_paragraphs, alignment_paragraphs
-
-    def remove_tags(self, segments):
-        return [s for s in segments if s[1] != TAG]
-
-    def segments_to_text(self, segments, sep=" "):
-        return sep.join(s[0] for s in segments)
 
     def translate_from_to(self, src, tgt):
         self._translate(src, tgt, "from_to")
@@ -202,78 +94,37 @@ class Document(Translatable):
         assert out.returncode == 0
         tikal_output = f"{self.orig_full_path}.{src}"
         assert os.path.exists(tikal_output)
-        extracted_texts_path = f"{self.orig_full_path}.{src}.withmarkup"
-        os.rename(tikal_output, extracted_texts_path)
 
-        # remove markup
-        with open(extracted_texts_path) as f:
-            lines = f.read().splitlines()
-            self.text = "\n".join(lines) + "\n"
-        # remove non-breaking spaces
-        lines = [x.replace("\xa0", " ") for x in lines]
-        words_tags_whitespaces = [self.words_tags_whitespaces(x) for x in lines]
-        words_tags = [self.whitespaces_to_tags(w) for w in words_tags_whitespaces]
-        words = [self.remove_tags(w) for w in words_tags]
-        words_str = [self.segments_to_text(w) for w in words]
+        # read the extracted text from the uploaded file
+        self.text = open(tikal_output).read()
 
-        removed_tags = "\n".join(words_str) + "\n"
-
-        # write text with encoded whitespaces
-        words_tags_str = map(lambda x: self.segments_to_text(x), words_tags)
-        words_tags_str = "\n".join(words_tags_str) + "\n"
-        extracted_texts_encoded_whitespaces_path = self.orig_full_path+"."+src+".withmarkup.encoded"
-        with open(extracted_texts_encoded_whitespaces_path, 'w') as f:
-            f.write(words_tags_str)
-
-        self._input_word_count = count_words(removed_tags)
+        # count words and check length (without tags)
+        text_without_tags = re.sub(r'<[^>]*>', '', self.text)
+        self._input_word_count = count_words(text_without_tags)
         self._input_nfc_len = len(normalize('NFC', self.text))
-
         if self._input_nfc_len >= MAX_TEXT_LENGTH:
             api.abort(code=413, message='The total text length in the document exceeds the translation limit.')
 
-        # translate
-        print("Translating")
-        if method == "with_model":
-            src_sents, tgt_sents = translate_with_model(model, removed_tags, src, tgt, return_source_sentences=True)
-        else:
-            src_sents, tgt_sents = translate_from_to(src, tgt, removed_tags, return_source_sentences=True)
-        self.translation = extract_text(tgt_sents)
+        # initialize translation pipeline
+        translator = InnerLindatTranslator(method, src, tgt, model)
+        aligner = LindatAligner(src, tgt)
+        tokenizer = RegexTokenizer()
+        mt = MarkupTranslator(translator, aligner, tokenizer)
 
-        self._output_word_count = count_words(self.translation)
+        # translate the text (possibly with markup)
+        self.translation = mt.translate(self.text)
 
-        # align
-        print("Aligning")
-        source_tokens = [sentence.split(" ") for sentence in src_sents]
-        target_tokens = [sentence.split(" ") for sentence in tgt_sents]
-        alignment = align_tokens(source_tokens, target_tokens, src, tgt)
-        _, _, alignment = self.join_sentences_and_alignments(source_tokens, target_tokens, alignment)
-        # write alignment
-        alignment_path = self.orig_full_path+f".{src}-{tgt}.align.nomarkup"
-        with open(alignment_path, 'w') as f:
-            for al in alignment:
-                alignment_string = [f"{a}-{b}" for a,b in al]
-                alignment_string = " ".join(alignment_string)+"\n"
-                f.write(alignment_string)
-        # reinsert tags
-        reinserted_path = self.orig_full_path+f".{tgt}.withmarkup"
+        # count words in translation
+        self._output_word_count = len(self.translation.split())
 
-        with open(reinserted_path, 'w') as f:
-            p = subprocess.Popen(['perl', '/home/balhar/document-translation/m4loc/xliff/reinsert_wordalign.pm', extracted_texts_encoded_whitespaces_path, alignment_path], stdin=subprocess.PIPE, stdout=f)
-            p.communicate(self.translation.encode('utf-8'), timeout=15)
-        with open(reinserted_path, 'r') as f:
-            reinserted = f.read().splitlines()
-        
-        reinserted_segments = [self.words_tags_whitespaces(line) for line in reinserted]
-        decoded_whitespaces = [self.tags_to_whitespaces(line) for line in reinserted_segments]
-        reconstructed = "\n".join([self.segments_to_text(line, sep="") for line in decoded_whitespaces]) + "\n"
+        # write translation to file
+        translated_text_path = f"{self.orig_full_path}.{tgt}"
+        with open(translated_text_path, 'w') as f:
+            f.write(self.translation)
 
-        reconstructed_path = self.orig_full_path+f".{tgt}.withmarkup.decoded"
-        with open(reconstructed_path, 'w') as f:
-            f.write(reconstructed)
-        
         # reinsert translation using Tikal
         self.translated_path = f"{orig_root}.{tgt}{file_extension}"
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', reconstructed_path, '-to', self.translated_path])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path])
 
     def get_text(self):
         return self.text

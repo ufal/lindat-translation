@@ -21,3 +21,4 @@ sentencepiece
 Werkzeug
 # see https://github.com/aws/aws-sam-cli/issues/3661
 MarkupSafe
+document-translation @ git+https://github.com/kukas/document-translation
