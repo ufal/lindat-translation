@@ -153,31 +153,24 @@ class LanguagesEndpointTester(unittest.TestCase):
             "input_text": "This is a "*(1024*10) # 100kB
         })
         self.assertEqual(r.status_code, 413)
-        self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
+        self.assertEqual(r.text, '{"message": "The total text length in the document exceeds the translation limit."}\n')
 
         r = requests.post(self.ADDRESS, files={
             'input_text': ('hello.txt', "This is a "*(1024*10), 'text/plain') # 100kB
         })
         self.assertEqual(r.status_code, 413)
-        self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
+        self.assertEqual(r.text, '{"message": "The total text length in the document exceeds the translation limit."}\n')
 
     def test_too_long_doc(self):
-        # disable test for now, file upload is temporarily unlimited
-        return
-
         text = "<p><p><p><p>How are you?</p></p></p></p>"
-        repeats = ceil(102400/len(text)) + 1
-        print(repeats, len(text), len(text)*repeats)
+        without_tags = text.replace("<p>", "").replace("</p>", "")
+        repeats = ceil(102400/len(without_tags)) + 1
         final = text*repeats
-        print("message length:", len(final))
-        print("without tags: ", len(final.replace("<p>", "").replace("</p>", "")))
         r = requests.post(self.ADDRESS, files={
             'input_text': ('hello.html', final, 'text/html')
         })
-        pp(r.status_code)
-        pp(r.text)
         self.assertEqual(r.status_code, 413)
-        self.assertEqual(r.text, '{"message": "The data value transmitted exceeds the capacity limit."}\n')
+        self.assertEqual(r.text, '{"message": "The total text length in the document exceeds the translation limit."}\n')
 
     def test_do_not_add_whitespace(self):
         r = requests.post(self.ADDRESS, data=self.en_cs, files={
@@ -198,7 +191,7 @@ class LanguagesEndpointTester(unittest.TestCase):
             'input_text': ('kofr1.html', 'V 8. stol. př. n. l. vznikly v Řecku eposy <i>Ilias a Odysseia</i>, jejichž autorství je tradičně připisováno Homérovi (1200–700 př. n. l.).', 'text/html')
         })
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.text, 'In the 8th century BC, the Greek epics <i>Iliad and Odysseus</i> were created, the authorship of which is traditionally attributed to Homer (1200–700 BC).\n')
+        self.assertEqual(r.text, 'In the 8th century BC, the Greek epics <i>Iliad and Odysseus</i> were created, the authorship of which is traditionally attributed to Homer (1200–700 BC).')
 
 
 if __name__ == "__main__":

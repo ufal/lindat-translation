@@ -95,7 +95,7 @@ class ModelsEndpointTester(unittest.TestCase):
         })
         self.assertEqual(r.status_code, 200)
         expected = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        expected += '<p>Tohle je<i>a<b>vzorek</b>text</i></p>'
+        expected += '<p>Tohle je <i>a <b>vzorek</b> text</i></p>'
         self.assertEqual(r.text, expected)
 
     def _upload_binary_file(self, filename, outname, langpair):
@@ -112,14 +112,10 @@ class ModelsEndpointTester(unittest.TestCase):
     def test_document_docx(self):
         # Test successful translation request, file upload
         r = self._upload_binary_file("./test_data/test.docx", "./test_data/test_response.docx", "cs-en")
-        pp(r)
-        pp(r.headers)
         self.assertEqual(r.status_code, 200)
 
     def test_document_odt(self):
         r = self._upload_binary_file("./test_data/kentucky_russian.odt", "./test_data/kentucky_eng_translation.odt", "ru-en")
-        pp(r)
-        pp(r.headers)
         self.assertEqual(r.status_code, 200)
 
 
