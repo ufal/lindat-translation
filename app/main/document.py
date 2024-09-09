@@ -3,7 +3,6 @@ import subprocess
 import re
 from typing import List, Tuple
 from unicodedata import normalize
-import logging
 
 from flask import send_from_directory
 
@@ -11,20 +10,13 @@ from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
 from werkzeug.utils import secure_filename
 from app.main.api.restplus import api
 
-from app.text_utils import count_words, extract_text
+from app.text_utils import count_words
 from app.main.translate import translate_from_to, translate_with_model
-from app.main.align import align_tokens
 
 from app.main.translatable import Translatable
 from document_translation.markuptranslator import MarkupTranslator, Translator
 from document_translation.lindat_services.align import LindatAligner
 from document_translation.regextokenizer import RegexTokenizer
-
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
-# loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict if "document_translation" in name]
-# for _logger in loggers:
-#     _logger.setLevel(logger.level)
 
 class InnerLindatTranslator(Translator):
     def __init__(self, method, src, tgt, model=None):

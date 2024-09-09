@@ -31,9 +31,3 @@ UPLOAD_FOLDER = '/tmp/translator_uploads'
 
 # These should match with the appropriate constants in the frontend
 ALLOWED_EXTENSIONS = {'txt', 'xml', 'html', 'htm', 'docx', 'odt', 'pptx', 'odp', 'xlsx', 'ods'}
-ALLOWED_MIMETYPE = {
-    'text/plain', 'text/xml', 'text/html', 
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text', 
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.presentation',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'
-}
