@@ -20,11 +20,11 @@ from document_translation.markuptranslator import MarkupTranslator, Translator
 from document_translation.lindat_services.align import LindatAligner
 from document_translation.regextokenizer import RegexTokenizer
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict if "document_translation" in name]
-for _logger in loggers:
-    _logger.setLevel(logger.level)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
+# loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict if "document_translation" in name]
+# for _logger in loggers:
+#     _logger.setLevel(logger.level)
 
 class InnerLindatTranslator(Translator):
     def __init__(self, method, src, tgt, model=None):
@@ -34,22 +34,46 @@ class InnerLindatTranslator(Translator):
         self.model = model
 
     def translate(self, input_text: str) -> Tuple[List[str], List[str]]:
-        logger.info("translator input text:")
-        logger.info(repr(input_text))
+        # translator does not like leading newlines, so we remove them and add them back later
+        num_prefix_newlines = 0
+        if input_text.startswith("\n"):
+            while input_text[num_prefix_newlines] == "\n":
+                num_prefix_newlines += 1
+            input_text = input_text[num_prefix_newlines:]
+
+        # remove final newline, translator adds it back so we don't want it to be there twice
+        assert input_text.endswith("\n")
+        input_text_stripped = input_text[:-1]
+
+        # here we translate the text
         if self.method == "with_model":
-            src_sents, tgt_sents = translate_with_model(self.model, input_text, self.src, self.tgt, return_source_sentences=True)
+            src_sentences, tgt_sentences = translate_with_model(self.model, input_text_stripped, self.src, self.tgt, return_source_sentences=True)
         else:
-            src_sents, tgt_sents = translate_from_to(self.src, self.tgt, input_text, return_source_sentences=True)
-        logger.info(f"Translated {len(src_sents)} sentences")
+            src_sentences, tgt_sentences = translate_from_to(self.src, self.tgt, input_text_stripped, return_source_sentences=True)
 
-        # remove final newline (translator adds it)
-        src_sents[-1] = src_sents[-1][:-1]
-        tgt_sents[-1] = tgt_sents[-1][:-1]
+        # post process the translation
+        if tgt_sentences:
+            # if the line was empty or whitespace-only, then discard any potential translation
+            new_tgt_sentences: List[str] = []
+            for src, tgt in zip(src_sentences, tgt_sentences):
+                if re.match(r"^\s+$", src):
+                    new_tgt_sentences.append(src)
+                else:
+                    new_tgt_sentences.append(tgt)
+            tgt_sentences = new_tgt_sentences
+            # reinsert prefix newlines
+            src_sentences[0] = "\n" * num_prefix_newlines + src_sentences[0]
+            tgt_sentences[0] = "\n" * num_prefix_newlines + tgt_sentences[0]
+            # add spaces after sentence ends
+            src_sentences = [src_sentence + " " if not src_sentence.endswith("\n") else src_sentence for src_sentence in src_sentences]
+            tgt_sentences = [tgt_sentence + " " if not tgt_sentence.endswith("\n") else tgt_sentence for tgt_sentence in tgt_sentences]
 
-        logger.info(src_sents)
-        logger.info(tgt_sents)
+        # remove final newline if there was none
+        if not input_text.endswith("\n"):
+            src_sentences[-1] = src_sentences[-1][:-1]
+            tgt_sentences[-1] = tgt_sentences[-1][:-1]
 
-        return src_sents, tgt_sents
+        return src_sentences, tgt_sentences
 
 class Document(Translatable):
     def __init__(self, orig_full_path):
