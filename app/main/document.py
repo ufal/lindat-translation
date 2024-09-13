@@ -17,6 +17,7 @@ from app.main.translatable import Translatable
 from document_translation.markuptranslator import MarkupTranslator, Translator
 from document_translation.lindat_services.align import LindatAligner
 from document_translation.regextokenizer import RegexTokenizer
+from document_translation.pdf_tools.pdfeditor import PdfEditor
 
 class InnerLindatTranslator(Translator):
     def __init__(self, method, src, tgt, model=None):
@@ -97,14 +98,24 @@ class Document(Translatable):
         return extension_check
 
     def translate_from_to(self, src, tgt):
-        self._translate(src, tgt, "from_to")
+        self._extract_translate_merge(src, tgt, "from_to")
 
     def translate_with_model(self, model, src, tgt):
-        self._translate(src, tgt, "with_model", model)
-
-    def _translate(self, src, tgt, method, model=None):
-        TIKAL_PATH = "/home/balhar/okapi/"
+        self._extract_translate_merge(src, tgt, "with_model", model)
+    
+    def _extract_translate_merge(self, src, tgt, method, model=None):
+        if self.orig_full_path.endswith('.pdf'):
+            self._extract_translate_merge_pdf(src, tgt, method, model=None)
+        else:
+            self._extract_translate_merge_document(src, tgt, method, model=None)
+    
+    def get_translated_path(self, tgt):
         orig_root, file_extension = os.path.splitext(self.orig_full_path)
+        return f"{orig_root}.{tgt}{file_extension}"
+
+    def _extract_translate_merge_document(self, src, tgt, method, model=None):
+        TIKAL_PATH = "/home/balhar/okapi/"
+        
         # run Tikal to extract text for translation
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path])
         assert out.returncode == 0
@@ -114,6 +125,43 @@ class Document(Translatable):
         # read the extracted text from the uploaded file
         self.text = open(tikal_output).read()
 
+        # translate the text
+        self._translate(src, tgt, method, model)
+    
+        # write translation to file
+        translated_text_path = f"{self.orig_full_path}.{tgt}"
+        with open(translated_text_path, 'w') as f:
+            f.write(self.translation)
+
+        # reinsert translation using Tikal
+        self.translated_path = self.get_translated_path(tgt)
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path])
+
+    def _extract_translate_merge_pdf(self, src, tgt, method, model=None):
+        # open the PDF file
+        self.pdf_editor = PdfEditor(self.orig_full_path)
+
+        # extract the text from the PDF
+        lines = self.pdf_editor.extract_text()
+
+        # join the extracted lines into a single string, separated by line breaks
+        input_text = "<lb />".join(lines)
+        assert "\n" not in input_text
+        input_text = input_text.replace("<page-break />", "\n")
+        self.text = input_text
+        
+        # translate the text
+        self._translate(src, tgt, method, model)
+
+        # split the translation into lines
+        translated_lines = self.translation.replace("\n", "<page-break />").split("<lb />")
+        assert len(lines) == len(translated_lines), f"{len(lines)} != {len(translated_lines)}"
+
+        # merge the translated text into the PDF
+        self.translated_path = self.get_translated_path(tgt)
+        self.pdf_editor.merge_text(translated_lines, self.translated_path)
+
+    def _translate(self, src, tgt, method, model=None):
         # count words and check length (without tags)
         text_without_tags = re.sub(r'<[^>]*>', '', self.text)
         self._input_word_count = count_words(text_without_tags)
@@ -132,15 +180,6 @@ class Document(Translatable):
 
         # count words in translation
         self._output_word_count = len(self.translation.split())
-
-        # write translation to file
-        translated_text_path = f"{self.orig_full_path}.{tgt}"
-        with open(translated_text_path, 'w') as f:
-            f.write(self.translation)
-
-        # reinsert translation using Tikal
-        self.translated_path = f"{orig_root}.{tgt}{file_extension}"
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path])
 
     def get_text(self):
         return self.text
