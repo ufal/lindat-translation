@@ -7,7 +7,7 @@ from unicodedata import normalize
 from flask import send_from_directory
 from flask import request
 
-from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
+from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH, TIKAL_PATH
 from werkzeug.utils import secure_filename
 from app.main.api.restplus import api
 
@@ -136,8 +136,6 @@ class Document(Translatable):
                     line = fun(line)
                     f_out.write(line)
 
-        TIKAL_PATH = "/home/balhar/okapi/"
-
         print("Translating FRAUS XML")
 
         # fix the wrong encoding in the FRAUS XML
@@ -200,8 +198,6 @@ class Document(Translatable):
         assert os.path.exists(self.translated_path)
 
     def _extract_translate_merge_document(self, src, tgt, method, model):
-        TIKAL_PATH = "/home/balhar/okapi/"
-        
         # run Tikal to extract text for translation
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path])
         assert out.returncode == 0
