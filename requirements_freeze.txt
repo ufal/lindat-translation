@@ -1,4 +1,4 @@
-document-translation @ git+https://github.com/kukas/document-translation
+document-translation @ git+https://github.com/kukas/document-translation@1b24794c2f6bb404bdbf3cfd43b3a1534ef7fe1b
 absl-py==1.4.0
 aniso8601==9.0.1
 array-record==0.5.0
