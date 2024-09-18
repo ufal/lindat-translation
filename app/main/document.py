@@ -5,6 +5,7 @@ from typing import List, Tuple
 from unicodedata import normalize
 
 from flask import send_from_directory
+from flask import request
 
 from app.settings import ALLOWED_EXTENSIONS, UPLOAD_FOLDER, MAX_TEXT_LENGTH
 from werkzeug.utils import secure_filename
@@ -12,6 +13,7 @@ from app.main.api.restplus import api
 
 from app.text_utils import count_words
 from app.main.translate import translate_from_to, translate_with_model
+from app.main.api.translation.parsers import text_input_with_src_tgt
 
 from app.main.translatable import Translatable
 from document_translation.markuptranslator import MarkupTranslator, Translator
@@ -166,7 +168,13 @@ class Document(Translatable):
         text_without_tags = re.sub(r'<[^>]*>', '', self.text)
         self._input_word_count = count_words(text_without_tags)
         self._input_nfc_len = len(normalize('NFC', self.text))
-        if self._input_nfc_len >= MAX_TEXT_LENGTH:
+
+        # check if we want to ignore the size limit
+        args = text_input_with_src_tgt.parse_args(request)
+        ignore_size_limit = args.get('ignoreSizeLimit', False)
+
+        # check the document character count limit
+        if self._input_nfc_len >= MAX_TEXT_LENGTH and not ignore_size_limit:
             api.abort(code=413, message='The total text length in the document exceeds the translation limit.')
 
         # initialize translation pipeline
