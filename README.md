@@ -5,13 +5,15 @@ In our setup the flask app runs on a machine called `transformer` and tensorflow
 
 ## Install
 
-### To install and run frontend
+### To install[^1] and run frontend
 ```
 git clone --recurse-submodules git@github.com:ufal/transformer_frontend
-pip install -r requirements.txt
+pip install -r requirements_freeze.txt
 gunicorn -t 500 -k sync -w 12 -b 0.0.0.0:5000 uwsgi:app
 ```
 systemd configs are provided in order to run as a system service, sample docker (see [Dockerfile](./Dockerfile), [docker-compose.yml](./docker-compose.yml)) configuration is provided for testing. Both need tweaking.
+
+[^1] The `requirements_freeze.txt` file is generated using `requirements.txt` and `constraints.txt` as follows: `pip install -r requirements.txt -c constraints.txt && pip freeze > requirements_freeze.txt`, see 4107fc73f.
 
 ### Serving
 The easiest but probably suboptimal (you likely want to compile yourself) way is to follow https://www.tensorflow.org/serving/setup and get a .deb package.
