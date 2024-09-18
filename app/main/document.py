@@ -98,22 +98,22 @@ class Document(Translatable):
         return extension_check
 
     def translate_from_to(self, src, tgt):
-        self._extract_translate_merge(src, tgt, "from_to")
+        self._extract_translate_merge(src, tgt, "from_to", None)
 
     def translate_with_model(self, model, src, tgt):
         self._extract_translate_merge(src, tgt, "with_model", model)
     
-    def _extract_translate_merge(self, src, tgt, method, model=None):
+    def _extract_translate_merge(self, src, tgt, method, model):
         if self.orig_full_path.endswith('.pdf'):
-            self._extract_translate_merge_pdf(src, tgt, method, model=None)
+            self._extract_translate_merge_pdf(src, tgt, method, model=model)
         else:
-            self._extract_translate_merge_document(src, tgt, method, model=None)
+            self._extract_translate_merge_document(src, tgt, method, model=model)
     
     def get_translated_path(self, tgt):
         orig_root, file_extension = os.path.splitext(self.orig_full_path)
         return f"{orig_root}.{tgt}{file_extension}"
 
-    def _extract_translate_merge_document(self, src, tgt, method, model=None):
+    def _extract_translate_merge_document(self, src, tgt, method, model):
         TIKAL_PATH = "/home/balhar/okapi/"
         
         # run Tikal to extract text for translation
