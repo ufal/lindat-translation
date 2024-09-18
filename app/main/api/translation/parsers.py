@@ -17,3 +17,4 @@ text_input_with_src_tgt.add_argument('X-User-Language', type=str, location='head
 text_input_with_src_tgt.add_argument('inputType', type=str)
 text_input_with_src_tgt.add_argument('logInput', type=inputs.boolean)
 text_input_with_src_tgt.add_argument('ignoreSizeLimit', type=inputs.boolean)
+text_input_with_src_tgt.add_argument('fraus', type=str)

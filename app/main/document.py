@@ -21,6 +21,9 @@ from document_translation.lindat_services.align import LindatAligner
 from document_translation.regextokenizer import RegexTokenizer
 from document_translation.pdf_tools.pdfeditor import PdfEditor
 
+import xml.etree.ElementTree as ET
+from html import unescape
+
 class InnerLindatTranslator(Translator):
     def __init__(self, method, src, tgt, model=None):
         self.method = method
@@ -107,13 +110,94 @@ class Document(Translatable):
     
     def _extract_translate_merge(self, src, tgt, method, model):
         if self.orig_full_path.endswith('.pdf'):
-            self._extract_translate_merge_pdf(src, tgt, method, model=model)
+            self._extract_translate_merge_pdf(src, tgt, method, model)
         else:
-            self._extract_translate_merge_document(src, tgt, method, model=model)
+            args = text_input_with_src_tgt.parse_args(request)
+            if args.get('fraus', False):
+                self._extract_translate_merge_fraus(src, tgt, method, model)
+            else:
+                self._extract_translate_merge_document(src, tgt, method, model)
     
     def get_translated_path(self, tgt):
         orig_root, file_extension = os.path.splitext(self.orig_full_path)
         return f"{orig_root}.{tgt}{file_extension}"
+
+    def _extract_translate_merge_fraus(self, src, tgt, method, model):
+        def fix_fraus_encoding(input_file, output_file):
+            with open(input_file, 'r', encoding='utf-8') as f_in, open(output_file, 'w', encoding='utf-8') as f_out:
+                for line in f_in:
+                    if line.startswith('<?xml version="1.0" encoding="utf-16"?>'):
+                        line = line.replace("utf-16", "utf-8")
+                    f_out.write(line)
+
+        def transform_lines(input_file, output_file, fun):
+            with open(input_file, 'r', encoding='utf-8') as f_in, open(output_file, 'w', encoding='utf-8') as f_out:
+                for line in f_in:
+                    line = fun(line)
+                    f_out.write(line)
+
+        TIKAL_PATH = "/home/balhar/okapi/"
+
+        print("Translating FRAUS XML")
+
+        # fix the wrong encoding in the FRAUS XML
+        xml_path = self.orig_full_path+".fixed"
+        fix_fraus_encoding(self.orig_full_path, xml_path)
+
+        # path to the `app` directory based on the current file
+        app_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        profile_xml = os.path.join(app_dir, 'okapi_profiles', 'okf_xml@fraus.fprm')
+
+        # run Tikal first time to extract text and encoded html tags from the FRAUS XML
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', xml_path, '-fc', profile_xml, '-sl', src, '-to', xml_path])
+        assert out.returncode == 0
+        tikal_output = f"{xml_path}.{src}"
+        assert os.path.exists(tikal_output)
+
+        # unescape the extracted text to reveal the html tags
+        transform_lines(tikal_output, tikal_output+".html", unescape)
+
+        # wrap each line in <p> tags to make them separate paragraphs
+        def _wrap_in_p_tags(line):
+            line_stripped = line.rstrip('\n')
+            return f"<p>{line_stripped}</p>\n"
+        transform_lines(tikal_output+".html", tikal_output+".html.p", _wrap_in_p_tags)
+
+        # run Tikal again to extract the text within the html tags
+        profile_html = os.path.join(app_dir, 'okapi_profiles', 'okf_html@fraus.fprm')
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', tikal_output+".html.p", '-fc', profile_html, '-sl', src, '-to', tikal_output+".html.p"])
+        assert out.returncode == 0
+        tikal_output_2nd = tikal_output+f".html.p.{src}"
+        assert os.path.exists(tikal_output_2nd)
+
+        # read the extracted text
+        self.text = open(tikal_output_2nd).read()
+
+        # translate the text
+        self._translate(src, tgt, method, model)
+    
+        # write translation to file
+        translated_text_path = tikal_output + f".html.p.{tgt}"
+        with open(translated_text_path, 'w') as f:
+            f.write(self.translation)
+        
+        # reinsert translation into our paragraph tags
+        translated_html = tikal_output + f".html.p.translated"
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', tikal_output + f".html.p", '-fc', profile_html, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', translated_html])
+        assert out.returncode == 0
+        assert os.path.exists(translated_html)
+
+        # unwrap the translated text from the <p> tags
+        def _unwrap_p_tags(line):
+            stripped_line = line.rstrip('\n')
+            return stripped_line[3:-4] + "\n"
+        transform_lines(translated_html, xml_path + ".translated", _unwrap_p_tags)
+        
+        # reinsert translation into FRAUS XML using Tikal
+        self.translated_path = self.get_translated_path(tgt)
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', xml_path, '-fc', profile_xml, '-sl', src, '-tl', tgt, '-overtrg', '-from', xml_path + ".translated", '-to', self.translated_path])
+        assert out.returncode == 0
+        assert os.path.exists(self.translated_path)
 
     def _extract_translate_merge_document(self, src, tgt, method, model):
         TIKAL_PATH = "/home/balhar/okapi/"
@@ -138,6 +222,8 @@ class Document(Translatable):
         # reinsert translation using Tikal
         self.translated_path = self.get_translated_path(tgt)
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path])
+        assert out.returncode == 0
+        assert os.path.exists(self.translated_path)
 
     def _extract_translate_merge_pdf(self, src, tgt, method, model=None):
         # open the PDF file
