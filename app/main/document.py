@@ -38,16 +38,17 @@ class InnerLindatTranslator(Translator):
             while input_text[num_prefix_newlines] == "\n":
                 num_prefix_newlines += 1
             input_text = input_text[num_prefix_newlines:]
-
-        # remove final newline, translator adds it back so we don't want it to be there twice
-        assert input_text.endswith("\n")
-        input_text_stripped = input_text[:-1]
+        num_suffix_newlines = 0
+        if input_text.endswith("\n"):
+            while input_text[-1 - num_suffix_newlines] == "\n":
+                num_suffix_newlines += 1
+            input_text = input_text[:-num_suffix_newlines]
 
         # here we translate the text
         if self.method == "with_model":
-            src_sentences, tgt_sentences = translate_with_model(self.model, input_text_stripped, self.src, self.tgt, return_source_sentences=True)
+            src_sentences, tgt_sentences = translate_with_model(self.model, input_text, self.src, self.tgt, return_source_sentences=True)
         else:
-            src_sentences, tgt_sentences = translate_from_to(self.src, self.tgt, input_text_stripped, return_source_sentences=True)
+            src_sentences, tgt_sentences = translate_from_to(self.src, self.tgt, input_text, return_source_sentences=True)
 
         # post process the translation
         if tgt_sentences:
@@ -62,14 +63,12 @@ class InnerLindatTranslator(Translator):
             # reinsert prefix newlines
             src_sentences[0] = "\n" * num_prefix_newlines + src_sentences[0]
             tgt_sentences[0] = "\n" * num_prefix_newlines + tgt_sentences[0]
+            # reinsert suffix newlines
+            src_sentences[-1] = src_sentences[-1].rstrip("\n") + "\n" * num_suffix_newlines
+            tgt_sentences[-1] = tgt_sentences[-1].rstrip("\n") + "\n" * num_suffix_newlines
             # add spaces after sentence ends
             src_sentences = [src_sentence + " " if not src_sentence.endswith("\n") else src_sentence for src_sentence in src_sentences]
             tgt_sentences = [tgt_sentence + " " if not tgt_sentence.endswith("\n") else tgt_sentence for tgt_sentence in tgt_sentences]
-
-        # remove final newline if there was none
-        if not input_text.endswith("\n"):
-            src_sentences[-1] = src_sentences[-1][:-1]
-            tgt_sentences[-1] = tgt_sentences[-1][:-1]
 
         return src_sentences, tgt_sentences
 
