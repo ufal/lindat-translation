@@ -147,7 +147,7 @@ class Document(Translatable):
         profile_xml = os.path.join(app_dir, 'okapi_profiles', 'okf_xml@fraus.fprm')
 
         # run Tikal first time to extract text and encoded html tags from the FRAUS XML
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', xml_path, '-fc', profile_xml, '-sl', src, '-to', xml_path])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', xml_path, '-fc', profile_xml, '-sl', src, '-to', xml_path], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         tikal_output = f"{xml_path}.{src}"
         assert os.path.exists(tikal_output)
@@ -163,7 +163,7 @@ class Document(Translatable):
 
         # run Tikal again to extract the text within the html tags
         profile_html = os.path.join(app_dir, 'okapi_profiles', 'okf_html@fraus.fprm')
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', tikal_output+".html.p", '-fc', profile_html, '-sl', src, '-to', tikal_output+".html.p"])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', tikal_output+".html.p", '-fc', profile_html, '-sl', src, '-to', tikal_output+".html.p"], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         tikal_output_2nd = tikal_output+f".html.p.{src}"
         assert os.path.exists(tikal_output_2nd)
@@ -181,7 +181,7 @@ class Document(Translatable):
         
         # reinsert translation into our paragraph tags
         translated_html = tikal_output + f".html.p.translated"
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', tikal_output + f".html.p", '-fc', profile_html, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', translated_html])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', tikal_output + f".html.p", '-fc', profile_html, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', translated_html], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         assert os.path.exists(translated_html)
 
@@ -193,13 +193,13 @@ class Document(Translatable):
         
         # reinsert translation into FRAUS XML using Tikal
         self.translated_path = self.get_translated_path(tgt)
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', xml_path, '-fc', profile_xml, '-sl', src, '-tl', tgt, '-overtrg', '-from', xml_path + ".translated", '-to', self.translated_path])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', xml_path, '-fc', profile_xml, '-sl', src, '-tl', tgt, '-overtrg', '-from', xml_path + ".translated", '-to', self.translated_path], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         assert os.path.exists(self.translated_path)
 
     def _extract_translate_merge_document(self, src, tgt, method, model):
         # run Tikal to extract text for translation
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         tikal_output = f"{self.orig_full_path}.{src}"
         assert os.path.exists(tikal_output)
@@ -217,7 +217,7 @@ class Document(Translatable):
 
         # reinsert translation using Tikal
         self.translated_path = self.get_translated_path(tgt)
-        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path])
+        out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         assert os.path.exists(self.translated_path)
 
@@ -261,7 +261,7 @@ class Document(Translatable):
 
         # initialize translation pipeline
         translator = InnerLindatTranslator(method, src, tgt, model)
-        aligner = LindatAligner(src, tgt)
+        aligner = LindatAligner(src, tgt, show_progress=False)
         tokenizer = RegexTokenizer()
         mt = MarkupTranslator(translator, aligner, tokenizer)
 
