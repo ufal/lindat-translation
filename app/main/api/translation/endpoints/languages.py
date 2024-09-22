@@ -135,6 +135,7 @@ class LanguageTranslate(MyAbstractResource):
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src') or 'en'
         tgt = args.get('tgt') or 'cs'
+        self.set_media_type_representations()
         try:
             translatable.translate_from_to(src, tgt)
             extra_msg = 'src={};tgt={}'.format(src, tgt)

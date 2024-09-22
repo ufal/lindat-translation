@@ -15,14 +15,17 @@ class MyAbstractResource(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._start_time = None
-        self.representations = {
-            'text/plain': MyAbstractResource.to_text,
-            'application/json': output_json,
-        }
 
     @classmethod
     def to_text(cls, data, code, headers):
         return make_response(extract_text(data), code, headers)
+    
+    def set_media_type_representations(self):
+        self.representations = self.representations if self.representations else {}
+        if 'text/plain' not in self.representations:
+            self.representations['text/plain'] = MyAbstractResource.to_text
+        if 'application/json' not in self.representations:
+            self.representations['application/json'] = output_json
 
     def start_time_request(self):
         self._start_time = datetime.datetime.now()
