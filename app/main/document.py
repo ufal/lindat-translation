@@ -136,8 +136,6 @@ class Document(Translatable):
                     line = fun(line)
                     f_out.write(line)
 
-        print("Translating FRAUS XML")
-
         # fix the wrong encoding in the FRAUS XML
         xml_path = self.orig_full_path+".fixed"
         fix_fraus_encoding(self.orig_full_path, xml_path)
@@ -196,6 +194,13 @@ class Document(Translatable):
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', xml_path, '-fc', profile_xml, '-sl', src, '-tl', tgt, '-overtrg', '-from', xml_path + ".translated", '-to', self.translated_path], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         assert os.path.exists(self.translated_path)
+        # clean up the temporary files
+        os.remove(self.orig_full_path)
+        os.remove(xml_path)
+        os.remove(tikal_output)
+        os.remove(tikal_output_2nd)
+        os.remove(translated_text_path)
+        os.remove(translated_html)
 
     def _extract_translate_merge_document(self, src, tgt, method, model):
         # run Tikal to extract text for translation
@@ -220,6 +225,10 @@ class Document(Translatable):
         out = subprocess.run([TIKAL_PATH+'tikal.sh', '-lm', self.orig_full_path, '-sl', src, '-tl', tgt, '-overtrg', '-from', translated_text_path, '-to', self.translated_path], stdout=subprocess.DEVNULL)
         assert out.returncode == 0
         assert os.path.exists(self.translated_path)
+        # clean up the temporary files
+        os.remove(self.orig_full_path)
+        os.remove(tikal_output)
+        os.remove(translated_text_path)
 
     def _extract_translate_merge_pdf(self, src, tgt, method, model=None):
         # open the PDF file
@@ -285,4 +294,5 @@ class Document(Translatable):
         basename = os.path.basename(self.translated_path)
         response = send_from_directory(UPLOAD_FOLDER, basename)
         response.headers.extend(headers)
+        os.remove(self.translated_path)
         return response
