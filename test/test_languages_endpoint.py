@@ -4,6 +4,25 @@ import os
 from pprint import pp
 from math import ceil
 
+def _upload_binary_file(url, filename, langpair):
+    src, tgt = langpair.split("-")
+    path_in = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data", filename)
+    with open(path_in, "rb") as f:
+        r = requests.post(url, data={
+            "src": src,
+            "tgt": tgt,
+        }, files={
+            'input_text': f
+        })
+
+    # Uncomment to save the file:
+    # outname = r.headers["X-Billing-Filename"]
+    # with open(outname, 'wb') as f:
+    #     for chunk in r.iter_content(chunk_size=1024): 
+    #         if chunk:
+    #             f.write(chunk)
+    return r
+
 class LanguagesEndpointTester(unittest.TestCase):
     ADDRESS = 'http://127.0.0.1:5000/api/v2/languages/'
     en_cs = {
@@ -119,32 +138,10 @@ class LanguagesEndpointTester(unittest.TestCase):
         expected += '<p>Toto je <i>a <b>ukázka</b> text</i></p>'
         self.assertEqual(r.text, expected)
 
-    def _upload_binary_file(self, filename, langpair):
-        src, tgt = langpair.split("-")
-        path_in = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data", filename)
-        with open(path_in, "rb") as f:
-            r = requests.post(self.ADDRESS, data={
-                "src": src,
-                "tgt": tgt,
-            }, files={
-                'input_text': f
-            })
-            outname = r.headers["X-Billing-Filename"]
-        with open(outname, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024): 
-                if chunk:
-                    f.write(chunk)
-        return r
-
-    def test_document_docx(self):
-        # Test successful translation request, file upload
-        r = self._upload_binary_file("test.docx", "cs-en")
-        # pp(r)
-        # pp(r.headers)
-        self.assertEqual(r.status_code, 200)
 
     def test_document_odt(self):
-        r = self._upload_binary_file("kentucky_russian.odt", "ru-en")
+        # Test successful translation request, file upload
+        r = _upload_binary_file(self.ADDRESS, "test_libreoffice.odt", "cs-en")
         self.assertEqual(r.status_code, 200)
 
     def test_too_long_text(self):

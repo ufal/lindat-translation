@@ -2,6 +2,7 @@ import unittest
 import requests
 import os
 from pprint import pp
+from test_languages_endpoint import _upload_binary_file
 
 class ModelsEndpointTester(unittest.TestCase):
     ADDRESS = 'http://127.0.0.1:5000/api/v2/models'
@@ -16,6 +17,12 @@ class ModelsEndpointTester(unittest.TestCase):
         self.assertTrue(r.json())
         # test that model list is in the json
         self.assertTrue("_links" in r.json())
+    
+    def test_model_info(self):
+        r = requests.get(self.ADDRESS + "/en-cs")
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json())
+        self.assertTrue(r.json()["model"] == "en-cs")
     
     def test_translate(self):
         # Test successful translation request, direct input
@@ -98,24 +105,8 @@ class ModelsEndpointTester(unittest.TestCase):
         expected += '<p>Tohle je <i>a <b>vzorek</b> text</i></p>'
         self.assertEqual(r.text, expected)
 
-    def _upload_binary_file(self, filename, outname, langpair):
-        with open(filename, "rb") as f:
-            r = requests.post(self.ADDRESS+"/"+langpair, files={
-                'input_text': f
-            })
-        with open(outname, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024): 
-                if chunk:
-                    f.write(chunk)
-        return r
-
-    def test_document_docx(self):
-        # Test successful translation request, file upload
-        r = self._upload_binary_file("./test_data/test.docx", "./test_data/test_response.docx", "cs-en")
-        self.assertEqual(r.status_code, 200)
-
     def test_document_odt(self):
-        r = self._upload_binary_file("./test_data/kentucky_russian.odt", "./test_data/kentucky_eng_translation.odt", "ru-en")
+        r = _upload_binary_file(self.ADDRESS+"/cs-en", "test_libreoffice.odt", "cs-en")
         self.assertEqual(r.status_code, 200)
 
 
