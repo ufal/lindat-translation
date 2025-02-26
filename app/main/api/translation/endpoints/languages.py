@@ -1,13 +1,10 @@
 import logging
 from flask import request, url_for
-from flask.helpers import make_response
 from flask_restx import Namespace, Resource, fields
-from flask_restx.api import output_json
 
 from app.main.api.translation.endpoints.MyAbstractResource import MyAbstractResource
 from app.main.api.translation.parsers import text_input_with_src_tgt  # , file_input
 from app.model_settings import languages
-from app.main.translate import translate_from_to
 
 from app.main.api_examples.language_resource_example import *
 from app.main.api_examples.languages_resource_example import *
@@ -98,10 +95,8 @@ languages_resources = ns.model('LanguagesResource', {
     }), example=languages_resource_embedded_example)
 })
 
-
 @ns.route('/')
-class LanguageCollection(MyAbstractResource):
-
+class LanguageCollection(Resource):
     @ns.marshal_with(languages_resources, skip_none=True)
     def get(self):
         """
@@ -120,9 +115,12 @@ class LanguageCollection(MyAbstractResource):
             },
         }
 
+
+@ns.route('/')
+class LanguageTranslate(MyAbstractResource):
     @ns.produces(['application/json', 'text/plain'])
     @ns.response(code=200, description="Success", model=str)
-    @ns.response(code=415, description="You sent a file but it was not text/plain")
+    @ns.response(code=415, description="Unsupported file type for translation")
     @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
     @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
     @ns.param(**{'name': 'input_text', 'description': 'text to translate',
@@ -130,24 +128,24 @@ class LanguageCollection(MyAbstractResource):
     def post(self):
         """
         Translate input from scr lang to tgt lang.
-        It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading text/plain files)
+        It expects the text in variable called `input_text` and handles both "application/x-www-form-urlencoded" and "multipart/form-data" (for uploading files)
         """
-        text = self.get_text_from_request()
+        self.start_time_request()
+        translatable = self.get_translatable_from_request()
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src') or 'en'
         tgt = args.get('tgt') or 'cs'
-        translation = ''
         self.set_media_type_representations()
         try:
-            translation = translate_from_to(src, tgt, text)
-            return self.create_response(translation,
-                                        'src={};tgt={}'.format(src, tgt))
+            translatable.translate_from_to(src, tgt)
+            extra_msg = 'src={};tgt={}'.format(src, tgt)
+            return translatable.create_response(self.extra_headers(extra_msg))
         except ValueError as e:
             log.exception(e)
             ns.abort(code=404, message='Can\'t translate from {} to {}'.format(src, tgt))
         finally:
             try:
-                self.log_request(src=src, tgt=tgt, text=text, translation=translation)
+                self.log_request(src, tgt, translatable)
             except Exception as ex:
                 log.exception(ex)
 

@@ -1,9 +1,19 @@
+FROM ubuntu:22.04 AS tikal
+RUN sed -i -e 's# http://[^ ]* # http://ftp.cvut.cz/ubuntu/ #' /etc/apt/sources.list
+RUN apt-get update && apt-get install -y curl unzip
+WORKDIR /tmp
+RUN curl -LJO https://okapiframework.org/binaries/main/1.46.0/okapi-apps_gtk2-linux-x86_64_1.46.0.zip && mkdir okapi-apps && cd okapi-apps && unzip /tmp/okapi-apps_gtk2-linux-x86_64_1.46.0.zip
+
 FROM ubuntu:22.04
+
+COPY --from=tikal /tmp/okapi-apps /srv/okapi-apps
 
 # python & pygame dependencies
 RUN sed -i -e 's# http://[^ ]* # http://ftp.cvut.cz/ubuntu/ #' /etc/apt/sources.list
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       python3 python3-pip python3-venv \
+      git \
+      openjdk-21-jre-headless \
       cmake \
       libsdl-image1.2-dev \
       libsdl-mixer1.2-dev \
@@ -24,7 +34,7 @@ COPY requirements_freeze.txt requirements.txt
 ENV VIRTUAL_ENV=/srv/transformer_frontend/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN pip install --upgrade pip==21 wheel==0.38.0 setuptools==65.5.1 && \
+RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip==21 wheel==0.38.0 setuptools==65.5.1 && \
     pip install -r requirements.txt
 COPY . .
 
