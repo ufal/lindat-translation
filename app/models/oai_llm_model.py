@@ -70,7 +70,7 @@ class OaiLLMModel(models.Model):
                 {"role": "user", "content": prompt},
             ], temperature=0.05
         )
-            #TODO: FIX THIS REPLACE!!!!
+            #TODO: maybe we should handle this replace better?
             res.append(completion.choices[0].message.content.replace('\n', ' '))
 
         print("Result: ", '\n'.join(res), flush=True, file=sys.stderr)
