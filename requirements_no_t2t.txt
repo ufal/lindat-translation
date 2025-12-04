@@ -8,7 +8,6 @@ WTForms
 sentence-splitter
 gunicorn
 eventlet
-tensor2tensor
 numpy
 tensorflow-serving-api
 iso639
