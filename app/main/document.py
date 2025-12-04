@@ -210,7 +210,7 @@ class Document(Translatable):
             tikal_command.extend(["-fc",TIKAL_PATH+"okf_xml@all_inline"])
         elif self.orig_full_path.endswith(".innopxml"):
             tikal_command.extend(["-fc",TIKAL_PATH+"okf_xml@all_inline_not_paragraphs"])
-        out = subprocess.run(tikal_command, stdout=subprocess.DEVNULL)
+        out = subprocess.run(tikal_command, stdout=sys.stderr, stderr=sys.stderr)
         assert out.returncode == 0
         tikal_output = f"{self.orig_full_path}.{src}"
         assert os.path.exists(tikal_output)

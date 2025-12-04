@@ -33,4 +33,9 @@ UPLOAD_FOLDER = '/tmp/translator_uploads'
 # inxml, innopxml are our custom XML formats for ČTK that treasts all tags/all tags except <p> as inline tags
 ALLOWED_EXTENSIONS = {'inxml', 'innopxml', 'txt', 'xml', 'html', 'htm', 'docx', 'odt', 'pptx', 'odp', 'xlsx', 'ods', 'pdf', 'srt', 'md', 'xlf', 'json', 'yaml'}
 
-TIKAL_PATH='/lnet/work/people/jon/okapi-apps/'
+TIKAL_PATH = os.path.join('okapi-apps/')
+
+# Enable/disable tensor2tensor (T2T) model support
+# Set to False to disable T2T models even if tensor2tensor is installed
+# This can be useful if you want to run only Marian or LLM models
+ENABLE_T2T_MODELS = os.environ.get('ENABLE_T2T_MODELS', 'true').lower() in ('true', '1', 'yes', 'on')

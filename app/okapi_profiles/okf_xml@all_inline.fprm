@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<its:rules xmlns:okp="okapi-framework:xmlfilter-options"  xmlns:its="http://www.w3.org/2005/11/its" version="1.0"  xmlns:itsx="http://www.w3.org/2008/12/its-extensions">
+	<its:withinTextRule selector="//mytestdoc/descendant::*" withinText="yes"/>
+	<its:translateRule selector="//mytestdoc/descendant::*" translate="yes" itsx:whiteSpaces="preserve"/>
+ <okp:options omitXMLDeclaration="yes"/>
+
+</its:rules>

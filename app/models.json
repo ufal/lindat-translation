@@ -168,7 +168,7 @@
     "model_framework": "oai_llm",
     "batch_size": 7,
         "token": "token-abc123",
-    "server": "http://dll-3gpu1:8000"
+    "server": "http://localhost:9999"
   },
      {
     "source": ["bg", "hr", "cs", "da", "nl", "en", "et", "fi", "fr", "de", "el", "hu", "ga", "it", "lv", "lt", "mt", "pl", "pt", "ro", "sk", "sl", "es", "sv", "ar", "ca", "zh", "gl", "hi", "ja", "ko", "no", "ru", "tr", "uk"]
@@ -244,24 +244,9 @@
     "batch_size": 7,
         "token": "token-abc123",
     "server": "http://dll-3gpu2:8000"
-  },
-
-
-
-  {
-      "source": ["en","cs","sk","hu","vi","uk","pt","es","fr","de","nl","it","ko","zh","ru"],
-    "target": ["en","cs","sk","hu","vi","uk","pt","es","fr","de","nl","it","ko","zh","ru"],
-          "weight": 0.1,
-    "domain": "",
-      "provider": "openai",
-    "model": "gpt-4o-mini",
-    "display": "LLM test",
-      "ignore_tags": false,
-    "model_framework": "oai_llm",
-    "batch_size": 7,
-    "token":"",
-    "server": "https://api.openai.com/"
   }
+
+
 ]
 
 

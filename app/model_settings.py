@@ -21,7 +21,11 @@ class Models(object):
                 log.error("Error in config source and target must be lists")
                 import sys
                 sys.exit(1)
-            model = Model.create(cfg)
+            try:
+                model = Model.create(cfg)
+            except ImportError as e:
+                log.warning(f"Skipping model {cfg.get('model', 'unknown')}: {e}")
+                continue
             if model.model in self._models:
                 log.error("Model names should be unique")
                 import sys

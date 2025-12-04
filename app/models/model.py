@@ -2,15 +2,47 @@ import os
 import logging
 from flask import current_app
 from iso639 import to_name
-from tensor2tensor.utils import usr_dir, hparam
 
 from app.dict_utils import get_or_create
 import app.models as models
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
-usr_dir.import_usr_dir('t2t_usr_dir')
-hparams = hparam.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
+
+# Try to import tensor2tensor - make it optional
+# Also check if T2T models are enabled in settings
+T2T_AVAILABLE = False
+hparams = None
+def _check_t2t_availability():
+    """Check if tensor2tensor is available and enabled"""
+    global T2T_AVAILABLE, hparams
+    
+    # Check if T2T is enabled in settings
+    try:
+        from app import settings
+        enable_t2t = getattr(settings, 'ENABLE_T2T_MODELS', True)
+    except (ImportError, AttributeError):
+        # Settings might not be loaded yet, default to True
+        enable_t2t = True
+    
+    if not enable_t2t:
+        log.info("tensor2tensor support is disabled in settings")
+        return False
+    
+    # Try to import tensor2tensor
+    try:
+        from tensor2tensor.utils import usr_dir, hparam
+        usr_dir.import_usr_dir('t2t_usr_dir')
+        hparams = hparam.HParams(data_dir=os.path.expanduser('t2t_data_dir'))
+        T2T_AVAILABLE = True
+        log.info("tensor2tensor is available and enabled")
+        return True
+    except ImportError:
+        log.warning("tensor2tensor is not available - T2T models will not be supported")
+        return False
+
+# Initialize T2T availability
+_check_t2t_availability()
 
 
 class Model(object):
@@ -21,11 +53,18 @@ class Model(object):
             if cfg['model_framework'] == 'marian':
                 return models.MarianModel(cfg)
             elif cfg['model_framework'] == 'tensorflow_doclevel':
+                if not T2T_AVAILABLE:
+                    raise ImportError("tensor2tensor is not available or disabled but tensorflow_doclevel model was requested")
                 return models.T2TDocModel(cfg)
             elif cfg['model_framework'] == 'tensorflow_with_scores':
+                if not T2T_AVAILABLE:
+                    raise ImportError("tensor2tensor is not available or disabled but tensorflow_with_scores model was requested")
                 return models.T2TModelWithScores(cfg)
             elif cfg['model_framework'] == 'oai_llm':
                 return models.OaiLLMModel(cfg)
+        # Default to T2T model only if T2T is available
+        if not T2T_AVAILABLE:
+            raise ImportError("tensor2tensor is not available or disabled and no model_framework specified")
         return models.T2TModel(cfg)
 
     @staticmethod
