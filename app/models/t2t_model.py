@@ -6,8 +6,8 @@ from flask import current_app, session
 
 # These imports should only happen if tensor2tensor is available
 try:
-from tensor2tensor.serving import serving_utils
-from tensor2tensor.utils import registry
+    from tensor2tensor.serving import serving_utils
+    from tensor2tensor.utils import registry
 except ImportError:
     raise ImportError("tensor2tensor is required for T2TModel but is not installed")
 
