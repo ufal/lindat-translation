@@ -4,6 +4,7 @@ Flask-WTF
 Flask-Script
 Flask-Bootstrap
 flask-restx
+flask-cors
 WTForms
 sentence-splitter
 gunicorn

@@ -6,7 +6,8 @@ RESTX_MASK_SWAGGER = False
 
 # These should match with the appropriate constants in the frontend
 # Maximum uploaded file size length is checked by Flask: https://flask.palletsprojects.com/en/2.3.x/patterns/fileuploads/#improving-uploads
-MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+# Increased to 50MB to support larger document files (PDFs, DOCX, etc.)
+MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 # Maximum text length inside the uploaded file
 MAX_TEXT_LENGTH = 100 * 1024
 

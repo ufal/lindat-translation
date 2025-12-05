@@ -1,5 +1,6 @@
 import logging
 from flask import Flask, Blueprint
+from flask_cors import CORS
 from . import settings
 from .extensions import bootstrap
 from .main.views import bp as main
@@ -48,6 +49,18 @@ def create_app():
     app.config.from_object(settings)
     app.config.from_envvar('LOCAL_SETTINGS', silent=True)
     logging.getLogger().error('DEFAULT_SERVER=' + app.config.get('DEFAULT_SERVER'))
+    
+    # Configure CORS to allow requests from all origins
+    # WARNING: This allows all origins. For production, you should restrict this to specific domains.
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Accept"],
+            "supports_credentials": False
+        }
+    })
+    
     bootstrap.init_app(app)
     app.register_blueprint(main)
 
