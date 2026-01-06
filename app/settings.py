@@ -9,7 +9,7 @@ RESTX_MASK_SWAGGER = False
 # Increased to 50MB to support larger document files (PDFs, DOCX, etc.)
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 # Maximum text length inside the uploaded file
-MAX_TEXT_LENGTH = 100 * 1024
+MAX_TEXT_LENGTH = 10000 * 1024
 
 BATCH_SIZE = 20 #1000
 MARIAN_BATCH_SIZE = 16

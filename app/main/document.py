@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import re
+import logging
 from typing import List, Tuple
 from unicodedata import normalize
 
@@ -24,6 +25,44 @@ from document_translation.pdf_tools.pdfeditor import PdfEditor
 
 import xml.etree.ElementTree as ET
 from html import unescape
+
+def fix_html_entities_for_xml(content):
+    """
+    Convert HTML entities to XML-compatible numeric entities.
+    This fixes issues where HTML entities like &nbsp; are not valid in XML.
+    """
+    # Common HTML entities that need to be converted to XML numeric entities
+    html_entity_map = {
+        '&nbsp;': '&#160;',   # Non-breaking space
+        '&ensp;': '&#8194;',  # En space
+        '&emsp;': '&#8195;',  # Em space
+        '&thinsp;': '&#8201;', # Thin space
+        '&zwnj;': '&#8204;',  # Zero width non-joiner
+        '&zwj;': '&#8205;',   # Zero width joiner
+        '&lrm;': '&#8206;',   # Left-to-right mark
+        '&rlm;': '&#8207;',   # Right-to-left mark
+        '&ndash;': '&#8211;', # En dash
+        '&mdash;': '&#8212;', # Em dash
+        '&lsquo;': '&#8216;', # Left single quotation mark
+        '&rsquo;': '&#8217;', # Right single quotation mark
+        '&sbquo;': '&#8218;', # Single low-9 quotation mark
+        '&ldquo;': '&#8220;', # Left double quotation mark
+        '&rdquo;': '&#8221;', # Right double quotation mark
+        '&bdquo;': '&#8222;', # Double low-9 quotation mark
+        '&dagger;': '&#8224;', # Dagger
+        '&Dagger;': '&#8225;', # Double dagger
+        '&permil;': '&#8240;', # Per mille sign
+        '&lsaquo;': '&#8249;', # Single left-pointing angle quotation mark
+        '&rsaquo;': '&#8250;', # Single right-pointing angle quotation mark
+        '&euro;': '&#8364;',   # Euro sign
+        '&trade;': '&#8482;',  # Trade mark sign
+    }
+    
+    # Replace HTML entities with XML numeric entities
+    for html_entity, xml_entity in html_entity_map.items():
+        content = content.replace(html_entity, xml_entity)
+    
+    return content
 
 class InnerLindatTranslator(Translator):
     def __init__(self, method, src, tgt, model=None, custom_prompt=None, terms=None, split=True):
@@ -52,16 +91,33 @@ class InnerLindatTranslator(Translator):
         else:
             src_sentences, tgt_sentences = translate_from_to(self.src, self.tgt, input_text, return_source_sentences=True, custom_prompt=self.custom_prompt, split=split)
 
+        # Debug: Print what we got from translation (will show in stderr)
+        print(f"[DEBUG InnerLindatTranslator] Translation returned: src_count={len(src_sentences) if src_sentences else 0}, tgt_count={len(tgt_sentences) if tgt_sentences else 0}", file=sys.stderr, flush=True)
+        if src_sentences and tgt_sentences:
+            print(f"[DEBUG InnerLindatTranslator] First src (first 150 chars): {src_sentences[0][:150] if len(src_sentences[0]) > 150 else src_sentences[0]}", file=sys.stderr, flush=True)
+            print(f"[DEBUG InnerLindatTranslator] First tgt (first 150 chars): {tgt_sentences[0][:150] if len(tgt_sentences[0]) > 150 else tgt_sentences[0]}", file=sys.stderr, flush=True)
+            if len(src_sentences) != len(tgt_sentences):
+                print(f"[DEBUG InnerLindatTranslator] CRITICAL: Length mismatch before post-processing: src={len(src_sentences)}, tgt={len(tgt_sentences)}", file=sys.stderr, flush=True)
+                print(f"[DEBUG InnerLindatTranslator] src lengths: {[len(s) for s in src_sentences[:10]]}", file=sys.stderr, flush=True)
+                print(f"[DEBUG InnerLindatTranslator] tgt lengths: {[len(s) for s in tgt_sentences[:10]]}", file=sys.stderr, flush=True)
+
         # post process the translation
         if tgt_sentences:
+            # Check for length mismatch that could cause alignment issues
+            if len(src_sentences) != len(tgt_sentences):
+                print(f"[DEBUG InnerLindatTranslator] Length mismatch: src={len(src_sentences)}, tgt={len(tgt_sentences)}", file=sys.stderr, flush=True)
+                print(f"[DEBUG InnerLindatTranslator] src lengths: {[len(s) for s in src_sentences[:5]]}...", file=sys.stderr, flush=True)
+                print(f"[DEBUG InnerLindatTranslator] tgt lengths: {[len(s) for s in tgt_sentences[:5]]}...", file=sys.stderr, flush=True)
+            
             # if the line was empty or whitespace-only, then discard any potential translation
             new_tgt_sentences: List[str] = []
-            for src, tgt in zip(src_sentences, tgt_sentences):
+            for i, (src, tgt) in enumerate(zip(src_sentences, tgt_sentences)):
                 if re.match(r"^\s+$", src):
                     new_tgt_sentences.append(src)
                 else:
                     new_tgt_sentences.append(tgt)
             tgt_sentences = new_tgt_sentences
+            print(f"[DEBUG InnerLindatTranslator] After post-processing: tgt_count={len(tgt_sentences)}", file=sys.stderr, flush=True)
             # reinsert prefix newlines
             src_sentences[0] = "\n" * num_prefix_newlines + src_sentences[0]
             tgt_sentences[0] = "\n" * num_prefix_newlines + tgt_sentences[0]
@@ -71,6 +127,15 @@ class InnerLindatTranslator(Translator):
             # add spaces after sentence ends
             src_sentences = [src_sentence + " " if not src_sentence.endswith("\n") else src_sentence for src_sentence in src_sentences]
             tgt_sentences = [tgt_sentence + " " if not tgt_sentence.endswith("\n") else tgt_sentence for tgt_sentence in tgt_sentences]
+
+        # Debug: Print what we're returning (will show in stderr)
+        print(f"[DEBUG InnerLindatTranslator] Returning: src_count={len(src_sentences) if src_sentences else 0}, tgt_count={len(tgt_sentences) if tgt_sentences else 0}", file=sys.stderr, flush=True)
+        if src_sentences and tgt_sentences and len(src_sentences) > 0 and len(tgt_sentences) > 0:
+            print(f"[DEBUG InnerLindatTranslator] Returning first src (first 150 chars): {src_sentences[0][:150] if len(src_sentences[0]) > 150 else src_sentences[0]}", file=sys.stderr, flush=True)
+            print(f"[DEBUG InnerLindatTranslator] Returning first tgt (first 150 chars): {tgt_sentences[0][:150] if len(tgt_sentences[0]) > 150 else tgt_sentences[0]}", file=sys.stderr, flush=True)
+            # Check if they're the same (which would cause the alignment error)
+            if src_sentences[0] == tgt_sentences[0]:
+                print(f"[DEBUG InnerLindatTranslator] WARNING: First src and tgt sentences are IDENTICAL!", file=sys.stderr, flush=True)
 
         return src_sentences, tgt_sentences
 
@@ -204,6 +269,14 @@ class Document(Translatable):
         os.remove(translated_html)
 
     def _extract_translate_merge_document(self, src, tgt, method, model, custom_prompt=None, terms=None, split=True):
+        # Fix HTML entities in XML files before processing
+        if self.orig_full_path.endswith((".inxml", ".innopxml")):
+            with open(self.orig_full_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            content = fix_html_entities_for_xml(content)
+            with open(self.orig_full_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+        
         # run Tikal to extract text for translation
         tikal_command=[TIKAL_PATH+'tikal.sh', '-xm', self.orig_full_path, '-sl', src, '-to', self.orig_full_path]
         if self.orig_full_path.endswith(".inxml"):
@@ -221,13 +294,6 @@ class Document(Translatable):
         # translate the text
         self._translate(src, tgt, method, model, custom_prompt=custom_prompt, terms=terms, split=split)
         translated_text_path = f"{self.orig_full_path}.{tgt}"
-
-        # TODO: Can this ever work?
-        # pattern = r"<ln id=(\d+)>(.*?)</ln>"
-        # matches = re.findall(pattern, self.translation, flags=re.DOTALL)
-        # sorted_matches = sorted(matches, key=lambda x: int(x[0]))
-        # restored_lines = [content for (_id, content) in sorted_matches]
-        #self.translation= "\n".join(restored_lines)
 
         with open(translated_text_path, 'w') as f:
             f.write(self.translation)#.replace(" NEWLINE ", "\n"))
@@ -247,13 +313,14 @@ class Document(Translatable):
         os.remove(tikal_output)
         os.remove(translated_text_path)
 
-    def _extract_translate_merge_pdf(self, src, tgt, method, model=None, custom_prompt=None, terms=None):
+    def _extract_translate_merge_pdf(self, src, tgt, method, model=None, custom_prompt=None, terms=None, split=True):
         # open the PDF file
         self.pdf_editor = PdfEditor(self.orig_full_path)
 
         # extract the text from the PDF
         lines = self.pdf_editor.extract_text()
-
+        print("lines", lines)
+        print("len(lines)", len(lines))
         # join the extracted lines into a single string, separated by line breaks
         input_text = "<lb />".join(lines)
         assert "\n" not in input_text
@@ -269,6 +336,8 @@ class Document(Translatable):
 
         # merge the translated text into the PDF
         self.translated_path = self.get_translated_path(tgt)
+        print("translated_lines", translated_lines)
+        print("len(translated_lines)", len(translated_lines))
         self.pdf_editor.merge_text(translated_lines, self.translated_path)
 
     def _translate(self, src, tgt, method, model=None, custom_prompt=None, terms=None, split=True):
@@ -285,22 +354,26 @@ class Document(Translatable):
         if self._input_nfc_len >= MAX_TEXT_LENGTH and not ignore_size_limit:
             api.abort(code=413, message='The total text length in the document exceeds the translation limit.')
 
+        # Check for problematic pattern: numbers with commas inside inline tags
+        # This pattern can cause alignment issues because commas may be treated as sentence boundaries
+        problematic_pattern = re.search(r'<[^>]+>[\d\s]*\d+,\d+[\d\s]*</[^>]+>', self.text)
+        if problematic_pattern:
+            print(f"[DEBUG] Found potentially problematic pattern (number with comma in tag): {problematic_pattern.group()}", file=sys.stderr, flush=True)
+            print(f"[DEBUG] This may cause alignment issues if the comma is treated as a sentence boundary", file=sys.stderr, flush=True)
+
         # initialize translation pipeline
         translator = InnerLindatTranslator(method, src, tgt, model, custom_prompt=custom_prompt, terms=terms, split=split)
         aligner = LindatAligner(src, tgt, show_progress=False)
         tokenizer = RegexTokenizer()
         mt = MarkupTranslator(translator, aligner, tokenizer)
 
-        # translate the text (possibly with markup)
-
-        # TODO: Can this ever work?
-        wrapped_lines = []
-       # for i, line in enumerate(self.text.split('\n'), start=1):
-        #    wrapped_lines.append(f"<ln id={i}>{line}</ln>")
-
-        # Join the lines back together (with newlines, for example)
-       # self.text = "".join(wrapped_lines)
+        
         self.translation = mt.translate(self.text)#.replace("\n", "<lb />"))
+
+        # Unescape HTML/XML entities if requested (default: True)
+        unescape_entities = args.get('unescapeEntities', True)
+        if unescape_entities:
+            self.translation = unescape(self.translation)
 
         # count words in translation
         self._output_word_count = len(self.translation.split())
@@ -319,5 +392,6 @@ class Document(Translatable):
         basename = os.path.basename(self.translated_path)
         response = send_from_directory(UPLOAD_FOLDER, basename)
         response.headers.extend(headers)
-        os.remove(self.translated_path)
+        # Do not remove the translated file - keep it for later use
+        # os.remove(self.translated_path)
         return response

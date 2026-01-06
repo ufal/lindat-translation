@@ -48,6 +48,16 @@ def create_app():
     app.wsgi_app = ReverseProxied(app.wsgi_app)
     app.config.from_object(settings)
     app.config.from_envvar('LOCAL_SETTINGS', silent=True)
+    
+    # Configure global logging level
+    # Options: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
+    logging.basicConfig(
+        level=logging.DEBUG,  # Change this to logging.DEBUG for more verbose output
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    # Set root logger level
+    logging.getLogger().setLevel(logging.DEBUG)  # Change to logging.DEBUG for more verbose output
+    
     logging.getLogger().error('DEFAULT_SERVER=' + app.config.get('DEFAULT_SERVER'))
     
     # Configure CORS to allow requests from all origins

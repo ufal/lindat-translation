@@ -20,3 +20,5 @@ text_input_with_src_tgt.add_argument('inputType', type=str)
 text_input_with_src_tgt.add_argument('logInput', type=inputs.boolean)
 text_input_with_src_tgt.add_argument('ignoreSizeLimit', type=inputs.boolean)
 text_input_with_src_tgt.add_argument('fraus', type=inputs.boolean)
+text_input_with_src_tgt.add_argument('unescapeEntities', type=inputs.boolean, default=True,
+                                     help='Unescape HTML/XML entities like &quot; to " (default: True)')
