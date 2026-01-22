@@ -99,7 +99,7 @@ rpds-py==0.17.1
 rsa==4.9
 scipy==1.12.0
 sentence-splitter==1.4
-sentencepiece==0.1.99
+sentencepiece==0.2.1
 six==1.16.0
 sympy==1.12
 tensor2tensor==1.15.7
