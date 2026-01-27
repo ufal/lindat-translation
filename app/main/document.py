@@ -26,6 +26,71 @@ from document_translation.pdf_tools.pdfeditor import PdfEditor
 import xml.etree.ElementTree as ET
 from html import unescape
 
+# List of HTML void elements (non-pair tags) that should be converted to self-closing XML format
+HTML_VOID_ELEMENTS = [
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+    'link', 'meta', 'param', 'source', 'track', 'wbr'
+]
+
+def convert_non_pair_tags_to_xml(content):
+    """
+    Convert non-pair HTML tags (like <br>) to valid XML self-closing format (<br/>).
+    This ensures the XML is valid for processing with Okapi/Tikal.
+    """
+    for tag_name in HTML_VOID_ELEMENTS:
+        # Match <tag>, <tag />, <tag/>, <tag ...>, <tag ... />, <tag .../>
+        # Convert all variants to <tag/> or <tag .../>
+        # Pattern: <tag_name followed by optional attributes and optional spaces before closing
+        pattern = re.compile(
+            r'<' + re.escape(tag_name) + r'(\s[^>]*?)?\s*/?>',
+            re.IGNORECASE
+        )
+        
+        def replace_tag(match):
+            tag_content = match.group(0)
+            # Extract attributes if any
+            attr_match = re.match(r'<' + re.escape(tag_name) + r'(\s+[^>]*?)?', tag_content, re.IGNORECASE)
+            if attr_match:
+                attrs = attr_match.group(1) or ''
+                # Remove any trailing spaces or slashes
+                attrs = attrs.rstrip(' /')
+                return f'<{tag_name}{attrs}/>'
+            else:
+                return f'<{tag_name}/>'
+        
+        content = pattern.sub(replace_tag, content)
+    
+    return content
+
+def restore_non_pair_tags_from_xml(content):
+    """
+    Restore non-pair HTML tags from XML self-closing format (<br/>) back to HTML format (<br>).
+    This restores the original HTML format after Okapi/Tikal processing.
+    """
+    for tag_name in HTML_VOID_ELEMENTS:
+        # Match <tag/> or <tag .../> and convert to <tag> or <tag ...>
+        # Pattern: <tag_name followed by optional attributes and />
+        pattern = re.compile(
+            r'<' + re.escape(tag_name) + r'(\s[^>]*?)?\s*/>',
+            re.IGNORECASE
+        )
+        
+        def replace_tag(match):
+            tag_content = match.group(0)
+            # Extract attributes if any
+            attr_match = re.match(r'<' + re.escape(tag_name) + r'(\s+[^>]*?)?', tag_content, re.IGNORECASE)
+            if attr_match:
+                attrs = attr_match.group(1) or ''
+                # Remove trailing slash and space
+                attrs = attrs.rstrip(' /')
+                return f'<{tag_name}{attrs}>'
+            else:
+                return f'<{tag_name}>'
+        
+        content = pattern.sub(replace_tag, content)
+    
+    return content
+
 def fix_html_entities_for_xml(content):
     """
     Convert HTML entities to XML-compatible numeric entities.
@@ -269,11 +334,12 @@ class Document(Translatable):
         os.remove(translated_html)
 
     def _extract_translate_merge_document(self, src, tgt, method, model, custom_prompt=None, terms=None, split=True):
-        # Fix HTML entities in XML files before processing
+        # Fix HTML entities and convert non-pair tags to valid XML format before processing
         if self.orig_full_path.endswith((".inxml", ".innopxml")):
             with open(self.orig_full_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             content = fix_html_entities_for_xml(content)
+            content = convert_non_pair_tags_to_xml(content)
             with open(self.orig_full_path, 'w', encoding='utf-8') as f:
                 f.write(content)
         
@@ -308,6 +374,15 @@ class Document(Translatable):
         out = subprocess.run(tikal_command, stdout=sys.stderr)
         assert out.returncode == 0
         assert os.path.exists(self.translated_path)
+        
+        # Restore non-pair HTML tags from XML format back to original HTML format
+        if self.translated_path.endswith((".inxml", ".innopxml")):
+            with open(self.translated_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            content = restore_non_pair_tags_from_xml(content)
+            with open(self.translated_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+        
         # clean up the temporary files
         os.remove(self.orig_full_path)
         os.remove(tikal_output)
