@@ -26,6 +26,37 @@ from document_translation.pdf_tools.pdfeditor import PdfEditor
 import xml.etree.ElementTree as ET
 from html import unescape
 
+# HTML void elements that must be self-closing in XML (e.g. <br/> not <br>)
+HTML_VOID_ELEMENTS = [
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+    'link', 'meta', 'param', 'source', 'track', 'wbr'
+]
+
+
+def convert_non_pair_tags_to_xml(content):
+    """
+    Convert non-pair HTML tags (like <br>) to valid XML self-closing format (<br/>).
+    This ensures the XML is valid for processing with Okapi/Tikal.
+    """
+    for tag_name in HTML_VOID_ELEMENTS:
+        # Match <tag>, <tag />, <tag/>, <tag ...>, <tag ... />, <tag .../>
+        pattern = re.compile(
+            r'<' + re.escape(tag_name) + r'(\s[^>]*?)?\s*/?>',
+            re.IGNORECASE
+        )
+
+        def replace_tag(match, t=tag_name):
+            tag_content = match.group(0)
+            attr_match = re.match(r'<' + re.escape(t) + r'(\s+[^>]*?)?', tag_content, re.IGNORECASE)
+            if attr_match:
+                attrs = (attr_match.group(1) or '').rstrip(' /')
+                return f'<{t}{attrs}/>'
+            return f'<{t}/>'
+
+        content = pattern.sub(replace_tag, content)
+    return content
+
+
 def normalize_xml_quotes_in_text(file_path):
     """
     Re-serialize XML so that double quotes in text content are literal "
@@ -133,7 +164,7 @@ class InnerLindatTranslator(Translator):
                 else:
                     new_tgt_sentences.append(tgt)
             tgt_sentences = new_tgt_sentences
-            print(f"[DEBUG InnerLindatTranslator] After post-processing: tgt_count={len(tgt_sentences)}", file=sys.stderr, flush=True)
+            #print(f"[DEBUG InnerLindatTranslator] After post-processing: tgt_count={len(tgt_sentences)}", file=sys.stderr, flush=True)
             # reinsert prefix newlines
             src_sentences[0] = "\n" * num_prefix_newlines + src_sentences[0]
             tgt_sentences[0] = "\n" * num_prefix_newlines + tgt_sentences[0]
@@ -145,13 +176,13 @@ class InnerLindatTranslator(Translator):
             tgt_sentences = [tgt_sentence + " " if not tgt_sentence.endswith("\n") else tgt_sentence for tgt_sentence in tgt_sentences]
 
         # Debug: Print what we're returning (will show in stderr)
-        print(f"[DEBUG InnerLindatTranslator] Returning: src_count={len(src_sentences) if src_sentences else 0}, tgt_count={len(tgt_sentences) if tgt_sentences else 0}", file=sys.stderr, flush=True)
-        if src_sentences and tgt_sentences and len(src_sentences) > 0 and len(tgt_sentences) > 0:
-            print(f"[DEBUG InnerLindatTranslator] Returning first src (first 150 chars): {src_sentences[0][:150] if len(src_sentences[0]) > 150 else src_sentences[0]}", file=sys.stderr, flush=True)
-            print(f"[DEBUG InnerLindatTranslator] Returning first tgt (first 150 chars): {tgt_sentences[0][:150] if len(tgt_sentences[0]) > 150 else tgt_sentences[0]}", file=sys.stderr, flush=True)
+        #print(f"[DEBUG InnerLindatTranslator] Returning: src_count={len(src_sentences) if src_sentences else 0}, tgt_count={len(tgt_sentences) if tgt_sentences else 0}", file=sys.stderr, flush=True)
+        #if src_sentences and tgt_sentences and len(src_sentences) > 0 and len(tgt_sentences) > 0:
+         #   print(f"[DEBUG InnerLindatTranslator] Returning first src (first 150 chars): {src_sentences[0][:150] if len(src_sentences[0]) > 150 else src_sentences[0]}", file=sys.stderr, flush=True)
+          #  print(f"[DEBUG InnerLindatTranslator] Returning first tgt (first 150 chars): {tgt_sentences[0][:150] if len(tgt_sentences[0]) > 150 else tgt_sentences[0]}", file=sys.stderr, flush=True)
             # Check if they're the same (which would cause the alignment error)
-            if src_sentences[0] == tgt_sentences[0]:
-                print(f"[DEBUG InnerLindatTranslator] WARNING: First src and tgt sentences are IDENTICAL!", file=sys.stderr, flush=True)
+           # if src_sentences[0] == tgt_sentences[0]:
+            #    print(f"[DEBUG InnerLindatTranslator] WARNING: First src and tgt sentences are IDENTICAL!", file=sys.stderr, flush=True)
 
         return src_sentences, tgt_sentences
 
@@ -285,11 +316,12 @@ class Document(Translatable):
         os.remove(translated_html)
 
     def _extract_translate_merge_document(self, src, tgt, method, model, custom_prompt=None, terms=None, split=True):
-        # Fix HTML entities in XML files before processing
+        # Fix HTML entities and convert non-pair tags to valid XML before processing
         if self.orig_full_path.endswith((".inxml", ".innopxml")):
             with open(self.orig_full_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             content = fix_html_entities_for_xml(content)
+            content = convert_non_pair_tags_to_xml(content)
             with open(self.orig_full_path, 'w', encoding='utf-8') as f:
                 f.write(content)
         
