@@ -36,7 +36,6 @@ def normalize_xml_quotes_in_text(file_path):
         tree = ET.parse(file_path)
         root = tree.getroot()
         with open(file_path, 'wb') as f:
-            f.write(b'<?xml version="1.0" encoding="utf-8"?>\n')
             f.write(ET.tostring(root, encoding='utf-8', method='xml', default_namespace=None))
     except ET.ParseError:
         # If not valid XML or parse fails, leave file unchanged
