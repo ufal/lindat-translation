@@ -14,7 +14,7 @@ class OaiLLMModel(models.Model):
     def __init__(self, cfg):
         super().__init__(cfg)
         self.provider=cfg['provider']
-        default_prompt = "Translate the following text from {src} to {tgt}, including correctly transferring the markup from the source sentence into the translation. Do not add any explanations, make sure to only output the translated text, including markup like HTML tags, transferred from the source and nothing else. Source text: {sentence} "
+        default_prompt = "Translate the following text from {src} to {tgt}, including correctly transferring the markup from the source sentence into the translation. Do not add any explanations, make sure to only output the translated text, including markup like HTML tags, transferred from the source and nothing else. Do not exaplain any abrreviations or terms, only print out the translation, or, for untranslatable content, print out the source. Source text: {sentence} "
         default_prompt_terms= "Translate the following text from {src} to {tgt}, including correctly transferring the markup from the source sentence into the translation. Do not add any explanations, make sure to only output one single line with the translated sentence and nothing else.  Use the following terminology database to translate specific terms: Source term -> Target term \n {terms} \n Source sentence: {sentence} "
         self.token=cfg.get('token', None)
         self.prompt=cfg.get('prompt', default_prompt)
@@ -68,7 +68,7 @@ class OaiLLMModel(models.Model):
             model=model,
             messages=[
                 {"role": "user", "content": prompt},
-            ], temperature=0.05
+            ], temperature=0.01
         )
             #TODO: maybe we should handle this replace better?
             res.append(completion.choices[0].message.content.replace('\n', ' '))
