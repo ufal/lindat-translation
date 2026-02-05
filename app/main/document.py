@@ -26,6 +26,23 @@ from document_translation.pdf_tools.pdfeditor import PdfEditor
 import xml.etree.ElementTree as ET
 from html import unescape
 
+def normalize_xml_quotes_in_text(file_path):
+    """
+    Re-serialize XML so that double quotes in text content are literal "
+    instead of &quot;. Tikal merge outputs &quot; in text; ElementTree
+    keeps " in text and only escapes quotes in attributes.
+    """
+    try:
+        tree = ET.parse(file_path)
+        root = tree.getroot()
+        with open(file_path, 'wb') as f:
+            f.write(b'<?xml version="1.0" encoding="utf-8"?>\n')
+            f.write(ET.tostring(root, encoding='utf-8', method='xml', default_namespace=None))
+    except ET.ParseError:
+        # If not valid XML or parse fails, leave file unchanged
+        pass
+
+
 def fix_html_entities_for_xml(content):
     """
     Convert HTML entities to XML-compatible numeric entities.
@@ -308,6 +325,9 @@ class Document(Translatable):
         out = subprocess.run(tikal_command, stdout=sys.stderr)
         assert out.returncode == 0
         assert os.path.exists(self.translated_path)
+        # Tikal serializes quotes in text as &quot;; re-serialize so text has literal "
+        if self.orig_full_path.endswith((".inxml", ".innopxml")):
+            normalize_xml_quotes_in_text(self.translated_path)
         # clean up the temporary files
         os.remove(self.orig_full_path)
         os.remove(tikal_output)
