@@ -1,4 +1,5 @@
 import sentencepiece as spm
+from concurrent.futures import ThreadPoolExecutor
 from flask import current_app
 from websocket import create_connection
 
@@ -30,6 +31,22 @@ class OaiLLMModel(models.Model):
         else:
             return 1
 
+    def _translate_one_sentence(self, i, sentence, sent_terms, model_name, src, tgt, custom_prompt):
+        """Translate a single sentence via the LLM backend. Used by concurrent workers."""
+        if custom_prompt and self.allow_custom_prompt:
+            prompt = custom_prompt.format(src=iso639.to_name(src), tgt=iso639.to_name(tgt), sentence=sentence, terms=sent_terms or "")
+        else:
+            if sent_terms:
+                prompt = self.prompt_terms.format(src=iso639.to_name(src), tgt=iso639.to_name(tgt), sentence=sentence, terms=sent_terms)
+            else:
+                prompt = self.prompt.format(src=iso639.to_name(src), tgt=iso639.to_name(tgt), sentence=sentence)
+        completion = self.client.chat.completions.create(
+            model=model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.01,
+        )
+        return (i, completion.choices[0].message.content.replace("\n", " "))
+
     def send_sentences_to_backend(self, sentences, src=None, tgt=None, custom_prompt=None, terms=None):
         self.client = OpenAI(
             base_url=f"{self.server}/v1",
@@ -37,43 +54,42 @@ class OaiLLMModel(models.Model):
         )
         print("Connecting to '{}'".format(self.server), flush=True, file=sys.stderr)
         print("Sentences: ", sentences, flush=True, file=sys.stderr)
-        res=[]
 
-        if self.provider=="openai":
-            model=self.model
+        if self.provider == "openai":
+            model_name = self.model
         else:
-            model=f"{self.provider}/{self.model}"
-        for i,sentence in enumerate(sentences):
-            sent_terms=None
+            model_name = f"{self.provider}/{self.model}"
+
+        max_concurrent = current_app.config.get("LLM_MAX_CONCURRENT_REQUESTS", 128)
+        max_concurrent = max(1, int(max_concurrent))
+
+        # Build one task per sentence: (index, sentence, sent_terms)
+        tasks = []
+        for i, sentence in enumerate(sentences):
+            sent_terms = None
             if terms:
                 try:
-                    sent_terms= ""
+                    sent_terms = ""
                     for x in terms[i]:
-                        sent_terms+=f"{x[0]} -> {x[1]}\n"
+                        sent_terms += f"{x[0]} -> {x[1]}\n"
                 except Exception as e:
                     logging.warning("Error while trying to format terms: {}".format(e))
+            tasks.append((i, sentence, sent_terms))
 
-            #prompt = f"Translate the following text from {iso639.to_name(src)} to {iso639.to_name(tgt)}, including correctly transferring the markup from the source sentence into the translation. Do not add any explanations, make sure to only output one single line with the translated sentence and nothing else. Source sentence: " + sentence
-            if custom_prompt and self.allow_custom_prompt:
+        if not tasks:
+            print("Result: ", flush=True, file=sys.stderr)
+            return []
 
-                prompt = custom_prompt.format(src=iso639.to_name(src), tgt=iso639.to_name(tgt), sentence=sentence, terms=sent_terms)
-            else:
-                if sent_terms:
-                    prompt = self.prompt_terms.format(src=iso639.to_name(src), tgt=iso639.to_name(tgt), sentence=sentence, terms=sent_terms)
-                else:
-                    prompt = self.prompt.format(src=iso639.to_name(src), tgt=iso639.to_name(tgt), sentence=sentence)
-            print("Prompt: ", prompt, flush=True, file=sys.stderr)
-
-            completion = self.client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "user", "content": prompt},
-            ], temperature=0.01
+        worker = lambda t: self._translate_one_sentence(
+            t[0], t[1], t[2], model_name, src, tgt, custom_prompt
         )
-            #TODO: maybe we should handle this replace better?
-            res.append(completion.choices[0].message.content.replace('\n', ' '))
+        with ThreadPoolExecutor(max_workers=max_concurrent) as executor:
+            results = list(executor.map(worker, tasks))
 
-        print("Result: ", '\n'.join(res), flush=True, file=sys.stderr)
+        results.sort(key=lambda x: x[0])
+        res = [r[1] for r in results]
+
+        print("Result: ", "\n".join(res), flush=True, file=sys.stderr)
         return res
 
     def split_to_sent_array(self, text, lang):
