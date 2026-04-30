@@ -1,4 +1,5 @@
 import logging
+import json
 from flask import request, url_for
 from flask_restx import Namespace, Resource, fields
 
@@ -123,6 +124,9 @@ class LanguageTranslate(MyAbstractResource):
     @ns.response(code=415, description="Unsupported file type for translation")
     @ns.param(**{'name': 'tgt', 'description': 'tgt query param description', 'x-example': 'cs'})
     @ns.param(**{'name': 'src', 'description': 'src query param description', 'x-example': 'en'})
+    @ns.param(**{'name': 'prompt', 'description': 'custom prompt for an LLM',
+                 'x-example': 'Translate this text into Czech: '})
+    @ns.param(**{'name': 'terms', 'description': 'terms', 'x-example': '[[(term1, term1translation)]]'})
     @ns.param(**{'name': 'input_text', 'description': 'text to translate',
                  'x-example': 'this is a sample text', '_in': 'formData'})
     def post(self):
@@ -135,9 +139,13 @@ class LanguageTranslate(MyAbstractResource):
         args = text_input_with_src_tgt.parse_args(request)
         src = args.get('src') or 'en'
         tgt = args.get('tgt') or 'cs'
+        prompt = args.get('prompt', None)
+        split = args.get('split-newlines', None)
+        terms = args.get('terms', None)
+        terms = json.loads(terms) if terms else None
         self.set_media_type_representations()
         try:
-            translatable.translate_from_to(src, tgt)
+            translatable.translate_from_to(src, tgt, custom_prompt=prompt, terms=terms, split=split)
             extra_msg = 'src={};tgt={}'.format(src, tgt)
             return translatable.create_response(self.extra_headers(extra_msg))
         except ValueError as e:
